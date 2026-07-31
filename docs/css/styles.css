@@ -1801,14 +1801,14 @@ p {
   height: 100%;
   padding: 0 0.8rem;
   color: var(--ink) !important;
-  border-bottom: 2px solid transparent;
+  border-bottom: 0;
+  transition: color var(--ease);
 }
 
 .nav-main:hover,
 .nav-main:focus-visible,
 .nav-main[aria-current="page"] {
-  color: #000000 !important;
-  border-bottom-color: #191919;
+  color: var(--teal) !important;
 }
 
 .nav-menu {
@@ -1862,33 +1862,42 @@ p {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  min-height: 32px;
-  padding: 0.4rem 0.7rem;
-  color: #ffffff;
-  background: #8e1820;
+  min-height: 36px;
+  padding: 0.25rem 0;
+  color: #000000;
+  background: transparent;
   border: 0;
-  border-radius: 7px;
-  font-size: 0.72rem;
-  font-weight: 600;
   cursor: pointer;
+  transition: color var(--ease), opacity var(--ease);
 }
 
-.nav-role:hover {
-  color: #ffffff;
-  background: #6e1017;
+.nav-role:hover,
+.nav-role:focus-visible {
+  color: var(--teal);
+  opacity: 0.8;
 }
 
-.nav-role > span {
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.58rem;
-  font-weight: 750;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.nav-role:focus-visible {
+  outline: 2px solid rgba(13, 124, 107, 0.35);
+  outline-offset: 2px;
 }
 
-.nav-role strong {
+.nav-role-icon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.nav-role-name {
   color: currentColor;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
+  font-weight: 650;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .nav-role-switch {
@@ -3134,6 +3143,17 @@ textarea {
   padding: 0.65rem 0.7rem;
   font: inherit;
   font-size: 0.78rem;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid rgba(25, 25, 25, 0.14);
+  border-radius: 7px;
+  outline: none;
+  transition: border-color var(--ease), box-shadow var(--ease);
+}
+
+.agent-form textarea:focus {
+  border-color: rgba(13, 124, 107, 0.38);
+  box-shadow: 0 0 0 4px rgba(13, 124, 107, 0.12);
 }
 
 .agent-form button {

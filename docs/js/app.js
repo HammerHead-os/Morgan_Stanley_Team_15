@@ -11,7 +11,7 @@
       copy: "Find a class that fits, understand the support around it, and keep every booking and milestone inside your Profile Passport.",
       primary: ["Find an activity", "pages/activity-finder.html"],
       secondary: ["Open your Profile Passport", "pages/profile.html#ability"],
-      modules: ["activities", "programmes", "story", "login"],
+      modules: ["activities", "programmes", "story", "login", "social"],
     },
     volunteer: {
       label: "Volunteer",
@@ -20,7 +20,7 @@
       copy: "Pick a role that fits your schedule, support a programme, or discover the skills and talent already inside the Love 21 community.",
       primary: ["See volunteer roles", "pages/volunteer.html"],
       secondary: ["Find community talent", "pages/explore.html#marketplace"],
-      modules: ["volunteer", "story", "social", "login"],
+      modules: ["volunteer", "story", "login", "social"],
     },
     donor: {
       label: "Donor",
@@ -139,8 +139,13 @@
         pagePrefix +
         'profile.html#impact">Impact passport</a></div></li></ul>' +
         '<div class="nav-tools"><div class="nav-role-switch nav-dropdown">' +
-        '<button class="nav-role" type="button" aria-expanded="false">' +
-        '<span>Role</span><strong class="nav-role-name">' +
+        '<button class="nav-role" type="button" aria-expanded="false" aria-label="Change role. Current role: ' +
+        role.label +
+        '" title="Role: ' +
+        role.label +
+        '">' +
+        '<svg class="nav-role-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66" /><path d="M20 4v5h-5" /></svg>' +
+        '<strong class="nav-role-name">' +
         role.label +
         '</strong></button><div class="nav-menu nav-role-menu" aria-label="Choose your role">' +
         roleMenuLink(homeHref, "family", "Family or participant") +
@@ -598,6 +603,11 @@
     });
     qsa(".nav-role-name").forEach(function (slot) {
       slot.textContent = data.label;
+      const button = slot.closest(".nav-role");
+      if (button) {
+        button.setAttribute("aria-label", "Change role. Current role: " + data.label);
+        button.setAttribute("title", "Role: " + data.label);
+      }
     });
 
     const kicker = qs("[data-hero-kicker]");
