@@ -7,6 +7,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
 from ..labels import status_label
+from ..posthog_client import get_posthog
 
 router = APIRouter(prefix="/api/family", tags=["family"])
 
@@ -116,6 +117,12 @@ def register_for_activity(
     )
     db.commit()
     db.refresh(reg)
+    posthog_client = get_posthog()
+    if posthog_client is not None:
+        posthog_client.capture(
+            "activity_registered" if status == "registered" else "activity_waitlist_joined",
+            properties={"reminder_channel": channel},
+        )
     reg.activity = activity
     reg.member = member
     return _registration_out(reg)
@@ -158,6 +165,9 @@ def post_feedback(
     )
     db.commit()
     db.refresh(reg)
+    posthog_client = get_posthog()
+    if posthog_client is not None:
+        posthog_client.capture("session_feedback_submitted")
     return _registration_out(reg)
 
 
@@ -229,6 +239,12 @@ def add_family_member(
     )
     db.commit()
     db.refresh(new_person)
+    posthog_client = get_posthog()
+    if posthog_client is not None:
+        posthog_client.capture(
+            "family_member_added",
+            properties={"household_role": new_person.household_role, "is_child": is_child},
+        )
     return schemas.PersonOut(
         id=new_person.id,
         email=new_person.email,

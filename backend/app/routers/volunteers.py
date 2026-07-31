@@ -7,6 +7,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
 from ..points import REWARDS, points_for_minutes, reward_by_id
+from ..posthog_client import get_posthog
 
 router = APIRouter(prefix="/api/volunteers", tags=["volunteers"])
 
@@ -105,6 +106,9 @@ def onboard(
     )
     db.commit()
     db.refresh(profile)
+    posthog_client = get_posthog()
+    if posthog_client is not None:
+        posthog_client.capture("volunteer_onboarded")
     return profile
 
 
@@ -154,6 +158,16 @@ def claim_shift(
     )
     db.commit()
     db.refresh(claim)
+    posthog_client = get_posthog()
+    if posthog_client is not None:
+        posthog_client.capture(
+            "shift_claimed",
+            properties={
+                "duration_min": shift.duration_min,
+                "requires_onboarding": shift.requires_onboarding,
+                "remote": shift.remote,
+            },
+        )
     claim.shift = shift
     return _claim_out(claim)
 
@@ -211,6 +225,12 @@ def complete_claim(
     )
     db.commit()
     db.refresh(claim)
+    posthog_client = get_posthog()
+    if posthog_client is not None:
+        posthog_client.capture(
+            "shift_completed",
+            properties={"hours": hours, "points_awarded": pts},
+        )
     claim.shift = shift
     return _claim_out(claim)
 
@@ -244,6 +264,12 @@ def redeem_reward(
     )
     db.commit()
     db.refresh(profile)
+    posthog_client = get_posthog()
+    if posthog_client is not None:
+        posthog_client.capture(
+            "reward_redeemed",
+            properties={"reward_id": reward["id"], "cost": reward["cost"]},
+        )
     return schemas.RedeemOut(
         ok=True,
         reward_id=reward["id"],
