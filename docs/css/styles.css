@@ -2518,6 +2518,39 @@ textarea:focus-visible {
   margin-bottom: 1rem;
 }
 
+.module-donate {
+  color: #ffffff;
+  background: #8e1820 !important;
+}
+
+.module-donate h2,
+.module-donate p,
+.module-donate .eyebrow {
+  color: #ffffff;
+}
+
+.module-donate p {
+  color: #f1d5d7;
+}
+
+.donation-cta-action {
+  display: grid;
+  min-width: 220px;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.donation-cta-action .btn {
+  padding: 1.05rem 1.8rem;
+  font-size: 1rem;
+  box-shadow: 0 12px 32px rgba(45, 3, 7, 0.28);
+}
+
+.donation-cta-action small {
+  color: #edc5c8;
+  font-size: 0.68rem;
+}
+
 .support-layout img {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -2579,6 +2612,13 @@ textarea:focus-visible {
   background: #191919 !important;
 }
 
+.module-login .passport-cta {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  background: #222220;
+  border: 1px solid #3b3a37;
+  border-radius: 16px;
+}
+
 .passport-cta h2,
 .passport-cta p,
 .module-login .eyebrow {
@@ -2588,6 +2628,13 @@ textarea:focus-visible {
 .passport-cta p {
   max-width: 720px;
   color: #c9c7c2;
+}
+
+.passport-primary-action {
+  min-width: 190px;
+  padding: 1.05rem 1.8rem;
+  font-size: 1rem;
+  box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.08);
 }
 
 /* Existing pages adopt the same visual language */
@@ -3375,6 +3422,12 @@ textarea {
   display: grid;
   gap: 1rem;
   margin: 2.5rem 0;
+}
+
+.financial-dashboard-home {
+  margin-top: 4rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--line-strong);
 }
 
 .financial-dashboard-heading {

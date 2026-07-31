@@ -267,44 +267,118 @@
           id="reports"
           data-home-module="reports"
         >
-          <div class="container report-layout">
-            <div>
-              <p class="eyebrow">Our reports</p>
-              <h2>See the work behind every gift.</h2>
-              <p class="story-lead">
-                Love 21 is a Section 88 registered charity. Official annual
-                reports explain the programmes, outcomes, and financial
-                stewardship behind the numbers.
-              </p>
-              <a class="btn btn-primary" href="pages/about.html#reports"
-                >View financial reports</a
-              >
+          <div class="container">
+            <div class="report-layout">
+              <div>
+                <p class="eyebrow">Our reports</p>
+                <h2>See the work behind every gift.</h2>
+                <p class="story-lead">
+                  Love 21 is a Section 88 registered charity. Official annual
+                  reports explain the programmes, outcomes, and financial
+                  stewardship behind the numbers.
+                </p>
+                <a class="btn btn-primary" href="pages/about.html#reports"
+                  >View financial reports</a
+                >
+              </div>
+              <div class="report-list">
+                <a
+                  href="https://love21foundation.com/wp-content/uploads/2026/04/Annualreport_final.pdf"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <span>Annual report</span>
+                  <strong>2024–2025</strong>
+                </a>
+                <a
+                  href="https://love21foundation.com/wp-content/uploads/2025/10/Love21-ANNUAL-REPORT_2324.pdf"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <span>Annual report</span>
+                  <strong>2023–2024</strong>
+                </a>
+                <a
+                  href="https://love21foundation.com/wp-content/uploads/2024/03/Love-21-Annual-Report-2022-2023-ENG-3.pdf"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <span>Annual report</span>
+                  <strong>2022–2023</strong>
+                </a>
+              </div>
             </div>
-            <div class="report-list">
-              <a
-                href="https://love21foundation.com/wp-content/uploads/2026/04/Annualreport_final.pdf"
-                target="_blank"
-                rel="noopener"
-              >
-                <span>Annual report</span>
-                <strong>2024–2025</strong>
-              </a>
-              <a
-                href="https://love21foundation.com/wp-content/uploads/2025/10/Love21-ANNUAL-REPORT_2324.pdf"
-                target="_blank"
-                rel="noopener"
-              >
-                <span>Annual report</span>
-                <strong>2023–2024</strong>
-              </a>
-              <a
-                href="https://love21foundation.com/wp-content/uploads/2024/03/Love-21-Annual-Report-2022-2023-ENG-3.pdf"
-                target="_blank"
-                rel="noopener"
-              >
-                <span>Annual report</span>
-                <strong>2022–2023</strong>
-              </a>
+
+            <div class="financial-dashboard financial-dashboard-home">
+              <div class="financial-dashboard-heading">
+                <div>
+                  <span>2024–2025 published figures</span>
+                  <h3>Income and expenditure at a glance.</h3>
+                </div>
+                <p>HKD, rounded to the nearest thousand.</p>
+              </div>
+
+              <div class="finance-chart-grid">
+                <figure class="finance-figure">
+                  <canvas
+                    width="420"
+                    height="420"
+                    data-finance-donut="income"
+                    role="img"
+                    aria-label="Income total HKD 13,495,000: 49 percent unrestricted funds, 49 percent restricted funds, and 2 percent other income."
+                  ></canvas>
+                  <figcaption>
+                    <div>
+                      <span>Total income</span>
+                      <strong>HKD 13.495m</strong>
+                    </div>
+                    <ul class="finance-legend">
+                      <li><i class="legend-green"></i>Unrestricted · 49%</li>
+                      <li><i class="legend-yellow"></i>Restricted · 49%</li>
+                      <li><i class="legend-red"></i>Other · 2%</li>
+                    </ul>
+                  </figcaption>
+                </figure>
+
+                <figure class="finance-figure">
+                  <canvas
+                    width="420"
+                    height="420"
+                    data-finance-donut="expenditure"
+                    role="img"
+                    aria-label="Expenditure total HKD 11,490,000: 86 percent programmes, 8 percent fundraising, and 6 percent administration."
+                  ></canvas>
+                  <figcaption>
+                    <div>
+                      <span>Total expenditure</span>
+                      <strong>HKD 11.490m</strong>
+                    </div>
+                    <ul class="finance-legend">
+                      <li><i class="legend-green"></i>Programmes · 86%</li>
+                      <li><i class="legend-yellow"></i>Fundraising · 8%</li>
+                      <li><i class="legend-red"></i>Administration · 6%</li>
+                    </ul>
+                  </figcaption>
+                </figure>
+              </div>
+
+              <figure class="finance-comparison">
+                <div>
+                  <span>Two-year comparison</span>
+                  <strong>Published totals</strong>
+                </div>
+                <canvas
+                  width="900"
+                  height="360"
+                  data-finance-bars
+                  role="img"
+                  aria-label="Bar chart comparing revenue and expenditure in 2023–2024 and 2024–2025."
+                ></canvas>
+                <figcaption>
+                  2023–24: HKD 8.25m revenue and HKD 6.54m expenditure.
+                  2024–25: HKD 13.50m income and HKD 11.49m expenditure.
+                </figcaption>
+              </figure>
             </div>
           </div>
         </section>
@@ -323,9 +397,12 @@
                 keep receipts inside your Profile Passport.
               </p>
             </div>
-            <a class="btn btn-primary" href="pages/impact.html#tax"
-              >Open donation calculator</a
-            >
+            <div class="donation-cta-action">
+              <a class="btn btn-light" href="pages/impact.html#tax"
+                >Donate now</a
+              >
+              <small>Review the tax estimate, then choose a fund.</small>
+            </div>
           </div>
         </section>
 
@@ -432,7 +509,7 @@
                 receipts together in one personal place.
               </p>
             </div>
-            <a class="btn btn-light" href="pages/profile.html"
+            <a class="btn btn-light passport-primary-action" href="pages/profile.html"
               >Log in to start</a
             >
           </div>

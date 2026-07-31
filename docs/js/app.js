@@ -27,7 +27,7 @@
       kicker: "For donors",
       title: "Give with a clear view of the impact.",
       copy: "Meet the community, read the official reports, estimate the tax-adjusted cost, and keep every contribution inside your Profile Passport.",
-      primary: ["See what HKD 300 does", "pages/impact.html#tax"],
+      primary: ["Donate now", "pages/impact.html#tax"],
       secondary: ["Read the latest report", "pages/about.html#reports"],
       modules: ["story", "reports", "donate", "social"],
     },
