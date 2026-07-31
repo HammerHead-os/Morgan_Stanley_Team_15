@@ -209,6 +209,8 @@
     if (claimBtn && L && !onProfile) {
       e.preventDefault();
       const shiftId = Number(claimBtn.getAttribute("data-claim-shift"));
+      const card = claimBtn.closest(".activity, .micro-task, .task");
+      const stayHere = claimBtn.hasAttribute("data-claim-stay");
       try {
         if (!L.getPerson()) await L.ensureLogin("volunteer@demo.love21");
         const claim = await L.api("/api/volunteers/claims", {
@@ -219,7 +221,22 @@
           window.reloadVolunteerShifts();
         }
         if (typeof window.loadHomeTasks === "function") window.loadHomeTasks();
-        L.goToProfile("contribution", "Claimed: " + (claim.shift_title || "shift"));
+        if (typeof window.loadMicroBoard === "function") window.loadMicroBoard();
+        if (stayHere) {
+          L.showToast(
+            "Claimed: " +
+              (claim.shift_title || "task") +
+              ". Finish it on Profile → My tasks."
+          );
+          if (card) card.remove();
+        } else {
+          L.goToProfile(
+            null,
+            "Claimed: " +
+              (claim.shift_title || "task") +
+              ". Finish it under My tasks."
+          );
+        }
       } catch (err) {
         L.showToast(L.friendlyError(err));
       }

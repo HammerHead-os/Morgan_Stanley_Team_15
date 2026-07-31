@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
+from ..points import REWARDS, points_for_minutes, reward_by_id
 
 router = APIRouter(prefix="/api/volunteers", tags=["volunteers"])
 
@@ -28,6 +29,9 @@ def _ensure_profile(db: Session, person: models.Person) -> models.VolunteerProfi
 def _claim_out(claim: models.VolunteerShiftClaim) -> schemas.ClaimOut:
     from ..labels import status_label
 
+    shift = claim.shift
+    duration = shift.duration_min if shift else None
+    available = points_for_minutes(duration) if claim.status == "claimed" else 0
     return schemas.ClaimOut(
         id=claim.id,
         shift_id=claim.shift_id,
@@ -37,7 +41,11 @@ def _claim_out(claim: models.VolunteerShiftClaim) -> schemas.ClaimOut:
         hours=claim.hours,
         reflection=claim.reflection,
         claimed_at=claim.claimed_at,
-        shift_title=claim.shift.title if claim.shift else None,
+        completed_at=claim.completed_at,
+        shift_title=shift.title if shift else None,
+        points_awarded=claim.points_awarded or 0,
+        points_available=available,
+        duration_min=duration,
     )
 
 
@@ -57,6 +65,20 @@ def my_profile(
     db: Session = Depends(get_db),
 ):
     return _ensure_profile(db, person)
+
+
+@router.get("/points", response_model=schemas.PointsOut)
+def my_points(
+    person: models.Person = Depends(get_current_person),
+    db: Session = Depends(get_db),
+):
+    profile = _ensure_profile(db, person)
+    return schemas.PointsOut(
+        points_balance=profile.points_balance or 0,
+        points_spent=profile.points_spent or 0,
+        hours_logged=profile.hours_logged or 0.0,
+        rewards=[schemas.RewardOut(**r) for r in REWARDS],
+    )
 
 
 @router.post("/onboard", response_model=schemas.VolunteerProfileOut)
@@ -118,6 +140,7 @@ def claim_shift(
         volunteer_profile_id=profile.id,
         status="claimed",
         hours=shift.duration_min / 60.0,
+        points_awarded=0,
     )
     shift.spots_left -= 1
     db.add(claim)
@@ -147,6 +170,8 @@ def list_claims(
         .order_by(models.VolunteerShiftClaim.claimed_at.desc())
         .all()
     )
+    for c in claims:
+        c.shift  # load relationship
     return [_claim_out(c) for c in claims]
 
 
@@ -161,20 +186,69 @@ def complete_claim(
     claim = db.get(models.VolunteerShiftClaim, claim_id)
     if not claim or claim.volunteer_profile_id != profile.id:
         raise HTTPException(status_code=404, detail="Claim not found")
+    if claim.status == "completed":
+        raise HTTPException(status_code=409, detail="Already completed")
+
+    shift = db.get(models.VolunteerShift, claim.shift_id)
     hours = body.hours if body.hours is not None else claim.hours
+    pts = points_for_minutes(shift.duration_min if shift else hours * 60)
+
     claim.status = "completed"
     claim.reflection = body.reflection
     claim.hours = hours
     claim.completed_at = datetime.utcnow()
+    claim.points_awarded = pts
     profile.hours_logged = (profile.hours_logged or 0) + hours
+    profile.points_balance = (profile.points_balance or 0) + pts
+
     db.add(
         models.JourneyEvent(
             person_id=person.id,
             event_type="shift_completed",
             channel="email",
-            payload=f"claim={claim.id};hours={hours}",
+            payload=f"claim={claim.id};hours={hours};points={pts}",
         )
     )
     db.commit()
     db.refresh(claim)
+    claim.shift = shift
     return _claim_out(claim)
+
+
+@router.post("/redeem", response_model=schemas.RedeemOut)
+def redeem_reward(
+    body: schemas.RedeemIn,
+    person: models.Person = Depends(get_current_person),
+    db: Session = Depends(get_db),
+):
+    profile = _ensure_profile(db, person)
+    reward = reward_by_id(body.reward_id)
+    if not reward:
+        raise HTTPException(status_code=404, detail="Reward not found")
+    balance = profile.points_balance or 0
+    if balance < reward["cost"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Need {reward['cost']} points (you have {balance})",
+        )
+
+    profile.points_balance = balance - reward["cost"]
+    profile.points_spent = (profile.points_spent or 0) + reward["cost"]
+    db.add(
+        models.JourneyEvent(
+            person_id=person.id,
+            event_type="points_redeemed",
+            channel="email",
+            payload=f"reward={reward['id']};cost={reward['cost']}",
+        )
+    )
+    db.commit()
+    db.refresh(profile)
+    return schemas.RedeemOut(
+        ok=True,
+        reward_id=reward["id"],
+        reward_label=reward["label"],
+        cost=reward["cost"],
+        points_balance=profile.points_balance,
+        message=f"Redeemed {reward['label']}. Staff will follow up by email.",
+    )

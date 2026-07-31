@@ -426,8 +426,126 @@
     renderRoleToggles(data);
     renderFamily(data);
     renderGiftManage(data);
+    renderMyTasks(data);
     renderCalendar(data);
     renderFeed(data);
+  }
+
+  function renderMyTasks(data) {
+    const section = document.getElementById("my-tasks");
+    const box = document.querySelector("[data-my-tasks]");
+    const pointsBar = document.querySelector("[data-points-bar]");
+    const redeemBlock = document.querySelector("[data-redeem-block]");
+    const redeemGrid = document.querySelector("[data-redeem-grid]");
+    if (!box) return;
+
+    const vol = data.volunteer || {};
+    const claims = vol.claims || [];
+    const balance = vol.points_balance || 0;
+    const rewards = vol.rewards || [];
+    const show =
+      hasRole(data, "volunteer") ||
+      hasRole(data, "corporate") ||
+      claims.length > 0;
+    if (section) section.hidden = !show;
+    if (!show) return;
+
+    if (pointsBar) {
+      pointsBar.hidden = false;
+      const bal = pointsBar.querySelector("[data-points-balance]");
+      if (bal) bal.textContent = String(balance);
+    }
+
+    if (!claims.length) {
+      box.innerHTML =
+        '<p class="muted">No claimed tasks yet. Claim one from Contributor or Volunteer.</p>';
+    } else {
+      const open = claims.filter(function (c) {
+        return c.status === "claimed";
+      });
+      const done = claims.filter(function (c) {
+        return c.status === "completed";
+      });
+      let html = "";
+      if (open.length) {
+        html += "<h3 class=\"task-group-title\">Open</h3>";
+        html += open
+          .map(function (c) {
+            const pts = c.points_available || 0;
+            return (
+              '<article class="my-task-card" data-claim-id="' +
+              c.id +
+              '">' +
+              "<div><strong>" +
+              escapeHtml(c.shift_title || "Task") +
+              "</strong>" +
+              '<p class="muted" style="margin:0.25rem 0 0;font-size:0.88rem">' +
+              escapeHtml(c.status_label || "Claimed") +
+              (pts ? " · +" + pts + " pts when done" : "") +
+              "</p>" +
+              '<label class="complete-note-label">Short note when finished' +
+              '<textarea class="complete-note" rows="2" maxlength="2000" placeholder="What did you do?"></textarea>' +
+              "</label></div>" +
+              '<button type="button" class="btn btn-sm btn-primary" data-complete-claim="' +
+              c.id +
+              '">Mark complete</button>' +
+              "</article>"
+            );
+          })
+          .join("");
+      }
+      if (done.length) {
+        html += "<h3 class=\"task-group-title\">Done</h3>";
+        html += done
+          .map(function (c) {
+            return (
+              '<article class="my-task-card done">' +
+              "<div><strong>" +
+              escapeHtml(c.shift_title || "Task") +
+              "</strong>" +
+              '<p class="muted" style="margin:0.25rem 0 0;font-size:0.88rem">' +
+              "Completed" +
+              (c.points_awarded ? " · +" + c.points_awarded + " pts" : "") +
+              (c.reflection
+                ? "<br/>" + escapeHtml(c.reflection)
+                : "") +
+              "</p></div></article>"
+            );
+          })
+          .join("");
+      }
+      box.innerHTML = html;
+    }
+
+    if (redeemBlock && redeemGrid) {
+      redeemBlock.hidden = false;
+      redeemGrid.innerHTML = rewards
+        .map(function (r) {
+          const can = balance >= r.cost;
+          return (
+            '<article class="redeem-card">' +
+            "<strong>" +
+            escapeHtml(r.label) +
+            "</strong>" +
+            '<p class="muted" style="margin:0.35rem 0;font-size:0.88rem">' +
+            escapeHtml(r.detail || "") +
+            "</p>" +
+            '<p class="redeem-cost">' +
+            r.cost +
+            " points</p>" +
+            '<button type="button" class="btn btn-sm' +
+            (can ? " btn-primary" : "") +
+            '" data-redeem="' +
+            escapeHtml(r.id) +
+            '"' +
+            (can ? "" : " disabled") +
+            ">" +
+            (can ? "Redeem" : "Need more points") +
+            "</button></article>"
+          );
+        })
+        .join("");
+    }
   }
 
   async function reloadProfile() {
@@ -534,6 +652,56 @@
   }
 
   document.addEventListener("click", async function (e) {
+    const completeBtn = e.target.closest("[data-complete-claim]");
+    if (completeBtn) {
+      e.preventDefault();
+      const claimId = Number(completeBtn.getAttribute("data-complete-claim"));
+      const card = completeBtn.closest(".my-task-card");
+      const noteEl = card ? card.querySelector(".complete-note") : null;
+      const reflection = noteEl ? noteEl.value.trim() : "";
+      if (!reflection) {
+        L.showToast("Add a short note before marking complete");
+        if (noteEl) noteEl.focus();
+        return;
+      }
+      try {
+        const claim = await L.api(
+          "/api/volunteers/claims/" + claimId + "/complete",
+          {
+            method: "POST",
+            body: { reflection: reflection },
+          }
+        );
+        L.showToast(
+          "Done · +" +
+            (claim.points_awarded || 0) +
+            " points"
+        );
+        await reloadProfile();
+      } catch (err) {
+        L.showToast(L.friendlyError(err));
+      }
+      return;
+    }
+
+    const redeemBtn = e.target.closest("[data-redeem]");
+    if (redeemBtn && !redeemBtn.disabled) {
+      e.preventDefault();
+      const rewardId = redeemBtn.getAttribute("data-redeem");
+      if (!window.confirm("Redeem this reward?")) return;
+      try {
+        const res = await L.api("/api/volunteers/redeem", {
+          method: "POST",
+          body: { reward_id: rewardId },
+        });
+        L.showToast(res.message || "Redeemed");
+        await reloadProfile();
+      } catch (err) {
+        L.showToast(L.friendlyError(err));
+      }
+      return;
+    }
+
     const commitAction = e.target.closest("[data-commitment-action]");
     if (commitAction && document.querySelector("[data-gift-manage]")) {
       e.preventDefault();

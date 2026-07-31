@@ -8,6 +8,7 @@ from ..labels import event_label, status_label
 from ..roles_util import has_role, parse_roles, pick_primary, serialize_roles
 from .family import _registration_out
 from .volunteers import _claim_out, _ensure_profile
+from ..points import REWARDS
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
 
@@ -268,6 +269,8 @@ def get_profile(
             .order_by(models.VolunteerShiftClaim.claimed_at.desc())
             .all()
         )
+        for c in claims:
+            _ = c.shift
         claimed_ids = {c.shift_id for c in claims}
         suggested = _match_shift(db, profile, claimed_ids)
 
@@ -277,6 +280,9 @@ def get_profile(
         suggested_next=schemas.VolunteerShiftOut.model_validate(suggested)
         if suggested
         else None,
+        points_balance=(profile.points_balance or 0) if profile else 0,
+        points_spent=(profile.points_spent or 0) if profile else 0,
+        rewards=[schemas.RewardOut(**r) for r in REWARDS],
     )
 
     events = (
