@@ -1,61 +1,57 @@
-# Design QA — Love 21 role entry and Family CTA, round 7
+# Design QA — AI Agent Markdown tables, round 8
 
 ## Evidence
 
-- Rendered implementation: `http://127.0.0.1:8001/?chooseRole=1`
-- Role-gate source visual truth: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-light-desktop-final-round6.jpg`
-- Family-login source visual truth: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-family-login-cta-round3b.jpg`
-- Final desktop role gate: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-clear-photos-round7.jpg`
-- Final mobile role gate: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-clear-photos-mobile-round7.jpg`
-- Final solid ROLE control: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-family-nav-role-solid-round7.jpg`
-- Final Family login module: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-family-login-red-final-clean-round7.jpg`
-- Role-gate before/after comparison: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-photo-clarity-comparison-round7.png`
-- Family-login before/after comparison: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-family-login-comparison-round7.png`
+- Source visual truth: `/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/TemporaryItems/NSIRD_screencaptureui_Doo9c8/Screenshot 2026-07-31 at 7.56.07 PM.png`
+- Rendered implementation: `http://127.0.0.1:8001/pages/about.html#reports`
+- Desktop implementation: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-ai-markdown-table-desktop-round8.png`
+- Mobile implementation: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-ai-markdown-table-mobile-round8.png`
+- Focused implementation crop: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-ai-markdown-table-focus-round8c.png`
+- Focused before/after comparison: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-ai-markdown-table-comparison-round8.png`
 
 ## Normalization and state
 
-- Desktop implementation: 1280 × 800 CSS pixels at 1× capture density.
-- Mobile implementation: 390 × 844 CSS pixels at 1× capture density.
-- Role-gate comparisons use the mandatory role-selection state with no navigation and all five choices visible.
-- Family comparisons use the final profile-passport module and include the persistent navigation and AI Agent launcher.
+- Source screenshot: 750 × 356 pixels at 1× density.
+- Desktop implementation viewport: 1280 × 800 CSS pixels at 1× density.
+- Mobile implementation viewport: 390 × 844 CSS pixels at 1× density.
+- Focused comparison normalizes both message crops to 356 pixels high and places the source on the left and rendered implementation on the right.
+- Compared state: AI Agent open after a financial question that returns a two-column Markdown table with total income and total expenditure.
 
-## Comparison judgment
+## Findings and comparison history
 
-The photo wall is now materially clearer while retaining the white visual relationship with the interior pages. The overlay opacity was reduced from 46% to 16%, and the photographs use lighter color correction rather than a washed-out treatment. The translucent white card continues to provide sufficient text contrast.
+### Iteration 1 — fixed
 
-Role selection now has a short, purposeful handoff: the gate card and wall recede before the selected homepage fades and rises into place. The navigation ROLE control is a solid Love 21 red control without a border. The Family login module now uses the same red conversion language as Donate, with a white high-contrast CTA.
+- [P1] Markdown table syntax was shown as paragraph text with literal pipe and delimiter characters.
+  - Location: AI Agent response renderer, `docs/js/app.js`.
+  - Evidence: the source screenshot shows `|`, `---`, and row syntax instead of a semantic table.
+  - Impact: financial comparisons are difficult to scan and appear broken.
+  - Fix: added safe GitHub-Flavored Markdown table detection, semantic `table`/`thead`/`tbody` output, and preserved the existing HTML-escaping and inline-formatting path.
 
-## Findings
-
-### Iteration 1 — passed
+### Iteration 2 — passed
 
 - No actionable P0, P1, or P2 issue remains.
-- The photo-wall overlay computes to `rgba(255, 255, 255, 0.16)`.
-- Photo treatment computes to `saturate(0.84) contrast(0.98)`.
-- The ROLE control computes to `#8e1820`, white text, and a zero-width border.
-- The Family login section computes to `#8e1820`; its nested CTA container is transparent and borderless, and the CTA button is white.
-- Desktop `scrollHeight` and `clientHeight` are both 800 pixels; mobile values are both 844 pixels.
+- The rendered response contains one semantic table with two headers and three total rows.
+- Desktop table width is 328 CSS pixels with no unnecessary overflow.
+- Mobile wrapper width is 278 CSS pixels and exposes horizontal scrolling for wider future tables.
+- Browser console contains no warning or error associated with the interaction.
 
 ## Required fidelity surfaces
 
-- Fonts and typography: hierarchy, wrapping, weights, logo color, and mission accents remain intact.
-- Spacing and layout: role-card geometry, separators, fixed-height placement, navigation rhythm, and Family CTA alignment remain stable.
-- Colors and tokens: the white page relationship is preserved while photography is more legible; solid ROLE and Family CTA treatments use the shared Love 21 red.
-- Image quality: real Love 21 photographs remain sharp enough to read as a wall rather than a pale texture.
-- Copy and content: mission, question, descriptions, role choices, and Family passport copy are unchanged.
-- Responsiveness: desktop and 390-pixel mobile role gates show all choices without document scrolling.
-- Interaction: selection exercises a 260 ms gate exit followed by a 360/420 ms homepage fade-and-rise. Direct role URLs and reduced-motion preferences remain immediate.
+- Fonts and typography: the compact chatbot type scale is preserved; the table header uses a stronger weight and smaller label treatment consistent with the existing interface.
+- Spacing and layout: the table sits within the existing message card, uses compact cell padding, and does not widen or clip the AI Agent window.
+- Colors and tokens: white rows, the existing paper-toned header, subtle shared border token, and dark ink values match the current Notion-like visual language.
+- Image quality and assets: no visible image asset changed.
+- Copy and content: `Item`, `Amount (HKD)`, `Total income`, `Total expenditure`, and both published amounts render without alteration.
+- Responsiveness: desktop and 390-pixel mobile states remain readable; wider tables use a contained horizontal scroller rather than overflowing the window.
+- Accessibility: semantic column headers use `scope="col"` and the table remains available to browser accessibility APIs.
 
 ## Verification
 
-- [x] Desktop role gate at 1280 × 800
-- [x] Mobile role gate at 390 × 844
-- [x] Reduced photo-wall overlay and revised image treatment verified
-- [x] All five choices visible without document scrolling
-- [x] Role-selection transition exercised through the final Family state
-- [x] Solid, borderless ROLE control verified
-- [x] Red Family login module and white CTA verified
-- [x] Browser console checked with no warnings or errors
+- [x] Source and focused implementation opened together and visually compared
+- [x] Real AI response generated a Markdown table through the running API
+- [x] Desktop AI Agent state checked at 1280 × 800
+- [x] Mobile AI Agent state checked at 390 × 844
+- [x] Table DOM structure, row count, header copy, and numeric copy checked
 - [x] JavaScript syntax and repository whitespace checks completed
 
 final result: passed

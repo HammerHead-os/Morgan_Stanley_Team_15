@@ -456,13 +456,81 @@
       paragraph = [];
     }
 
-    lines.forEach(function (line) {
-      if (/^##\s+/.test(line)) {
+    function closeList() {
+      if (!listOpen) return;
+      html.push("</ul>");
+      listOpen = false;
+    }
+
+    function tableCells(line) {
+      let row = line.trim();
+      if (row.startsWith("|")) row = row.slice(1);
+      if (row.endsWith("|")) row = row.slice(0, -1);
+      return row.split("|").map(function (cell) {
+        return cell.trim();
+      });
+    }
+
+    function isTableDivider(line) {
+      const cells = tableCells(line);
+      return (
+        cells.length > 0 &&
+        cells.every(function (cell) {
+          return /^:?-{3,}:?$/.test(cell);
+        })
+      );
+    }
+
+    function renderTable(startIndex) {
+      const headings = tableCells(lines[startIndex]);
+      const rows = [];
+      let index = startIndex + 2;
+
+      while (index < lines.length && lines[index].includes("|")) {
+        const cells = tableCells(lines[index]);
+        if (!cells.some(Boolean)) break;
+        rows.push(cells);
+        index += 1;
+      }
+
+      html.push(
+        '<div class="agent-table-scroll"><table><thead><tr>' +
+          headings
+            .map(function (heading) {
+              return "<th scope=\"col\">" + inline(heading) + "</th>";
+            })
+            .join("") +
+          "</tr></thead><tbody>" +
+          rows
+            .map(function (row) {
+              return (
+                "<tr>" +
+                headings
+                  .map(function (_, cellIndex) {
+                    return "<td>" + inline(row[cellIndex] || "") + "</td>";
+                  })
+                  .join("") +
+                "</tr>"
+              );
+            })
+            .join("") +
+          "</tbody></table></div>"
+      );
+
+      return index - 1;
+    }
+
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
+      const nextLine = lines[index + 1] || "";
+
+      if (line.includes("|") && isTableDivider(nextLine)) {
         flushParagraph();
-        if (listOpen) {
-          html.push("</ul>");
-          listOpen = false;
-        }
+        closeList();
+        index = renderTable(index);
+      } else if (/^##\s+/.test(line)) {
+        flushParagraph();
+        closeList();
         html.push("<h3>" + inline(line.replace(/^##\s+/, "")) + "</h3>");
       } else if (/^-\s+/.test(line)) {
         flushParagraph();
@@ -473,16 +541,13 @@
         html.push("<li>" + inline(line.replace(/^-\s+/, "")) + "</li>");
       } else if (!line.trim()) {
         flushParagraph();
-        if (listOpen) {
-          html.push("</ul>");
-          listOpen = false;
-        }
+        closeList();
       } else {
         paragraph.push(line);
       }
-    });
+    }
     flushParagraph();
-    if (listOpen) html.push("</ul>");
+    closeList();
     return html.join("");
   }
 
