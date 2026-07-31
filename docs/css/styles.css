@@ -2029,7 +2029,7 @@ textarea:focus-visible {
   padding: clamp(0.75rem, 2.4vh, 1.5rem) 0;
   place-items: center;
   overflow: hidden;
-  background: #171717;
+  background: #ffffff;
 }
 
 .role-gate-inner {
@@ -2042,13 +2042,13 @@ textarea:focus-visible {
 .role-gate-panel {
   max-height: calc(100svh - clamp(1.5rem, 4.8vh, 3rem));
   padding: clamp(1.15rem, 2.6vh, 1.55rem);
-  color: #ffffff;
-  background: rgba(8, 8, 8, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #191919;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(25, 25, 25, 0.13);
   border-radius: 16px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
-  backdrop-filter: blur(18px) saturate(0.8);
-  -webkit-backdrop-filter: blur(18px) saturate(0.8);
+  box-shadow: 0 24px 80px rgba(25, 25, 25, 0.16);
+  backdrop-filter: blur(18px) saturate(0.72);
+  -webkit-backdrop-filter: blur(18px) saturate(0.72);
 }
 
 .role-gate-logo {
@@ -2061,13 +2061,13 @@ textarea:focus-visible {
 }
 
 .role-gate-panel .eyebrow {
-  color: rgba(255, 255, 255, 0.68);
+  color: rgba(25, 25, 25, 0.58);
 }
 
 .role-gate .role-value {
   max-width: 15ch;
   margin: 0.35rem 0 0.8rem;
-  color: #ffffff;
+  color: #191919;
   font-size: clamp(1.62rem, 3.3vw, 2.35rem);
   line-height: 1.04;
   letter-spacing: -0.045em;
@@ -2079,7 +2079,7 @@ textarea:focus-visible {
 
 .role-gate h2 {
   margin: 0 0 0.4rem;
-  color: #ffffff;
+  color: #191919;
   font-size: clamp(1.25rem, 2.4vw, 1.65rem);
   line-height: 1.1;
   letter-spacing: -0.025em;
@@ -2091,7 +2091,7 @@ textarea:focus-visible {
 
 .role-gate-panel > p:last-of-type {
   margin-bottom: 0;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(25, 25, 25, 0.64);
   font-size: 0.8rem;
   line-height: 1.45;
 }
@@ -2107,7 +2107,7 @@ textarea:focus-visible {
   display: grid;
   gap: 0.22rem;
   padding: 0.66rem 0.15rem;
-  color: #ffffff;
+  color: #191919;
   text-align: left;
   background: transparent;
   border: 0;
@@ -2119,7 +2119,7 @@ textarea:focus-visible {
 }
 
 .role-choice + .role-choice {
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-top: 1px solid rgba(25, 25, 25, 0.14);
 }
 
 .role-photo-wall {
@@ -2130,13 +2130,14 @@ textarea:focus-visible {
   gap: 0.55rem;
   padding: 0.55rem;
   overflow: hidden;
+  background: #ffffff;
 }
 
 .role-photo-wall::after {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: rgba(10, 10, 10, 0.48);
+  background: rgba(255, 255, 255, 0.46);
   content: "";
   pointer-events: none;
 }
@@ -2168,7 +2169,7 @@ textarea:focus-visible {
   flex: 0 0 auto;
   object-fit: cover;
   border-radius: 8px;
-  filter: saturate(0.78) contrast(0.96);
+  filter: saturate(0.72) contrast(0.92) brightness(1.04);
 }
 
 .role-photo-row img:nth-child(4n + 2) {
@@ -2254,17 +2255,17 @@ textarea:focus-visible {
 }
 
 .role-choice span {
-  color: rgba(255, 255, 255, 0.64);
+  color: rgba(25, 25, 25, 0.58);
   font-size: 0.72rem;
 }
 
 .role-choice:hover span,
 .role-choice.selected span {
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(25, 25, 25, 0.78);
 }
 
 .role-choice:focus-visible {
-  outline-color: #ffffff;
+  outline-color: #191919;
 }
 
 .role-skip {
