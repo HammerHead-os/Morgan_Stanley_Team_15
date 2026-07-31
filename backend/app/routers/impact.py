@@ -6,8 +6,24 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
+from ..labels import status_label
 
 router = APIRouter(prefix="/api/impact", tags=["impact"])
+
+
+def _commitment_out(c: models.DonationCommitment) -> schemas.CommitmentOut:
+    return schemas.CommitmentOut(
+        id=c.id,
+        supporter_person_id=c.supporter_person_id,
+        amount_hkd=c.amount_hkd,
+        fund_category=c.fund_category,
+        status=c.status,
+        status_label=status_label(c.status),
+        cadence=c.cadence,
+        office_perk_unlocked=bool(c.office_perk_unlocked),
+        started_at=c.started_at,
+        updated_at=c.updated_at,
+    )
 
 
 @router.get("/transparency", response_model=schemas.TransparencyOut)
@@ -20,12 +36,13 @@ def list_commitments(
     person: models.Person = Depends(get_current_person),
     db: Session = Depends(get_db),
 ):
-    return (
+    rows = (
         db.query(models.DonationCommitment)
         .filter(models.DonationCommitment.supporter_person_id == person.id)
         .order_by(models.DonationCommitment.started_at.desc())
         .all()
     )
+    return [_commitment_out(c) for c in rows]
 
 
 @router.post("/commitments", response_model=schemas.CommitmentOut)
@@ -47,7 +64,16 @@ def start_commitment(
         models.DonationReceipt(
             commitment_id=commitment.id,
             amount_hkd=body.amount_hkd,
-            story_back=f"Thank you — HKD {body.amount_hkd:.0f} supports {body.fund_category}.",
+            story_back=(
+                f"Mei’s swim stamp unlocked after your gift to {body.fund_category}."
+            ),
+        )
+    )
+    db.add(
+        models.ImpactBadge(
+            person_id=person.id,
+            title="Local contributor",
+            level="bronze" if body.amount_hkd < 500 else "silver",
         )
     )
     db.add(
@@ -60,7 +86,7 @@ def start_commitment(
     )
     db.commit()
     db.refresh(commitment)
-    return commitment
+    return _commitment_out(commitment)
 
 
 @router.patch("/commitments/{commitment_id}", response_model=schemas.CommitmentOut)
@@ -92,7 +118,7 @@ def update_commitment(
     )
     db.commit()
     db.refresh(commitment)
-    return commitment
+    return _commitment_out(commitment)
 
 
 @router.get("/receipts", response_model=list[schemas.ReceiptOut])

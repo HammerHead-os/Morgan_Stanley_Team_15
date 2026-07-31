@@ -26,11 +26,14 @@ def _ensure_profile(db: Session, person: models.Person) -> models.VolunteerProfi
 
 
 def _claim_out(claim: models.VolunteerShiftClaim) -> schemas.ClaimOut:
+    from ..labels import status_label
+
     return schemas.ClaimOut(
         id=claim.id,
         shift_id=claim.shift_id,
         volunteer_profile_id=claim.volunteer_profile_id,
         status=claim.status,
+        status_label=status_label(claim.status),
         hours=claim.hours,
         reflection=claim.reflection,
         claimed_at=claim.claimed_at,

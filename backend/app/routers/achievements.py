@@ -6,8 +6,36 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
+from ..labels import status_label
 
 router = APIRouter(prefix="/api/achievements", tags=["achievements"])
+
+
+def _achievement_out(a: models.Achievement) -> schemas.AchievementOut:
+    return schemas.AchievementOut(
+        id=a.id,
+        member_person_id=a.member_person_id,
+        title=a.title,
+        pillar=a.pillar,
+        status=a.status,
+        status_label=status_label(a.status),
+        share_consent=a.share_consent,
+        coach_name=a.coach_name or "Coach Pat",
+        approved_at=a.approved_at,
+        created_at=a.created_at,
+    )
+
+
+def _goal_out(g: models.Goal) -> schemas.GoalOut:
+    return schemas.GoalOut(
+        id=g.id,
+        member_person_id=g.member_person_id,
+        title=g.title,
+        status=g.status,
+        status_label=status_label(g.status),
+        target_date=g.target_date,
+        created_at=g.created_at,
+    )
 
 
 @router.get("", response_model=list[schemas.AchievementOut])
@@ -23,12 +51,13 @@ def list_achievements(
         raise HTTPException(status_code=404, detail="Member not found")
     if target.id != person.id and target.household_id != person.household_id:
         raise HTTPException(status_code=403, detail="Not allowed")
-    return (
+    rows = (
         db.query(models.Achievement)
         .filter(models.Achievement.member_person_id == member_id)
         .order_by(models.Achievement.created_at.desc())
         .all()
     )
+    return [_achievement_out(a) for a in rows]
 
 
 @router.post("/goals", response_model=schemas.GoalOut)
@@ -59,7 +88,7 @@ def create_goal(
     )
     db.commit()
     db.refresh(goal)
-    return goal
+    return _goal_out(goal)
 
 
 @router.get("/goals", response_model=list[schemas.GoalOut])
@@ -74,12 +103,13 @@ def list_goals(
         raise HTTPException(status_code=404, detail="Member not found")
     if target.id != person.id and target.household_id != person.household_id:
         raise HTTPException(status_code=403, detail="Not allowed")
-    return (
+    rows = (
         db.query(models.Goal)
         .filter(models.Goal.member_person_id == member_id)
         .order_by(models.Goal.created_at.desc())
         .all()
     )
+    return [_goal_out(g) for g in rows]
 
 
 @router.patch("/{achievement_id}/consent", response_model=schemas.AchievementOut)
@@ -104,7 +134,7 @@ def update_consent(
         ach.status = "coach_approved"
     db.commit()
     db.refresh(ach)
-    return ach
+    return _achievement_out(ach)
 
 
 @router.post("/{achievement_id}/approve", response_model=schemas.AchievementOut)
@@ -129,4 +159,4 @@ def coach_approve(
     )
     db.commit()
     db.refresh(ach)
-    return ach
+    return _achievement_out(ach)

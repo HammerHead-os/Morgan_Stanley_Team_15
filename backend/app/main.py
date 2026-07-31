@@ -8,6 +8,7 @@ from .routers import (
     activities,
     auth,
     family,
+    hire,
     impact,
     passport,
     prefs,
@@ -18,7 +19,7 @@ from .seed import init_db
 app = FastAPI(
     title="Love 21 API",
     description="Part 2 — Disconnected Journeys / Love 21 Passport",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 app.add_middleware(
@@ -37,6 +38,7 @@ app.include_router(impact.router)
 app.include_router(volunteers.router)
 app.include_router(prefs.router)
 app.include_router(passport.router)
+app.include_router(hire.router)
 
 
 @app.on_event("startup")

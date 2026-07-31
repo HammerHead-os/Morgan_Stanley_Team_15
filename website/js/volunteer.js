@@ -7,7 +7,6 @@
 
   async function reloadVolunteerShifts() {
     try {
-      await L.ensureLogin("volunteer@demo.love21");
       const shifts = await L.api("/api/volunteers/shifts");
       grid.innerHTML = shifts
         .map(function (s) {
@@ -43,7 +42,7 @@
         .join("");
     } catch (err) {
       grid.innerHTML =
-        '<p class="empty-hint">API offline — start backend on port 8000.</p>';
+        '<p class="empty-hint">Can\'t load shifts — start the Love 21 server, then refresh.</p>';
     }
   }
 
@@ -53,7 +52,9 @@
     if (!e.target.closest("[data-onboard]")) return;
     e.preventDefault();
     try {
-      await L.ensureLogin("volunteer@demo.love21");
+      if (!L.getPerson()) {
+        await L.ensureLogin("volunteer@demo.love21");
+      }
       await L.api("/api/volunteers/onboard", {
         method: "POST",
         body: {
@@ -62,10 +63,9 @@
           availability: "weekends",
         },
       });
-      L.showToast("Onboarding complete");
-      reloadVolunteerShifts();
+      L.goToPassport("contribution", "Onboarding complete");
     } catch (err) {
-      L.showToast(err.message || "Onboarding failed");
+      L.showToast(L.friendlyError(err));
     }
   });
 

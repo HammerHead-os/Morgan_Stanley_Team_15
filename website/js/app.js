@@ -10,15 +10,13 @@
       ctaHref: "pages/activity-finder.html",
       modules: [],
       note: "Filter by age, day, language, and support need. Full classes go on a waitlist with email reminders.",
-      loginEmail: "carer@chen.demo",
     },
     volunteer: {
       title: "Volunteer",
       cta: "See open shifts",
       ctaHref: "pages/volunteer.html",
       modules: [],
-      note: "Most tasks are 30–90 minutes. Claim a shift, then log hours from your account.",
-      loginEmail: "volunteer@demo.love21",
+      note: "Most tasks are 30–90 minutes. Claim a shift, then log hours from your Passport.",
     },
     donor: {
       title: "Give monthly",
@@ -26,7 +24,6 @@
       ctaHref: "pages/impact.html",
       modules: [],
       note: "Spend breakdown first, then set up a monthly gift you can pause or change.",
-      loginEmail: "donor@demo.love21",
     },
     corporate: {
       title: "Company / CSR",
@@ -34,7 +31,6 @@
       ctaHref: "pages/opportunity.html",
       modules: [],
       note: "Team volunteering dates, in-kind requests, and hiring enquiries — not a blank contact form.",
-      loginEmail: "donor@demo.love21",
     },
   };
 
@@ -47,6 +43,7 @@
   }
 
   const L = window.Love21;
+  const onPassport = !!qs("[data-passport-root]");
 
   /* Mobile nav */
   const toggle = qs(".nav-toggle");
@@ -61,12 +58,12 @@
     });
   }
 
-  /* Role chooser */
+  /* Role chooser — preview only; does not hijack Passport session */
   const roleGrid = qs("[data-role-grid]");
   const preview = qs("[data-journey-preview]");
   if (roleGrid && preview) {
     const saved = localStorage.getItem(ROLE_KEY);
-    roleGrid.addEventListener("click", async function (e) {
+    roleGrid.addEventListener("click", function (e) {
       const btn = e.target.closest("[data-role]");
       if (!btn) return;
       const role = btn.getAttribute("data-role");
@@ -75,13 +72,6 @@
         el.classList.toggle("selected", el === btn);
       });
       showJourney(role);
-      if (L && journeys[role]) {
-        try {
-          await L.demoLogin(journeys[role].loginEmail);
-        } catch (err) {
-          /* backend may be down — UI still works */
-        }
-      }
     });
     if (saved && journeys[saved]) {
       const match = qs('[data-role="' + saved + '"]', roleGrid);
@@ -103,21 +93,6 @@
       '</h3><p class="muted">' +
       data.note +
       "</p>" +
-      (data.modules && data.modules.length
-        ? '<div class="journey-modules">' +
-          data.modules
-            .map(function (m, i) {
-              return (
-                '<span class="chip"><span class="chip-num">' +
-                (i + 1) +
-                "</span>" +
-                m +
-                "</span>"
-              );
-            })
-            .join("") +
-          "</div>"
-        : "") +
       '<a class="btn btn-primary" href="' +
       base +
       data.ctaHref +
@@ -126,33 +101,7 @@
       "</a>";
   }
 
-  /* Passport tabs */
-  const tabs = qsa("[data-passport-tab]");
-  const panels = qsa("[data-passport-panel]");
-  if (tabs.length) {
-    tabs.forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        const id = tab.getAttribute("data-passport-tab");
-        tabs.forEach(function (t) {
-          t.classList.toggle("active", t === tab);
-        });
-        panels.forEach(function (p) {
-          p.classList.toggle(
-            "active",
-            p.getAttribute("data-passport-panel") === id
-          );
-        });
-        history.replaceState(null, "", "#" + id);
-      });
-    });
-    const hash = (location.hash || "").replace("#", "");
-    if (hash) {
-      const tab = qs('[data-passport-tab="' + hash + '"]');
-      if (tab) tab.click();
-    }
-  }
-
-  /* Channel toggles → API */
+  /* Channel toggles → API (keep current session) */
   qsa("[data-toggle]").forEach(function (btn) {
     btn.addEventListener("click", async function () {
       btn.classList.toggle("on");
@@ -165,9 +114,12 @@
       try {
         await L.ensureLogin();
         await L.api("/api/prefs", { method: "PATCH", body: body });
-        L.showToast((on ? "Enabled" : "Disabled") + " " + channel.replace("_", " "));
+        L.showToast(
+          (on ? "Enabled" : "Disabled") + " " + channel.replace("_", " ")
+        );
       } catch (err) {
-        L.showToast(err.message || "Could not save preference");
+        btn.classList.toggle("on");
+        L.showToast(L.friendlyError(err));
       }
     });
   });
@@ -195,7 +147,7 @@
       renderActivities(list);
     } catch (err) {
       activityGrid.innerHTML =
-        '<p class="empty-hint">API offline — start the backend on port 8000.</p>';
+        '<p class="empty-hint">Can\'t load classes — start the Love 21 server, then refresh.</p>';
     }
   }
 
@@ -251,14 +203,19 @@
       e.preventDefault();
       const activityId = Number(regBtn.getAttribute("data-register"));
       try {
-        const person = await L.ensureLogin("carer@chen.demo");
+        let person = L.getPerson();
+        if (!person) {
+          person = await L.ensureLogin("carer@chen.demo");
+        }
         const passport = await L.api("/api/passport");
+        if (!passport.family) {
+          L.showToast("This account has no household — switch to a family demo in Passport.");
+          return;
+        }
         const member =
-          (passport.family &&
-            passport.family.members.find(function (m) {
-              return m.role_primary === "member";
-            })) ||
-          person;
+          passport.family.members.find(function (m) {
+            return m.role_primary === "member";
+          }) || person;
         const result = await L.api("/api/family/register", {
           method: "POST",
           body: {
@@ -267,34 +224,42 @@
             reminder_channel: "email",
           },
         });
-        L.showToast(
+        const msg =
           result.status === "waitlist"
-            ? "Waitlist #" + result.waitlist_position + " — reminder set"
-            : "Registered · " + (result.activity_title || "activity")
-        );
+            ? "Waitlist #" + result.waitlist_position + " — stamped in Passport"
+            : "Booked · " + (result.activity_title || "class") + " — stamped in Passport";
+        if (onPassport && typeof window.reloadPassport === "function") {
+          L.showToast(msg);
+          window.reloadPassport();
+        } else {
+          L.goToPassport("ability", msg);
+        }
         loadActivities();
       } catch (err) {
-        L.showToast(err.message || "Registration failed");
+        L.showToast(L.friendlyError(err));
       }
       return;
     }
 
     const claimBtn = e.target.closest("[data-claim-shift]");
-    if (claimBtn && L) {
+    if (claimBtn && L && !onPassport) {
       e.preventDefault();
       const shiftId = Number(claimBtn.getAttribute("data-claim-shift"));
       try {
-        await L.ensureLogin("volunteer@demo.love21");
+        if (!L.getPerson()) {
+          await L.ensureLogin("volunteer@demo.love21");
+        }
         const claim = await L.api("/api/volunteers/claims", {
           method: "POST",
           body: { shift_id: shiftId },
         });
-        L.showToast("Claimed: " + (claim.shift_title || "shift"));
+        const msg = "Claimed: " + (claim.shift_title || "shift");
         if (typeof window.reloadVolunteerShifts === "function") {
           window.reloadVolunteerShifts();
         }
+        L.goToPassport("contribution", msg);
       } catch (err) {
-        L.showToast(err.message || "Could not claim shift");
+        L.showToast(L.friendlyError(err));
       }
       return;
     }
@@ -303,7 +268,9 @@
     if (commitBtn && L) {
       e.preventDefault();
       try {
-        await L.ensureLogin("donor@demo.love21");
+        if (!L.getPerson()) {
+          await L.ensureLogin("donor@demo.love21");
+        }
         const amountEl = document.getElementById("gift");
         const amount = amountEl ? Number(amountEl.value) || 300 : 300;
         const c = await L.api("/api/impact/commitments", {
@@ -314,19 +281,25 @@
             cadence: "monthly",
           },
         });
-        L.showToast("Monthly HKD " + c.amount_hkd + " started · impact badge on");
+        L.goToPassport(
+          "impact",
+          "Monthly HKD " + c.amount_hkd + " started · badge unlocked"
+        );
       } catch (err) {
-        L.showToast(err.message || "Could not start commitment");
+        L.showToast(L.friendlyError(err));
       }
       return;
     }
 
+    /* Commitment manage on non-passport pages only — Passport handles its own */
     const commitAction = e.target.closest("[data-commitment-action]");
-    if (commitAction && L) {
+    if (commitAction && L && !onPassport) {
       e.preventDefault();
       const action = commitAction.getAttribute("data-commitment-action");
       try {
-        await L.ensureLogin("donor@demo.love21");
+        if (!L.getPerson()) {
+          await L.ensureLogin("donor@demo.love21");
+        }
         const list = await L.api("/api/impact/commitments");
         if (!list.length) {
           L.showToast("No commitment yet — start one first");
@@ -343,58 +316,16 @@
           method: "PATCH",
           body: body,
         });
-        L.showToast(
+        L.goToPassport(
+          "impact",
           action === "pause"
-            ? "Paused"
+            ? "Gift paused"
             : action === "renew"
-              ? "Renewed / active"
-              : "Fund category updated"
+              ? "Gift renewed"
+              : "Fund updated"
         );
-        if (typeof window.reloadPassport === "function") window.reloadPassport();
       } catch (err) {
-        L.showToast(err.message || "Update failed");
-      }
-      return;
-    }
-
-    const goalBtn = e.target.closest("[data-set-goal]");
-    if (goalBtn && L) {
-      e.preventDefault();
-      try {
-        await L.ensureLogin("carer@chen.demo");
-        const passport = await L.api("/api/passport");
-        const memberId =
-          (passport.achievement && passport.achievement.member.id) ||
-          L.getPerson().id;
-        await L.api("/api/achievements/goals", {
-          method: "POST",
-          body: {
-            title: "New coach goal · " + new Date().toLocaleDateString(),
-            member_person_id: memberId,
-          },
-        });
-        L.showToast("Goal set — coach approval next");
-        if (typeof window.reloadPassport === "function") window.reloadPassport();
-      } catch (err) {
-        L.showToast(err.message || "Could not set goal");
-      }
-      return;
-    }
-
-    const feedbackBtn = e.target.closest("[data-feedback]");
-    if (feedbackBtn && L) {
-      e.preventDefault();
-      const regId = Number(feedbackBtn.getAttribute("data-feedback"));
-      try {
-        await L.ensureLogin("carer@chen.demo");
-        await L.api("/api/family/registrations/" + regId + "/feedback", {
-          method: "POST",
-          body: { feedback: "Great session — Alex was engaged the whole time." },
-        });
-        L.showToast("Feedback saved");
-        if (typeof window.reloadPassport === "function") window.reloadPassport();
-      } catch (err) {
-        L.showToast(err.message || "Feedback failed");
+        L.showToast(L.friendlyError(err));
       }
       return;
     }
@@ -426,10 +357,10 @@
         slot.textContent = person.name;
         slot.title = person.email;
       } else {
-        slot.textContent = "API ready";
+        slot.textContent = "Ready";
       }
     } catch (e) {
-      slot.textContent = "API offline";
+      slot.textContent = "Offline";
     }
   }
   paintSession();

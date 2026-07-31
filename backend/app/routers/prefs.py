@@ -16,7 +16,12 @@ def get_prefs(
     prefs = person.prefs
     if not prefs:
         raise HTTPException(status_code=404, detail="Preferences not found")
-    return prefs
+    return schemas.PrefsOut(
+        email_on=prefs.email_on,
+        sms_on=prefs.sms_on,
+        whatsapp_on=prefs.whatsapp_on,
+        opt_out_token=prefs.opt_out_token,
+    )
 
 
 @router.patch("", response_model=schemas.PrefsOut)
@@ -34,12 +39,16 @@ def update_prefs(
         prefs.sms_on = body.sms_on
     if body.whatsapp_on is not None:
         prefs.whatsapp_on = body.whatsapp_on
-    # Email stays primary — if all off, force email on
     if not prefs.email_on and not prefs.sms_on and not prefs.whatsapp_on:
         prefs.email_on = True
     db.commit()
     db.refresh(prefs)
-    return prefs
+    return schemas.PrefsOut(
+        email_on=prefs.email_on,
+        sms_on=prefs.sms_on,
+        whatsapp_on=prefs.whatsapp_on,
+        opt_out_token=prefs.opt_out_token,
+    )
 
 
 @router.post("/opt-out/{token}")

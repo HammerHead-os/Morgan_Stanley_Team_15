@@ -1,11 +1,10 @@
-"""Love 21 API client — Part 2 Passport backend."""
+/* Love 21 API client — Passport backend */
 
 (function (global) {
   const TOKEN_KEY = "love21_token";
   const PERSON_KEY = "love21_person";
 
   function apiBase() {
-    // Same origin when served by FastAPI; fallback for plain file / other static servers
     if (location.port === "8765" || location.protocol === "file:") {
       return "http://127.0.0.1:8000";
     }
@@ -34,6 +33,14 @@
     localStorage.removeItem(PERSON_KEY);
   }
 
+  function friendlyError(err) {
+    if (!err) return "Something went wrong";
+    if (err.status === 0 || err.name === "TypeError") {
+      return "Can't reach Love 21 right now. Start the local server and try again.";
+    }
+    return err.message || "Request failed";
+  }
+
   async function api(path, options) {
     options = options || {};
     const headers = Object.assign(
@@ -43,11 +50,18 @@
     const token = getToken();
     if (token) headers["X-Demo-Token"] = token;
 
-    const res = await fetch(apiBase() + path, {
-      method: options.method || "GET",
-      headers: headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-    });
+    let res;
+    try {
+      res = await fetch(apiBase() + path, {
+        method: options.method || "GET",
+        headers: headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+    } catch (networkErr) {
+      networkErr.status = 0;
+      networkErr.message = friendlyError(networkErr);
+      throw networkErr;
+    }
 
     let data = null;
     const text = await res.text();
@@ -65,6 +79,7 @@
       const err = new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
       err.status = res.status;
       err.data = data;
+      err.message = friendlyError(err);
       throw err;
     }
     return data;
@@ -79,14 +94,34 @@
     return data;
   }
 
-  async function ensureLogin(preferredEmail) {
+  /**
+   * Keep the current session unless force is true.
+   * Only logs in as preferredEmail when nobody is signed in (or force).
+   */
+  async function ensureLogin(preferredEmail, opts) {
+    opts = opts || {};
     const existing = getPerson();
-    if (getToken() && existing) {
-      if (!preferredEmail || existing.email === preferredEmail) return existing;
+    if (getToken() && existing && !opts.force) {
+      return existing;
     }
     const email = preferredEmail || "carer@chen.demo";
     const data = await demoLogin(email);
     return data.person;
+  }
+
+  function passportHref(hash) {
+    const inPages = /\/pages\//.test(location.pathname);
+    const base = inPages ? "my-love21.html" : "pages/my-love21.html";
+    return base + (hash ? "#" + hash.replace(/^#/, "") : "");
+  }
+
+  function goToPassport(hash, flash) {
+    if (flash) {
+      try {
+        sessionStorage.setItem("love21_flash", flash);
+      } catch (e) {}
+    }
+    location.href = passportHref(hash);
   }
 
   function showToast(msg) {
@@ -121,5 +156,8 @@
     demoLogin: demoLogin,
     ensureLogin: ensureLogin,
     showToast: showToast,
+    goToPassport: goToPassport,
+    passportHref: passportHref,
+    friendlyError: friendlyError,
   };
 })(window);

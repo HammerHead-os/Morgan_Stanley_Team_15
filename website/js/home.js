@@ -7,23 +7,33 @@
     if (L) L.showToast(msg);
   }
 
-  document.addEventListener("click", function (e) {
+  document.addEventListener("click", async function (e) {
     const hire = e.target.closest("[data-hire]");
     if (hire) {
       e.preventDefault();
-      toast(
-        "Enquiry sent for " +
-          hire.getAttribute("data-hire") +
-          " (demo — staff would follow up)"
-      );
+      const label = hire.getAttribute("data-hire");
+      if (!L) {
+        toast("Enquiry noted for " + label);
+        return;
+      }
+      try {
+        if (!L.getPerson()) {
+          await L.ensureLogin("donor@demo.love21");
+        }
+        await L.api("/api/hire", {
+          method: "POST",
+          body: { creator_label: label },
+        });
+        L.goToPassport("impact", "Hire enquiry sent for " + label);
+      } catch (err) {
+        toast(L.friendlyError(err));
+      }
       return;
     }
     const need = e.target.closest("[data-need-help]");
     if (need) {
       e.preventDefault();
-      toast(
-        "Thanks — noted: " + need.getAttribute("data-need-help") + " (demo)"
-      );
+      toast("Thanks — noted: " + need.getAttribute("data-need-help"));
     }
   });
 
@@ -50,7 +60,7 @@
       })
       .catch(function () {
         taskBox.innerHTML =
-          '<div class="task"><div><h3>Cantonese flyer check</h3><p>45 min · start the API on :8000 to claim live.</p></div>' +
+          '<div class="task"><div><h3>Cantonese flyer check</h3><p>45 min · start the API to claim live.</p></div>' +
           '<a class="btn btn-sm btn-mint" href="pages/volunteer.html">Open tasks</a></div>';
       });
   }

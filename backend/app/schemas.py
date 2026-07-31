@@ -8,7 +8,6 @@ class OrmModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# ——— People / auth demo ———
 class PersonOut(OrmModel):
     id: int
     email: str
@@ -16,6 +15,8 @@ class PersonOut(OrmModel):
     role_primary: str
     language: str
     household_id: Optional[int] = None
+    passport_code: str = ""
+    issued_at: Optional[datetime] = None
 
 
 class DemoLoginIn(BaseModel):
@@ -24,10 +25,9 @@ class DemoLoginIn(BaseModel):
 
 class DemoLoginOut(BaseModel):
     person: PersonOut
-    token: str  # demo: person id as string
+    token: str
 
 
-# ——— Activities ———
 class ActivityOut(OrmModel):
     id: int
     title: str
@@ -54,11 +54,13 @@ class RegistrationOut(OrmModel):
     household_id: int
     member_person_id: int
     status: str
+    status_label: str = ""
     waitlist_position: Optional[int] = None
     reminder_channel: str
     created_at: datetime
     feedback: Optional[str] = None
     activity_title: Optional[str] = None
+    activity_location: Optional[str] = None
     member_name: Optional[str] = None
 
 
@@ -66,14 +68,15 @@ class FeedbackIn(BaseModel):
     feedback: str = Field(min_length=1, max_length=2000)
 
 
-# ——— Achievements / goals ———
 class AchievementOut(OrmModel):
     id: int
     member_person_id: int
     title: str
     pillar: str
     status: str
+    status_label: str = ""
     share_consent: bool
+    coach_name: str = "Coach Pat"
     approved_at: Optional[datetime] = None
     created_at: datetime
 
@@ -89,6 +92,7 @@ class GoalOut(OrmModel):
     member_person_id: int
     title: str
     status: str
+    status_label: str = ""
     target_date: Optional[date] = None
     created_at: datetime
 
@@ -97,7 +101,6 @@ class ConsentIn(BaseModel):
     share_consent: bool
 
 
-# ——— Impact / donations ———
 class CommitmentIn(BaseModel):
     amount_hkd: float = 300
     fund_category: str = "Sports programmes"
@@ -110,13 +113,15 @@ class CommitmentOut(OrmModel):
     amount_hkd: float
     fund_category: str
     status: str
+    status_label: str = ""
     cadence: str
+    office_perk_unlocked: bool = True
     started_at: datetime
     updated_at: datetime
 
 
 class CommitmentUpdateIn(BaseModel):
-    status: Optional[str] = None  # active | paused | cancelled
+    status: Optional[str] = None
     fund_category: Optional[str] = None
     amount_hkd: Optional[float] = None
 
@@ -129,6 +134,14 @@ class ReceiptOut(OrmModel):
     story_back: Optional[str] = None
 
 
+class ImpactBadgeOut(OrmModel):
+    id: int
+    person_id: int
+    title: str
+    level: str
+    earned_at: datetime
+
+
 class TransparencyOut(BaseModel):
     as_of: datetime
     programmes_pct: float = 74.6
@@ -139,7 +152,6 @@ class TransparencyOut(BaseModel):
     hkd_300_means: str = "About 2 coach-led programme sessions"
 
 
-# ——— Volunteers ———
 class VolunteerShiftOut(OrmModel):
     id: int
     title: str
@@ -161,6 +173,7 @@ class ClaimOut(OrmModel):
     shift_id: int
     volunteer_profile_id: int
     status: str
+    status_label: str = ""
     hours: float
     reflection: Optional[str] = None
     claimed_at: datetime
@@ -188,11 +201,22 @@ class OnboardIn(BaseModel):
     availability: Optional[str] = None
 
 
-# ——— Comm prefs ———
+class HireIn(BaseModel):
+    creator_label: str = Field(min_length=2, max_length=200)
+
+
+class HireOut(OrmModel):
+    id: int
+    creator_label: str
+    status: str
+    created_at: datetime
+
+
 class PrefsOut(OrmModel):
     email_on: bool
     sms_on: bool
     whatsapp_on: bool
+    opt_out_token: Optional[str] = None
 
 
 class PrefsUpdateIn(BaseModel):
@@ -201,7 +225,21 @@ class PrefsUpdateIn(BaseModel):
     whatsapp_on: Optional[bool] = None
 
 
-# ——— Passport aggregate ———
+class JourneyEventOut(OrmModel):
+    id: int
+    event_type: str
+    event_label: str = ""
+    channel: str
+    payload: str
+    created_at: datetime
+
+
+class NextActionOut(BaseModel):
+    label: str
+    href: str
+    tab: Optional[str] = None
+
+
 class FamilyPassportOut(BaseModel):
     household_name: str
     members: list[PersonOut]
@@ -217,6 +255,7 @@ class AchievementPassportOut(BaseModel):
 class ImpactPassportOut(BaseModel):
     commitments: list[CommitmentOut]
     receipts: list[ReceiptOut]
+    badges: list[ImpactBadgeOut] = []
     programmes_pct: float = 74.6
 
 
@@ -229,7 +268,12 @@ class VolunteerPassportOut(BaseModel):
 class PassportOut(BaseModel):
     person: PersonOut
     prefs: PrefsOut
+    visible_tabs: list[str]
+    home_tab: str = "ability"
+    next_action: NextActionOut
     family: Optional[FamilyPassportOut] = None
     achievement: Optional[AchievementPassportOut] = None
     impact: ImpactPassportOut
     volunteer: VolunteerPassportOut
+    journey_events: list[JourneyEventOut] = []
+    hire_enquiries: list[HireOut] = []

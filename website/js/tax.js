@@ -39,7 +39,9 @@
     const amount = gift ? Number(gift.value) || 300 : 300;
     const method = pay.getAttribute("data-pay");
     try {
-      await L.ensureLogin("donor@demo.love21");
+      if (!L.getPerson()) {
+        await L.ensureLogin("donor@demo.love21");
+      }
       await L.api("/api/impact/commitments", {
         method: "POST",
         body: {
@@ -48,9 +50,12 @@
           cadence: "monthly",
         },
       });
-      L.showToast(method + " · HKD " + amount + "/mo started · badge unlocked");
+      L.goToPassport(
+        "impact",
+        method + " · HKD " + amount + "/mo started · badge unlocked"
+      );
     } catch (err) {
-      L.showToast(method + " demo: HKD " + amount + " (API: " + (err.message || "offline") + ")");
+      L.showToast(L.friendlyError(err));
     }
   });
 })();

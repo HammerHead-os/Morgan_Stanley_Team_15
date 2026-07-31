@@ -24,8 +24,11 @@ class Person(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(120))
     role_primary: Mapped[str] = mapped_column(String(40), default="family")
+    # family (carer) | member | donor | volunteer | corporate
     language: Mapped[str] = mapped_column(String(20), default="both")
     phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    passport_code: Mapped[str] = mapped_column(String(32), unique=True)
+    issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     household_id: Mapped[Optional[int]] = mapped_column(
@@ -130,10 +133,33 @@ class Achievement(Base):
     status: Mapped[str] = mapped_column(String(40), default="pending")
     # pending | coach_approved | shared
     share_consent: Mapped[bool] = mapped_column(Boolean, default=False)
+    coach_name: Mapped[str] = mapped_column(String(120), default="Coach Pat")
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     member: Mapped[Person] = relationship(back_populates="achievements")
+
+
+class ImpactBadge(Base):
+    __tablename__ = "impact_badges"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    person_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
+    title: Mapped[str] = mapped_column(String(120), default="Local contributor")
+    level: Mapped[str] = mapped_column(String(40), default="bronze")
+    earned_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class HireEnquiry(Base):
+    __tablename__ = "hire_enquiries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    person_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("people.id"), nullable=True
+    )
+    creator_label: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(40), default="received")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class Goal(Base):
@@ -159,6 +185,7 @@ class DonationCommitment(Base):
     status: Mapped[str] = mapped_column(String(40), default="active")
     # active | paused | cancelled
     cadence: Mapped[str] = mapped_column(String(20), default="monthly")
+    office_perk_unlocked: Mapped[bool] = mapped_column(Boolean, default=True)
     started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow

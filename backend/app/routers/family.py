@@ -6,22 +6,28 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
+from ..labels import status_label
 
 router = APIRouter(prefix="/api/family", tags=["family"])
 
 
 def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
+    label = status_label(reg.status)
+    if reg.status == "waitlist" and reg.waitlist_position:
+        label = f"On waitlist · #{reg.waitlist_position}"
     return schemas.RegistrationOut(
         id=reg.id,
         activity_id=reg.activity_id,
         household_id=reg.household_id,
         member_person_id=reg.member_person_id,
         status=reg.status,
+        status_label=label,
         waitlist_position=reg.waitlist_position,
         reminder_channel=reg.reminder_channel,
         created_at=reg.created_at,
         feedback=reg.feedback,
         activity_title=reg.activity.title if reg.activity else None,
+        activity_location=reg.activity.location if reg.activity else None,
         member_name=reg.member.name if reg.member else None,
     )
 

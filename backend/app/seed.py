@@ -21,6 +21,7 @@ def seed(db: Session) -> None:
         role_primary="family",
         language="both",
         household_id=household.id,
+        passport_code="L21-HK-1001",
     )
     member = models.Person(
         email="alex@chen.demo",
@@ -28,18 +29,21 @@ def seed(db: Session) -> None:
         role_primary="member",
         language="yue",
         household_id=household.id,
+        passport_code="L21-HK-1002",
     )
     donor = models.Person(
         email="donor@demo.love21",
         name="Sam Wong",
         role_primary="donor",
         language="en",
+        passport_code="L21-HK-2001",
     )
     volunteer = models.Person(
         email="volunteer@demo.love21",
         name="Taylor Ng",
         role_primary="volunteer",
         language="both",
+        passport_code="L21-HK-3001",
     )
     db.add_all([carer, member, donor, volunteer])
     db.flush()
@@ -95,7 +99,7 @@ def seed(db: Session) -> None:
             title="Parent counselling circle",
             description="Carers’ peer support · monthly · San Po Kong.",
             goal="family",
-            age_band="child",
+            age_band="adult",
             day="saturday",
             support_need="group",
             language="yue",
@@ -155,7 +159,7 @@ def seed(db: Session) -> None:
             member_person_id=member.id,
             status="attended",
             reminder_channel="email",
-            feedback=None,
+            feedback="Alex loved the quiet hour and helped plate snacks.",
         )
     )
 
@@ -167,6 +171,7 @@ def seed(db: Session) -> None:
                 pillar="sport",
                 status="coach_approved",
                 share_consent=True,
+                coach_name="Coach Pat",
                 approved_at=datetime.utcnow() - timedelta(days=40),
             ),
             models.Achievement(
@@ -175,6 +180,7 @@ def seed(db: Session) -> None:
                 pillar="nutrition",
                 status="coach_approved",
                 share_consent=False,
+                coach_name="Coach Yan",
                 approved_at=datetime.utcnow() - timedelta(days=14),
             ),
             models.Goal(
@@ -201,6 +207,14 @@ def seed(db: Session) -> None:
             amount_hkd=300,
             paid_at=datetime.utcnow() - timedelta(days=20),
             story_back="Mei’s swim stamp unlocked after your June gift.",
+        )
+    )
+    db.add(
+        models.ImpactBadge(
+            person_id=donor.id,
+            title="Local contributor",
+            level="bronze",
+            earned_at=datetime.utcnow() - timedelta(days=20),
         )
     )
 
@@ -277,8 +291,50 @@ def seed(db: Session) -> None:
             completed_at=datetime.utcnow() - timedelta(days=10),
         )
     )
+    db.add(
+        models.VolunteerShiftClaim(
+            shift_id=shifts[2].id,
+            volunteer_profile_id=vprofile.id,
+            status="claimed",
+            hours=shifts[2].duration_min / 60.0,
+        )
+    )
     shifts[0].spots_left = 2
     shifts[1].spots_left = 1
+    shifts[2].spots_left = max(0, shifts[2].spots_left - 1)
+
+    db.add_all(
+        [
+            models.JourneyEvent(
+                person_id=carer.id,
+                event_type="registration_confirmed",
+                channel="email",
+                payload="Swim · beginners",
+                created_at=datetime.utcnow() - timedelta(days=12),
+            ),
+            models.JourneyEvent(
+                person_id=carer.id,
+                event_type="waitlist_joined",
+                channel="email",
+                payload="One-on-one nutrition",
+                created_at=datetime.utcnow() - timedelta(days=5),
+            ),
+            models.JourneyEvent(
+                person_id=donor.id,
+                event_type="commitment_started",
+                channel="email",
+                payload="amount=300;fund=Sports programmes",
+                created_at=datetime.utcnow() - timedelta(days=20),
+            ),
+            models.JourneyEvent(
+                person_id=volunteer.id,
+                event_type="shift_completed",
+                channel="email",
+                payload="Cantonese flyer check",
+                created_at=datetime.utcnow() - timedelta(days=18),
+            ),
+        ]
+    )
 
     db.commit()
 
