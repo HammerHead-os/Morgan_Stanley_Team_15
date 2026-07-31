@@ -17,41 +17,22 @@
         { label: "Open Ability profile", href: "pages/profile.html#ability" },
       ],
     },
-    donor: {
-      title: "Give monthly",
-      note: "HKD 300 a month covers about two coach-led sessions. You can pause or change the fund later in Impact.",
-      loginEmail: "donor@demo.love21",
+    support: {
+      title: "Ways to support Love 21",
+      note: "Give monthly, claim a volunteer shift, or bring your company on board — pick one to see the details.",
       actions: [
-        { label: "Start giving", href: "pages/impact.html", primary: true },
-        { label: "Tax calculator", href: "pages/impact.html#tax" },
-        { label: "Impact profile", href: "pages/profile.html#impact" },
-      ],
-    },
-    volunteer: {
-      title: "Pick a task",
-      note: "Most tasks take under 90 minutes. Claim one and log the hours under Contribution.",
-      loginEmail: "volunteer@demo.love21",
-      actions: [
-        { label: "See all tasks", href: "pages/volunteer.html", primary: true },
-        {
-          label: "Contribution profile",
-          href: "pages/profile.html#contribution",
-        },
+        { label: "Give monthly", href: "pages/impact.html", primary: true },
+        { label: "See all tasks", href: "pages/volunteer.html" },
+        { label: "Hire talent / current needs", href: "pages/opportunity.html" },
       ],
       showTasks: true,
     },
-    company: {
-      title: "Work with us",
-      note: "Book a member for an office session, or help with something we need right now.",
-      loginEmail: "donor@demo.love21",
+    curious: {
+      title: "New here? Start with the basics",
+      note: "Love 21 runs sport, nutrition, and meaningful-work programmes for the Down syndrome, autistic, and neurodiverse community in Hong Kong.",
       actions: [
-        {
-          label: "Hire talent",
-          href: "pages/explore.html#marketplace",
-          primary: true,
-        },
-        { label: "Current needs", href: "pages/opportunity.html" },
-        { label: "Contact us", href: "pages/contact.html" },
+        { label: "About Love 21", href: "pages/about.html", primary: true },
+        { label: "Where money goes", href: "pages/transparency.html" },
       ],
     },
   };
@@ -247,15 +228,15 @@
       try {
         let person = L.getPerson();
         if (!person) person = await L.ensureLogin("carer@chen.demo");
-        const passport = await L.api("/api/passport");
-        if (!passport.family) {
+        const profile = await L.api("/api/profile");
+        if (!profile.family) {
           L.showToast(
             "This account has no household — switch demo account in Profile."
           );
           return;
         }
         const member =
-          passport.family.members.find(function (m) {
+          profile.family.members.find(function (m) {
             return m.role_primary === "member";
           }) || person;
         const result = await L.api("/api/family/register", {
@@ -273,9 +254,6 @@
         if (onProfile && typeof window.reloadProfile === "function") {
           L.showToast(msg);
           window.reloadProfile();
-        } else if (typeof window.reloadPassport === "function") {
-          L.showToast(msg);
-          window.reloadPassport();
         } else {
           L.goToProfile("ability", msg);
         }

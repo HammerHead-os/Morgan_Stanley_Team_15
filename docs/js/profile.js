@@ -132,9 +132,7 @@
     const roleEl = document.querySelector("[data-cover-role]");
     if (nameEl) nameEl.textContent = p.name;
     if (roleEl) roleEl.textContent = roleLabel(p.role_primary);
-    if (codeEl)
-      codeEl.textContent =
-        p.passport_code || p.profile_code || "L21-" + p.id;
+    if (codeEl) codeEl.textContent = p.profile_code || "L21-" + p.id;
   }
 
   function emptyChapter(title, body, ctaHref, ctaLabel) {
