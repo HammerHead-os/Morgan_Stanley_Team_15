@@ -385,7 +385,7 @@ p {
 /* google map code*/
 .location-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) minmax(280px, 45%);
+  grid-template-columns: minmax(280px, 45%) minmax(280px, 1fr);
   gap: 2rem;
   align-items: start;
 }
