@@ -67,8 +67,8 @@
     const pagePrefix = inPages ? "" : "pages/";
     const homeHref = inPages ? "../index.html" : "index.html";
     const assetPrefix = inPages ? "../" : "";
-    const role =
-      roleExperiences[localStorage.getItem(ROLE_KEY)] || roleExperiences.curious;
+    const currentRoleKey = localStorage.getItem(ROLE_KEY);
+    const role = roleExperiences[currentRoleKey] || roleExperiences.curious;
     const nav = qs(".site-nav");
     if (nav) {
       nav.innerHTML =
@@ -78,9 +78,11 @@
         '" aria-label="Love 21 home">' +
         '<img src="' +
         assetPrefix +
-        'assets/media/love21-logo.png" alt="" />' +
-        '<span>Love 21</span></a>' +
-        '<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>' +
+        'assets/media/love21-logo.png" alt="" /></a>' +
+        '<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">' +
+        '<span class="sr-only">Open navigation</span><img src="' +
+        assetPrefix +
+        'assets/icons/menu.svg" alt="" /></button>' +
         '<ul class="nav-links" id="nav-menu">' +
         '<li class="nav-item nav-dropdown"><a class="nav-main" href="' +
         pagePrefix +
@@ -133,11 +135,17 @@
         '<a href="' +
         pagePrefix +
         'profile.html#impact">Impact passport</a></div></li></ul>' +
-        '<div class="nav-tools"><a class="nav-role" href="' +
-        homeHref +
-        '?chooseRole=1#role-question">For: <span class="nav-role-name">' +
+        '<div class="nav-tools"><div class="nav-role-switch nav-dropdown">' +
+        '<button class="nav-role" type="button" aria-expanded="false">' +
+        '<span>Role</span><strong class="nav-role-name">' +
         role.label +
-        '</span></a><span class="nav-session" data-session>Ready</span></div>' +
+        '</strong></button><div class="nav-menu nav-role-menu" aria-label="Choose your role">' +
+        roleMenuLink(homeHref, "family", "Family or participant") +
+        roleMenuLink(homeHref, "volunteer", "Volunteer") +
+        roleMenuLink(homeHref, "donor", "Donor") +
+        roleMenuLink(homeHref, "company", "Corporate partner") +
+        roleMenuLink(homeHref, "curious", "Just curious") +
+        "</div></div></div>" +
         "</div>";
     }
 
@@ -168,6 +176,20 @@
     }
   }
 
+  function roleMenuLink(homeHref, role, label) {
+    return (
+      '<a href="' +
+      homeHref +
+      "?role=" +
+      role +
+      '" data-role-switch="' +
+      role +
+      '">' +
+      label +
+      "</a>"
+    );
+  }
+
   renderSiteShell();
 
   const toggle = qs(".nav-toggle");
@@ -178,6 +200,18 @@
       toggle.setAttribute(
         "aria-expanded",
         links.classList.contains("open") ? "true" : "false"
+      );
+    });
+  }
+
+  const roleSwitch = qs(".nav-role-switch");
+  const roleSwitchButton = qs(".nav-role", roleSwitch);
+  if (roleSwitch && roleSwitchButton) {
+    roleSwitchButton.addEventListener("click", function () {
+      roleSwitch.classList.toggle("open");
+      roleSwitchButton.setAttribute(
+        "aria-expanded",
+        roleSwitch.classList.contains("open") ? "true" : "false"
       );
     });
   }
@@ -194,19 +228,12 @@
       showRoleHome(role, true);
     });
 
-    const skip = qs("[data-role-skip]");
-    if (skip) {
-      skip.addEventListener("click", function () {
-        showRoleHome("curious", true);
-      });
-    }
-    qsa("[data-role-change]").forEach(function (button) {
-      button.addEventListener("click", openRoleGate);
-    });
-
     const params = new URLSearchParams(location.search);
     const saved = localStorage.getItem(ROLE_KEY);
-    if (params.get("chooseRole") === "1" || !roleExperiences[saved]) {
+    const requestedRole = params.get("role");
+    if (roleExperiences[requestedRole]) {
+      showRoleHome(requestedRole, false);
+    } else if (params.get("chooseRole") === "1" || !roleExperiences[saved]) {
       openRoleGate();
     } else {
       showRoleHome(saved, false);
@@ -215,6 +242,7 @@
 
   function openRoleGate() {
     if (!roleGate || !roleHome) return;
+    document.body.classList.add("role-gate-active");
     roleGate.hidden = false;
     roleHome.hidden = true;
     const heading = qs("#role-question");
@@ -225,6 +253,7 @@
   function showRoleHome(role, shouldScroll) {
     const data = roleExperiences[role] || roleExperiences.curious;
     localStorage.setItem(ROLE_KEY, role);
+    document.body.classList.remove("role-gate-active");
     if (roleGate) roleGate.hidden = true;
     if (roleHome) roleHome.hidden = false;
 
@@ -238,13 +267,11 @@
       slot.textContent = data.label;
     });
 
-    const current = qs("[data-role-current]");
     const kicker = qs("[data-hero-kicker]");
     const title = qs("[data-hero-title]");
     const copy = qs("[data-hero-copy]");
     const primary = qs("[data-hero-primary]");
     const secondary = qs("[data-hero-secondary]");
-    if (current) current.textContent = data.label;
     if (kicker) kicker.textContent = data.kicker;
     if (title) title.textContent = data.title;
     if (copy) copy.textContent = data.copy;

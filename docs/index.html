@@ -10,7 +10,7 @@
     <title>Love 21 Foundation</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
-  <body class="page-home-v2">
+  <body class="page-home-v2 role-gate-active">
     <nav class="site-nav" aria-label="Primary"></nav>
 
     <section
@@ -19,38 +19,64 @@
       aria-labelledby="role-question"
       aria-describedby="role-description"
     >
+      <div class="role-photo-wall" aria-hidden="true">
+        <div class="role-photo-track">
+          <img src="assets/media/programme-sport.jpeg" alt="" />
+          <img src="assets/media/social-communication.jpg" alt="" />
+          <img src="assets/media/programme-family.jpg" alt="" />
+          <img src="assets/media/social-board-game.jpg" alt="" />
+          <img src="assets/media/programme-nutrition.jpeg" alt="" />
+          <img src="assets/media/our-story.jpg" alt="" />
+          <img src="assets/media/programme-community.jpg" alt="" />
+          <img src="assets/media/social-mission.jpg" alt="" />
+          <img src="assets/media/programme-sport.jpeg" alt="" />
+          <img src="assets/media/social-communication.jpg" alt="" />
+          <img src="assets/media/programme-family.jpg" alt="" />
+          <img src="assets/media/social-board-game.jpg" alt="" />
+          <img src="assets/media/programme-nutrition.jpeg" alt="" />
+          <img src="assets/media/our-story.jpg" alt="" />
+          <img src="assets/media/programme-community.jpg" alt="" />
+          <img src="assets/media/social-mission.jpg" alt="" />
+        </div>
+      </div>
+
       <div class="role-gate-inner">
-        <div class="role-gate-copy">
+        <div class="role-gate-panel">
+          <img
+            class="role-gate-logo"
+            src="assets/media/love21-logo.png"
+            alt="Love 21"
+          />
           <p class="eyebrow">Welcome to Love 21</p>
           <h1 id="role-question">What brings you here today?</h1>
           <p id="role-description">
             Choose a role and we will put the most useful information first.
             Your choice is remembered and can be changed at any time.
           </p>
-        </div>
 
-        <div class="role-choice-grid" data-role-grid>
-          <button type="button" class="role-choice" data-role="family">
-            <strong>Family or participant</strong>
-            <span>Find classes and follow your progress</span>
-          </button>
-          <button type="button" class="role-choice" data-role="volunteer">
-            <strong>Volunteer</strong>
-            <span>Offer time or find community talent</span>
-          </button>
-          <button type="button" class="role-choice" data-role="donor">
-            <strong>Donor</strong>
-            <span>Understand the work and give with confidence</span>
-          </button>
-          <button type="button" class="role-choice" data-role="company">
-            <strong>Corporate partner</strong>
-            <span>Plan a CSR session or support a need</span>
-          </button>
+          <div class="role-choice-grid" data-role-grid>
+            <button type="button" class="role-choice" data-role="family">
+              <strong>Family or participant</strong>
+              <span>Find classes and follow your progress</span>
+            </button>
+            <button type="button" class="role-choice" data-role="volunteer">
+              <strong>Volunteer</strong>
+              <span>Offer time or find community talent</span>
+            </button>
+            <button type="button" class="role-choice" data-role="donor">
+              <strong>Donor</strong>
+              <span>Understand the work and give with confidence</span>
+            </button>
+            <button type="button" class="role-choice" data-role="company">
+              <strong>Corporate partner</strong>
+              <span>Plan a CSR session or support a need</span>
+            </button>
+            <button type="button" class="role-choice" data-role="curious">
+              <strong>Just curious</strong>
+              <span>Start with the story, programmes, and reports</span>
+            </button>
+          </div>
         </div>
-
-        <button type="button" class="role-skip" data-role-skip>
-          Just curious — show me around
-        </button>
       </div>
     </section>
 
@@ -58,10 +84,6 @@
       <header class="home-hero" id="top">
         <div class="container home-hero-grid">
           <div class="home-hero-copy">
-            <button type="button" class="role-current" data-role-change>
-              <span data-role-current>Just curious</span>
-              <small>Change</small>
-            </button>
             <p class="eyebrow" data-hero-kicker>So much ability</p>
             <h1 data-hero-title>Every person deserves room to thrive.</h1>
             <p class="hero-copy" data-hero-copy>

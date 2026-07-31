@@ -1768,7 +1768,6 @@ p {
 }
 
 .brand {
-  gap: 0.6rem;
   min-width: max-content;
   font-family: var(--font-body);
   font-size: 1rem;
@@ -1859,30 +1858,82 @@ p {
   min-width: max-content;
 }
 
-.nav-role,
-.nav-session {
+.nav-role {
   display: inline-flex;
   align-items: center;
+  gap: 0.45rem;
   min-height: 32px;
-  padding: 0.35rem 0.65rem;
-  color: var(--ink-soft);
-  background: var(--paper-deep);
-  border: 1px solid var(--line);
+  padding: 0.4rem 0.7rem;
+  color: #8e1820;
+  background: #fff6f6;
+  border: 1px solid #e6b8bb;
   border-radius: 7px;
   font-size: 0.72rem;
   font-weight: 600;
+  cursor: pointer;
 }
 
 .nav-role:hover {
-  color: var(--ink);
-  border-color: var(--line-strong);
+  color: #6e1017;
+  background: #feecec;
+  border-color: #ce7b81;
+}
+
+.nav-role > span {
+  color: #b33b43;
+  font-size: 0.58rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.nav-role strong {
+  color: currentColor;
+  font-size: 0.72rem;
+}
+
+.nav-role-switch {
+  position: relative;
+}
+
+.nav-role-menu {
+  right: 0;
+  left: auto;
+}
+
+.nav-role-switch.open .nav-menu {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .nav-toggle {
+  display: none;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0.65rem;
   color: var(--ink);
   background: #ffffff;
   border-color: var(--line-strong);
   border-radius: 7px;
+}
+
+.nav-toggle img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Shared controls */
@@ -1971,41 +2022,58 @@ textarea:focus-visible {
 
 /* Role question */
 .role-gate {
-  min-height: calc(100vh - var(--nav-h));
-  padding: clamp(3.5rem, 9vw, 7.5rem) 0;
-  background: #ffffff;
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  padding: clamp(2rem, 5vw, 4rem) 0;
+  place-items: center;
+  overflow: hidden;
+  background: #171717;
 }
 
 .role-gate-inner {
-  width: min(100% - 3rem, 980px);
+  position: relative;
+  z-index: 2;
+  width: min(100% - 2rem, 520px);
   margin-inline: auto;
 }
 
-.role-gate-copy {
-  max-width: 760px;
+.role-gate-panel {
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 14px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(16px);
+}
+
+.role-gate-logo {
+  width: 72px;
+  height: 48px;
+  margin-bottom: 1.7rem;
+  object-fit: contain;
 }
 
 .role-gate h1 {
-  max-width: 760px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: clamp(2.4rem, 7vw, 4rem);
 }
 
-.role-gate-copy > p:last-child {
-  max-width: 610px;
-  font-size: 1.08rem;
+.role-gate-panel > p:last-of-type {
+  font-size: 0.96rem;
 }
 
 .role-choice-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
-  margin-top: 3.5rem;
+  margin-top: 2rem;
 }
 
 .role-choice {
   display: grid;
   gap: 0.35rem;
-  padding: 1.25rem;
+  padding: 0.9rem 1rem;
   color: var(--ink);
   text-align: left;
   background: #ffffff;
@@ -2016,6 +2084,41 @@ textarea:focus-visible {
     background var(--ease),
     border-color var(--ease),
     transform var(--ease);
+}
+
+.role-photo-wall {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.role-photo-track {
+  display: flex;
+  gap: 0.8rem;
+  width: max-content;
+  padding: 0.8rem;
+  animation: role-wall-scroll 54s linear infinite;
+}
+
+.role-photo-track img {
+  width: clamp(230px, 23vw, 360px);
+  height: min(68vh, 560px);
+  object-fit: cover;
+  border-radius: 12px;
+  filter: saturate(0.72) brightness(0.72);
+}
+
+@keyframes role-wall-scroll {
+  to {
+    transform: translateX(calc(-50% - 0.4rem));
+  }
+}
+
+.role-gate-active .site-nav,
+.role-gate-active .site-footer {
+  display: none;
 }
 
 .role-choice:hover,
@@ -2078,25 +2181,6 @@ textarea:focus-visible {
   color: var(--ink-soft);
   font-size: clamp(1.05rem, 2vw, 1.25rem);
   line-height: 1.55;
-}
-
-.role-current {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin-bottom: 2.25rem;
-  padding: 0.45rem 0.65rem;
-  color: var(--ink);
-  background: var(--paper-deep);
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  cursor: pointer;
-}
-
-.role-current small {
-  color: var(--ink-soft);
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 .home-hero-actions {
@@ -2617,9 +2701,6 @@ textarea {
     margin-left: auto;
   }
 
-  .nav-session {
-    display: none;
-  }
 }
 
 @media (max-width: 860px) {
@@ -2634,6 +2715,13 @@ textarea {
 
   .nav-tools {
     order: 2;
+  }
+
+  .nav-role strong {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .nav-links {
@@ -2699,20 +2787,17 @@ textarea {
     font-size: clamp(2rem, 10vw, 2.8rem);
   }
 
-  .brand span {
-    display: none;
-  }
-
   .brand img {
     width: 48px;
   }
 
-  .nav-role {
-    max-width: 112px;
-    overflow: hidden;
+  .nav-role > span {
+    display: none;
+  }
+
+  .nav-role strong {
+    max-width: 90px;
     font-size: 0.65rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .role-choice-grid,
@@ -2725,11 +2810,28 @@ textarea {
   }
 
   .role-gate {
-    padding-top: 3rem;
+    padding: 1rem 0;
   }
 
   .role-choice-grid {
-    margin-top: 2rem;
+    margin-top: 1.4rem;
+  }
+
+  .role-gate-panel {
+    padding: 1.3rem;
+  }
+
+  .role-choice {
+    padding: 0.72rem 0.85rem;
+  }
+
+  .role-choice span {
+    display: none;
+  }
+
+  .role-photo-track img {
+    width: 72vw;
+    height: 74vh;
   }
 
   .hero-photo-grid {
