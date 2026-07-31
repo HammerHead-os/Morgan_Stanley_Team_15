@@ -4,8 +4,91 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Love 21 Foundation</title>
-    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/styles.css?v=gate2" />
     <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
+    <style>
+      /* Critical gate layout — keeps video full-bleed even if CSS cache is stale */
+      html,
+      body.page-gate {
+        margin: 0;
+        min-height: 100%;
+        background: #0b1210 !important;
+        color: #f5f7f6;
+      }
+      body.page-gate .gate-media {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 0 !important;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      body.page-gate .gate-video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      body.page-gate .gate-scrim {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(8, 14, 12, 0.82) 0%, rgba(8, 14, 12, 0.4) 55%, rgba(8, 14, 12, 0.6) 100%),
+          linear-gradient(180deg, rgba(8, 14, 12, 0.5) 0%, transparent 40%, rgba(8, 14, 12, 0.75) 100%);
+      }
+      body.page-gate .site-nav-gate {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 5;
+        background: transparent !important;
+        border-bottom: 0 !important;
+      }
+      body.page-gate .gate-stage {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-end;
+        box-sizing: border-box;
+        padding: 6.5rem 1.25rem 4.5rem;
+      }
+      body.page-gate .gate-intro {
+        width: min(100%, 42rem);
+        max-width: 42rem;
+      }
+      body.page-gate .gate-title {
+        color: #fff !important;
+        font-size: clamp(2.6rem, 7vw, 4.6rem);
+        line-height: 0.95;
+        margin: 0 0 1.1rem;
+      }
+      body.page-gate .gate-kicker,
+      body.page-gate .gate-lead,
+      body.page-gate .gate-about-link,
+      body.page-gate .gate-about-link a {
+        color: rgba(245, 247, 246, 0.88) !important;
+      }
+      body.page-gate .gate-sound {
+        position: fixed !important;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 6;
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        background: rgba(8, 14, 12, 0.55);
+        color: #fff;
+        border-radius: 999px;
+        padding: 0.55rem 0.95rem;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body class="page-gate">
     <div class="gate-media" aria-hidden="true">
