@@ -1758,9 +1758,10 @@ body.page-gate .gate-intro {
 
 .gate-sound {
   position: fixed;
-  right: 1.25rem;
+  left: 1.25rem;
   bottom: 1.25rem;
-  z-index: 2;
+  right: auto;
+  z-index: 6;
   appearance: none;
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(8, 14, 12, 0.55);
