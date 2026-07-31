@@ -1,90 +1,96 @@
-# Design QA — Love 21 role-adaptive redesign
+# Design QA — Love 21 role-adaptive redesign, round 2
 
 ## Evidence
 
-- Source visual truth: `/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/TemporaryItems/NSIRD_screencaptureui_C2i7hE/Screenshot 2026-07-31 at 4.04.27 PM.png`
+- Role-flow reference: `/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/TemporaryItems/NSIRD_screencaptureui_C2i7hE/Screenshot 2026-07-31 at 4.04.27 PM.png`
+- Organisation-chart reference: `/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/codex-clipboard-535251da-484f-4504-9031-fd2a8af8a5fa.png`
 - Rendered implementation: `http://127.0.0.1:8001/?chooseRole=1`
-- Final desktop screenshot: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-final.png`
-- Normalized full-view comparison: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-reference-comparison.png`
-- Final mobile role gate: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-role-gate-final.png`
-- Final mobile Family home: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-family-final-3.png`
-- Final mobile Profile: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-profile-final.png`
+- Final desktop role gate: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-round2-fixed.png`
+- Role-flow comparison: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-reference-comparison.png`
+- Desktop Family home: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-family-home-round2.png`
+- Desktop AI answer: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-ai-assistant-round2.jpg`
+- Desktop financial figures: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-finance-round2.jpg`
+- Desktop Board directory: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-board-round2.jpg`
+- Desktop organisation chart: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-org-chart-round2.jpg`
+- Organisation-chart comparison: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-org-reference-comparison.png`
+- Mobile role gate: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-role-gate-round2.jpg`
+- Mobile role menu: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-role-menu-round2.jpg`
+- Mobile navigation: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-navigation-round2.jpg`
+- Mobile assistant: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-assistant-round2.jpg`
+- Mobile financial section: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-finance-round2.jpg`
 
-### Viewport and normalization
+### Viewports and normalization
 
-- Source pixels: 2286 × 778.
-- Desktop implementation pixels and CSS viewport: 1280 × 720 at 1× capture density.
-- Full-view comparison: each image was aspect-fit and padded to 1200 × 720, then placed side-by-side in a 2400 × 720 canvas. The reference is an information-architecture flow, not a pixel-level page mock, so the comparison evaluates the role-first hierarchy and state model rather than literal component styling.
-- Mobile implementation pixels and CSS viewport: 390 × 844 at 1× capture density.
-- State: first-entry role question with all five paths visible; remembered Family role is shown in the persistent role switcher. The role selection is skippable, remembered, and switchable.
+- Role-flow source: 2286 × 778 pixels.
+- Organisation-chart source: 1024 × 724 pixels.
+- Desktop implementation: 1280 × 800 CSS pixels at 1× capture density.
+- Mobile implementation: 390 × 844 CSS pixels at 1× capture density.
+- Role-flow comparison: the source was aspect-fit and padded to 1280 × 800; the implementation was captured at 1280 × 800; the two states were placed side-by-side.
+- Organisation-chart comparison: both states were normalized to 720 pixels high and padded to equal 1280-pixel columns before being placed side-by-side.
+- Compared role state: mandatory first-entry question with all five role choices visible and no top navigation.
+- Compared organisation state: Board & organisation section with the July 2026 chart visible inside the live page.
 
-### Full-view comparison evidence
+## Comparison judgment
 
-The combined comparison shows that the implementation preserves the source's primary sequence: arrival → “What brings you here today?” → five role choices → a remembered, switchable experience. It translates the source's role-column diagram into a working, responsive role gate while keeping the three requested global destinations in the top bar.
+The role-flow reference is an information-architecture diagram rather than a pixel-level page mock. The implementation preserves its core sequence—arrival, role question, five role paths, remembered role, and role-adaptive ordering—while applying the later requirement that selection is mandatory. The photo wall, centered single-column choices, and absence of navigation make the gate visually distinct from the site itself.
 
-### Focused-region evidence
-
-A separate source/implementation crop was not required because the source is a low-detail structural flow chart with no target typography, imagery, iconography, or mobile treatment to match. The complete 2400 × 720 comparison keeps every source label and every implemented role card legible. Responsive details were instead checked directly in the 390 × 844 role-gate, Family-home, and Profile captures listed above.
+The organisation-chart comparison confirms that the supplied July 2026 chart is reproduced as the exact source image. The implementation changes only its framing: it sits inside the About page, below the current Board directory and beneath the persistent global navigation.
 
 ## Findings
 
-- No actionable P0, P1, or P2 mismatch remains.
-- [P3] The compact mobile role chip truncates long labels such as “Family or participant.”
-  - Location: shared mobile navigation, `.nav-role`.
-  - Evidence: the 390 px capture keeps the logo, role switcher, and Menu control on one row, but the role label is ellipsized.
-  - Impact: the selected role remains understandable and the control remains usable, but a shorter mobile-only label would be slightly cleaner.
-  - Fix: optionally add a `shortLabel` value such as “Family” for the mobile navigation only.
+- No actionable P0, P1, or P2 visual or interaction issue remains.
+- [P3] Long role names are ellipsized in the 390-pixel navigation chip.
+  - Location: shared mobile navigation, `.nav-role strong`.
+  - Evidence: `team15-mobile-role-menu-round2.jpg`.
+  - Impact: the adjacent `ROLE` label stays visible and opening the control immediately reveals the full five-name list.
+  - Decision: retained to preserve comfortable logo, role, and hamburger spacing on one row.
 
 ## Required fidelity surfaces
 
-- Fonts and typography: the implementation uses a neutral sans-serif hierarchy with heavy display headlines, readable body copy, clear eyebrow labels, and stable wrapping on desktop and mobile. No broken wrapping or weight collisions remain.
-- Spacing and layout rhythm: the role gate follows the reference hierarchy, desktop cards align to a two-column grid, mobile cards collapse to one column, and the Profile hero and tabs were tightened so useful content appears earlier.
-- Colors and tokens: white, near-black, and neutral gray tokens consistently deliver the requested Notion-like visual language. Contrast remains strong for primary text and controls.
-- Image quality and asset fidelity: all visible photography and the logo are real Love 21 assets copied from the supplied archive; no placeholder, CSS-drawn, emoji, or handcrafted SVG substitutes are used.
-- Copy and content: each role has a coherent hero, CTA, and ordered module sequence. Official report links and Love 21 story/programme language are grounded in the supplied archive and official website.
-- Icons and controls: the design deliberately uses text controls and the real Love 21 logo; no missing target iconography exists in the structural reference.
-- Responsiveness and accessibility: desktop and 390 px mobile states were checked for overflow, overlap, tap-target spacing, semantic role buttons, headings, labels, and descriptive image alt text.
-
-## Open Questions
-
-- Instagram images remain visibly identified as an archive preview, with reuse rights and participant consent subject to Love 21 staff review.
+- Typography: the white, editorial layout keeps the requested Notion-like hierarchy, with compact labels, strong display headings, and legible body copy.
+- Spacing: the role gate fits all five choices at 1280 × 800 and 390 × 844; desktop and mobile navigation controls remain separated.
+- Navigation: the top-left shows only the Love 21 icon; `Taylor Ng` is absent; desktop exposes three main destinations; mobile uses an icon-only menu; the visually distinct role control is the only role switch inside the site.
+- Role gate: no top bar is rendered, no skip route is presented, and selection is required before the role-adaptive home is shown.
+- Photography: the role gate, home modules, Board directory, and community sections use real Love 21 archive photography rather than placeholders or code-drawn substitutes.
+- AI assistant: the launcher and compact panel work on desktop and mobile; the tested finance answer renders a heading, bold text, bullets, link, and tool trace.
+- Financial figures: two canvas donut charts and a two-year bar chart expose income and expenditure totals and composition, while official PDF links remain available as sources.
+- Leadership: all twelve current Board names are present; ten official portraits available in the supplied archive are displayed; the July 2026 organisation chart is reproduced from the supplied source.
+- Accessibility: semantic buttons, headings, navigation labels, descriptive image alternatives, visible focus treatment, and minimum mobile tap targets were checked.
 
 ## Comparison history
 
 ### Iteration 1 — blocked
 
-- [P2] Mobile navigation crowded the long remembered-role label against the Menu control.
-- [P2] Role selection inherited global smooth scrolling, so the page could briefly land below the hero even though the hero must appear first.
-- [P2] The Profile hero consumed too much of the first viewport before the active passport content.
+- [P2] The fifth role choice fell below the 1280 × 800 first viewport.
+- [P2] At 390 pixels, the generic mobile `.nav-menu` rule also exposed the role menu by default, causing role links to overlap the home hero.
 
 Fixes made:
 
-- Reduced the mobile role-chip width and type size while preserving the switch control.
-- Changed the post-selection jump to an immediate `scrollIntoView` state so every role begins at its hero.
-- Reduced Profile hero padding and display scale and moved the tabs closer to the identity block.
+- Tightened the role panel, heading, description, button spacing, and logo dimensions without reducing the five-choice hierarchy.
+- Restored the role menu as an independently positioned, hidden popover on mobile and revealed it only from the role button.
+- Kept the small `ROLE` label visible on mobile so the distinct control remains self-explanatory.
 
 Post-fix evidence:
 
-- `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-role-gate-final.png`
-- `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-family-final-3.png`
-- `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-profile-final.png`
+- `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-round2-fixed.png`
+- `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-home-round2-fixed.jpg`
+- `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-role-menu-round2.jpg`
+- `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-mobile-navigation-round2.jpg`
 
 ### Iteration 2 — passed
 
-The revised 390 px captures show separated persistent controls, the Family hero first after selection, and Profile content beginning within the initial screen. No actionable P0/P1/P2 issue remains.
+The post-fix desktop and mobile captures show all required role choices, isolated role and navigation menus, a usable assistant, responsive figures, current leadership content, and an exact organisation-chart asset. No actionable P0, P1, or P2 issue remains.
 
 ## Implementation checklist
 
-- [x] Five role paths are visible, remembered, switchable, and skippable.
+- [x] Five required role paths are visible, remembered, and switchable.
+- [x] No top navigation appears before role selection.
 - [x] Hero appears first for every selected role.
 - [x] Role-specific modules reuse shared sections in different orders.
-- [x] About us, Join us, and Profile remain globally available.
-- [x] Desktop and mobile layouts were visually checked.
-- [x] Existing activity, volunteer, tax, donation, and Profile Passport flows were exercised.
-- [x] JavaScript syntax and repository whitespace checks pass.
-
-## Follow-up polish
-
-- Add optional mobile-only short role labels if Love 21 prefers zero truncation in the persistent switcher.
+- [x] About us, Join us, and Profile remain globally available after selection.
+- [x] Desktop and 390-pixel mobile navigation, role switcher, and assistant were exercised.
+- [x] Financial figures, current Board list, portraits, and organisation chart were visually checked.
+- [x] AI finance Markdown output and local read-only endpoint were exercised.
+- [x] JavaScript, Python, HTTP, and repository whitespace checks pass.
 
 final result: passed
