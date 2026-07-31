@@ -1,6 +1,6 @@
 # Love 21 Part 2 API
 
-FastAPI + SQLite backend for **Disconnected Journeys / Love 21 Passport**.
+FastAPI + SQLite backend for **Disconnected Journeys / Love 21 Profile**.
 
 ## Run
 
@@ -27,7 +27,7 @@ Login: `POST /api/auth/demo-login` `{ "email": "..." }` → send `X-Demo-Token: 
 
 - `GET /api/activities` — Activity Finder filters
 - `POST /api/family/register` — register / waitlist + reminder journey event
-- `GET /api/passport` — aggregate My Love21
+- `GET /api/profile` — aggregate My Love21
 - `POST /api/achievements/goals` — member goals
 - `POST /api/impact/commitments` — start monthly gift
 - `PATCH /api/impact/commitments/{id}` — pause / change / renew

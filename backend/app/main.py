@@ -10,7 +10,7 @@ from .routers import (
     family,
     hire,
     impact,
-    passport,
+    profile,
     prefs,
     volunteers,
 )
@@ -18,7 +18,7 @@ from .seed import init_db
 
 app = FastAPI(
     title="Love 21 API",
-    description="Part 2 — Disconnected Journeys / Love 21 Passport",
+    description="Part 2 — Disconnected Journeys / Love 21 Profile",
     version="0.2.0",
 )
 
@@ -37,7 +37,7 @@ app.include_router(achievements.router)
 app.include_router(impact.router)
 app.include_router(volunteers.router)
 app.include_router(prefs.router)
-app.include_router(passport.router)
+app.include_router(profile.router)
 app.include_router(hire.router)
 
 

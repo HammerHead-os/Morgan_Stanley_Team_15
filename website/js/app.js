@@ -3,34 +3,42 @@
 (function () {
   const ROLE_KEY = "love21_role";
 
+  /* Arrival-page roles. "support" fans out into branches (donor /
+     volunteer / company) rather than being a role of its own. */
   const journeys = {
     family: {
       title: "Find a class",
       cta: "Browse classes",
       ctaHref: "pages/activity-finder.html",
-      modules: [],
       note: "Filter by age, day, language, and support need. Full classes go on a waitlist with email reminders.",
     },
-    volunteer: {
-      title: "Volunteer",
-      cta: "See open shifts",
-      ctaHref: "pages/volunteer.html",
-      modules: [],
-      note: "Most tasks are 30–90 minutes. Claim a shift, then log hours from your Passport.",
+    support: {
+      title: "Ways to support Love 21",
+      note: "Give monthly, claim a volunteer shift, or bring your company on board — pick one to see the details.",
+      branches: [
+        {
+          label: "Donor",
+          hint: "See what HKD 300 / month funds",
+          href: "pages/impact.html",
+        },
+        {
+          label: "Volunteer",
+          hint: "30–90 min tasks — claim a shift",
+          href: "pages/volunteer.html",
+        },
+        {
+          label: "Company / CSR",
+          hint: "Team days, in-kind needs, hiring",
+          href: "pages/opportunity.html",
+        },
+      ],
     },
-    donor: {
-      title: "Give monthly",
-      cta: "See what HKD 300 funds",
-      ctaHref: "pages/impact.html",
-      modules: [],
-      note: "Spend breakdown first, then set up a monthly gift you can pause or change.",
-    },
-    corporate: {
-      title: "Company / CSR",
-      cta: "See current needs",
-      ctaHref: "pages/opportunity.html",
-      modules: [],
-      note: "Team volunteering dates, in-kind requests, and hiring enquiries — not a blank contact form.",
+    curious: {
+      title: "New here? Start with the basics",
+      note: "Love 21 runs sport, nutrition, and meaningful-work programmes for the Down syndrome, autistic, and neurodiverse community in Hong Kong.",
+      cta: "About Love 21",
+      ctaHref: "pages/about.html",
+      secondary: [{ label: "Where money goes", href: "pages/transparency.html" }],
     },
   };
 
@@ -43,7 +51,7 @@
   }
 
   const L = window.Love21;
-  const onPassport = !!qs("[data-passport-root]");
+  const onProfile = !!qs("[data-profile-root]");
 
   /* Mobile nav */
   const toggle = qs(".nav-toggle");
@@ -58,7 +66,7 @@
     });
   }
 
-  /* Role chooser — preview only; does not hijack Passport session */
+  /* Role chooser — preview only; does not hijack Profile session */
   const roleGrid = qs("[data-role-grid]");
   const preview = qs("[data-journey-preview]");
   if (roleGrid && preview) {
@@ -87,18 +95,40 @@
     if (!data || !preview) return;
     const base = preview.getAttribute("data-base") || "";
     preview.classList.add("visible");
-    preview.innerHTML =
-      "<h3>" +
-      data.title +
-      '</h3><p class="muted">' +
-      data.note +
-      "</p>" +
-      '<a class="btn btn-primary" href="' +
-      base +
-      data.ctaHref +
-      '">' +
-      data.cta +
-      "</a>";
+    let html = "<h3>" + data.title + '</h3><p class="muted">' + data.note + "</p>";
+
+    if (data.branches && data.branches.length) {
+      html +=
+        '<div class="role-grid mt-1">' +
+        data.branches
+          .map(function (b) {
+            return (
+              '<a class="role-option" href="' +
+              base +
+              b.href +
+              '"><span class="role-label">' +
+              b.label +
+              '</span><span class="role-hint">' +
+              b.hint +
+              "</span></a>"
+            );
+          })
+          .join("") +
+        "</div>";
+    } else if (data.cta) {
+      html += '<div class="action-bar">';
+      html += '<a class="btn btn-primary" href="' + base + data.ctaHref + '">' + data.cta + "</a>";
+      if (data.secondary && data.secondary.length) {
+        html += data.secondary
+          .map(function (s) {
+            return '<a class="btn btn-sm" href="' + base + s.href + '">' + s.label + "</a>";
+          })
+          .join("");
+      }
+      html += "</div>";
+    }
+
+    preview.innerHTML = html;
   }
 
   /* Channel toggles → API (keep current session) */
@@ -207,13 +237,13 @@
         if (!person) {
           person = await L.ensureLogin("carer@chen.demo");
         }
-        const passport = await L.api("/api/passport");
-        if (!passport.family) {
-          L.showToast("This account has no household — switch to a family demo in Passport.");
+        const profile = await L.api("/api/profile");
+        if (!profile.family) {
+          L.showToast("This account has no household — switch to a family demo in Profile.");
           return;
         }
         const member =
-          passport.family.members.find(function (m) {
+          profile.family.members.find(function (m) {
             return m.role_primary === "member";
           }) || person;
         const result = await L.api("/api/family/register", {
@@ -226,13 +256,13 @@
         });
         const msg =
           result.status === "waitlist"
-            ? "Waitlist #" + result.waitlist_position + " — stamped in Passport"
-            : "Booked · " + (result.activity_title || "class") + " — stamped in Passport";
-        if (onPassport && typeof window.reloadPassport === "function") {
+            ? "Waitlist #" + result.waitlist_position + " — stamped in Profile"
+            : "Booked · " + (result.activity_title || "class") + " — stamped in Profile";
+        if (onProfile && typeof window.reloadProfile === "function") {
           L.showToast(msg);
-          window.reloadPassport();
+          window.reloadProfile();
         } else {
-          L.goToPassport("ability", msg);
+          L.goToProfile("ability", msg);
         }
         loadActivities();
       } catch (err) {
@@ -242,7 +272,7 @@
     }
 
     const claimBtn = e.target.closest("[data-claim-shift]");
-    if (claimBtn && L && !onPassport) {
+    if (claimBtn && L && !onProfile) {
       e.preventDefault();
       const shiftId = Number(claimBtn.getAttribute("data-claim-shift"));
       try {
@@ -257,7 +287,7 @@
         if (typeof window.reloadVolunteerShifts === "function") {
           window.reloadVolunteerShifts();
         }
-        L.goToPassport("contribution", msg);
+        L.goToProfile("contribution", msg);
       } catch (err) {
         L.showToast(L.friendlyError(err));
       }
@@ -281,7 +311,7 @@
             cadence: "monthly",
           },
         });
-        L.goToPassport(
+        L.goToProfile(
           "impact",
           "Monthly HKD " + c.amount_hkd + " started · badge unlocked"
         );
@@ -291,9 +321,9 @@
       return;
     }
 
-    /* Commitment manage on non-passport pages only — Passport handles its own */
+    /* Commitment manage on non-profile pages only — Profile handles its own */
     const commitAction = e.target.closest("[data-commitment-action]");
-    if (commitAction && L && !onPassport) {
+    if (commitAction && L && !onProfile) {
       e.preventDefault();
       const action = commitAction.getAttribute("data-commitment-action");
       try {
@@ -316,7 +346,7 @@
           method: "PATCH",
           body: body,
         });
-        L.goToPassport(
+        L.goToProfile(
           "impact",
           action === "pause"
             ? "Gift paused"

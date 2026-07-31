@@ -63,7 +63,7 @@
           availability: "weekends",
         },
       });
-      L.goToPassport("contribution", "Onboarding complete");
+      L.goToProfile("contribution", "Onboarding complete");
     } catch (err) {
       L.showToast(L.friendlyError(err));
     }

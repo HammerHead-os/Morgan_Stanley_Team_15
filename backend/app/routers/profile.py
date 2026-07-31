@@ -8,7 +8,7 @@ from ..labels import event_label, status_label
 from .family import _registration_out
 from .volunteers import _claim_out, _ensure_profile
 
-router = APIRouter(prefix="/api/passport", tags=["passport"])
+router = APIRouter(prefix="/api/profile", tags=["profile"])
 
 
 def _person_out(p: models.Person) -> schemas.PersonOut:
@@ -19,7 +19,7 @@ def _person_out(p: models.Person) -> schemas.PersonOut:
         role_primary=p.role_primary,
         language=p.language,
         household_id=p.household_id,
-        passport_code=p.passport_code or f"L21-{p.id:04d}",
+        profile_code=p.profile_code or f"L21-{p.id:04d}",
         issued_at=p.issued_at or p.created_at,
     )
 
@@ -67,7 +67,7 @@ def _commitment_out(c: models.DonationCommitment) -> schemas.CommitmentOut:
 
 
 def _visible_tabs(role: str) -> list[str]:
-    """Always the three passport chapters — settings live outside the tab strip."""
+    """Always the three profile chapters — settings live outside the tab strip."""
     return ["ability", "contribution", "impact"]
 
 
@@ -122,7 +122,7 @@ def _next_action(role: str, data: dict) -> schemas.NextActionOut:
             href="volunteer.html",
             tab="contribution",
         )
-    return schemas.NextActionOut(label="Open your Passport", href="#", tab=None)
+    return schemas.NextActionOut(label="Open your Profile", href="#", tab=None)
 
 
 def _match_shift(db: Session, profile: models.VolunteerProfile, claimed_ids: set):
@@ -152,8 +152,8 @@ def _match_shift(db: Session, profile: models.VolunteerProfile, claimed_ids: set
     return ranked[0] if ranked and score(ranked[0]) > -900 else None
 
 
-@router.get("", response_model=schemas.PassportOut)
-def get_passport(
+@router.get("", response_model=schemas.ProfileOut)
+def get_profile(
     person: models.Person = Depends(get_current_person),
     db: Session = Depends(get_db),
 ):
@@ -179,7 +179,7 @@ def get_passport(
             .order_by(models.Registration.created_at.desc())
             .all()
         )
-        family = schemas.FamilyPassportOut(
+        family = schemas.FamilyProfileOut(
             household_name=household.name if household else "Household",
             members=[_person_out(m) for m in members],
             registrations=[_registration_out(r) for r in regs],
@@ -218,7 +218,7 @@ def get_passport(
     )
     achievement = None
     if person.role_primary in ("family", "member"):
-        achievement = schemas.AchievementPassportOut(
+        achievement = schemas.AchievementProfileOut(
             member=_person_out(ach_member),
             achievements=[_achievement_out(a) for a in achievements],
             goals=[_goal_out(g) for g in goals],
@@ -242,7 +242,7 @@ def get_passport(
         .order_by(models.ImpactBadge.earned_at.desc())
         .all()
     )
-    impact = schemas.ImpactPassportOut(
+    impact = schemas.ImpactProfileOut(
         commitments=[_commitment_out(c) for c in commitments],
         receipts=[schemas.ReceiptOut.model_validate(r) for r in receipts],
         badges=[schemas.ImpactBadgeOut.model_validate(b) for b in badges],
@@ -267,7 +267,7 @@ def get_passport(
         claimed_ids = {c.shift_id for c in claims}
         suggested = _match_shift(db, profile, claimed_ids)
 
-    volunteer = schemas.VolunteerPassportOut(
+    volunteer = schemas.VolunteerProfileSummaryOut(
         profile=schemas.VolunteerProfileOut.model_validate(profile) if profile else None,
         claims=[_claim_out(c) for c in claims],
         suggested_next=schemas.VolunteerShiftOut.model_validate(suggested)
@@ -313,7 +313,7 @@ def get_passport(
         },
     )
 
-    return schemas.PassportOut(
+    return schemas.ProfileOut(
         person=_person_out(person),
         prefs=prefs_out,
         visible_tabs=tabs,

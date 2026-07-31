@@ -1,4 +1,4 @@
-/* 90-second mini-game — local barriers → Love 21 path */
+﻿/* 90-second mini-game â€” local barriers â†’ Love 21 path */
 
 (function () {
   const root = document.querySelector("[data-game]");
@@ -11,7 +11,7 @@
         {
           t: "They wait months with no status",
           next: 1,
-          note: "That’s the old way — word-of-mouth only.",
+          note: "Thatâ€™s the old way â€” word-of-mouth only.",
         },
         {
           t: "They filter classes online and join a waitlist with reminders",
@@ -22,12 +22,12 @@
       ],
     },
     {
-      q: "An office wants to “do CSR” this quarter. What’s the useful move?",
+      q: "An office wants to â€œdo CSRâ€ this quarter. Whatâ€™s the useful move?",
       choices: [
         {
           t: "Share a sad post and a donate link",
           next: 2,
-          note: "That doesn’t create ongoing work for members.",
+          note: "That doesnâ€™t create ongoing work for members.",
         },
         {
           t: "Book a member-led kitchen or yoga session for the team",
@@ -41,7 +41,7 @@
       q: "Someone has 20 free minutes on the MTR. How do they help?",
       choices: [
         {
-          t: "Promise an all-day Saturday shift they can’t keep",
+          t: "Promise an all-day Saturday shift they canâ€™t keep",
           next: 3,
           note: "Long shifts scare busy Hongkongers off.",
         },
@@ -77,17 +77,17 @@
   function render() {
     if (i === "end" || i >= steps.length) {
       root.innerHTML =
-        '<p class="game-progress">Done · ' +
+        '<p class="game-progress">Done Â· ' +
         score +
         "/" +
         steps.length +
         " capability moves</p>" +
-        "<h3>You’re through the barriers</h3>" +
-        "<p class=\"muted\">Pick a real next step — hire talent, claim a task, or give with tax math.</p>" +
+        "<h3>Youâ€™re through the barriers</h3>" +
+        "<p class=\"muted\">Pick a real next step â€” hire talent, claim a task, or give with tax math.</p>" +
         '<div class="game-choices">' +
-        '<a class="btn btn-primary" href="../index.html#marketplace">Hire a creator</a>' +
+        '<a class="btn btn-primary" href="explore.html#marketplace">Hire a creator</a>' +
         '<a class="btn btn-mint" href="volunteer.html">15-min task</a>' +
-        '<a class="btn btn-yellow" href="impact.html">Give · tax saver</a>' +
+        '<a class="btn btn-yellow" href="impact.html">Give Â· tax saver</a>' +
         "</div>";
       return;
     }

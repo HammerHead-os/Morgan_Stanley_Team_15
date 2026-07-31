@@ -24,7 +24,7 @@
           method: "POST",
           body: { creator_label: label },
         });
-        L.goToPassport("impact", "Hire enquiry sent for " + label);
+        L.goToProfile("impact", "Hire enquiry sent for " + label);
       } catch (err) {
         toast(L.friendlyError(err));
       }
@@ -61,7 +61,7 @@
       .catch(function () {
         taskBox.innerHTML =
           '<div class="task"><div><h3>Cantonese flyer check</h3><p>45 min · start the API to claim live.</p></div>' +
-          '<a class="btn btn-sm btn-mint" href="pages/volunteer.html">Open tasks</a></div>';
+          '<a class="btn btn-sm btn-mint" href="volunteer.html">Open tasks</a></div>';
       });
   }
 

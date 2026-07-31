@@ -15,7 +15,7 @@ class PersonOut(OrmModel):
     role_primary: str
     language: str
     household_id: Optional[int] = None
-    passport_code: str = ""
+    profile_code: str = ""
     issued_at: Optional[datetime] = None
 
 
@@ -240,40 +240,40 @@ class NextActionOut(BaseModel):
     tab: Optional[str] = None
 
 
-class FamilyPassportOut(BaseModel):
+class FamilyProfileOut(BaseModel):
     household_name: str
     members: list[PersonOut]
     registrations: list[RegistrationOut]
 
 
-class AchievementPassportOut(BaseModel):
+class AchievementProfileOut(BaseModel):
     member: PersonOut
     achievements: list[AchievementOut]
     goals: list[GoalOut]
 
 
-class ImpactPassportOut(BaseModel):
+class ImpactProfileOut(BaseModel):
     commitments: list[CommitmentOut]
     receipts: list[ReceiptOut]
     badges: list[ImpactBadgeOut] = []
     programmes_pct: float = 74.6
 
 
-class VolunteerPassportOut(BaseModel):
+class VolunteerProfileSummaryOut(BaseModel):
     profile: Optional[VolunteerProfileOut] = None
     claims: list[ClaimOut]
     suggested_next: Optional[VolunteerShiftOut] = None
 
 
-class PassportOut(BaseModel):
+class ProfileOut(BaseModel):
     person: PersonOut
     prefs: PrefsOut
     visible_tabs: list[str]
     home_tab: str = "ability"
     next_action: NextActionOut
-    family: Optional[FamilyPassportOut] = None
-    achievement: Optional[AchievementPassportOut] = None
-    impact: ImpactPassportOut
-    volunteer: VolunteerPassportOut
+    family: Optional[FamilyProfileOut] = None
+    achievement: Optional[AchievementProfileOut] = None
+    impact: ImpactProfileOut
+    volunteer: VolunteerProfileSummaryOut
     journey_events: list[JourneyEventOut] = []
     hire_enquiries: list[HireOut] = []

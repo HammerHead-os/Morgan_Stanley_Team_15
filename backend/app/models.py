@@ -27,7 +27,7 @@ class Person(Base):
     # family (carer) | member | donor | volunteer | corporate
     language: Mapped[str] = mapped_column(String(20), default="both")
     phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
-    passport_code: Mapped[str] = mapped_column(String(32), unique=True)
+    profile_code: Mapped[str] = mapped_column(String(32), unique=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

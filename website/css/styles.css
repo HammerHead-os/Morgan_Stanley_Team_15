@@ -1,4 +1,4 @@
-/* Love 21 — awake, warm, clear · Passport-centred */
+/* Love 21 — awake, warm, clear · Profile-centred */
 
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap");
 
@@ -326,7 +326,7 @@ p {
   padding: 3rem 0;
 }
 
-.section-passport {
+.section-profile {
   position: relative;
   background:
     linear-gradient(120deg, rgba(13, 124, 107, 0.12), transparent 40%),
@@ -337,7 +337,7 @@ p {
   overflow: hidden;
 }
 
-.section-passport::before {
+.section-profile::before {
   content: "";
   position: absolute;
   width: 280px;
@@ -512,8 +512,8 @@ p {
   display: none;
 }
 
-/* ——— Passport ——— */
-.passport-intro {
+/* ——— Profile ——— */
+.profile-intro {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   gap: 2.5rem;
@@ -523,17 +523,17 @@ p {
 }
 
 @media (max-width: 800px) {
-  .passport-intro {
+  .profile-intro {
     grid-template-columns: 1fr;
   }
 }
 
-.passport-pillars {
+.profile-pillars {
   display: grid;
   gap: 0.7rem;
 }
 
-.passport-pillar {
+.profile-pillar {
   display: block;
   padding: 1.15rem 1.3rem;
   background: var(--white);
@@ -544,22 +544,22 @@ p {
   transition: transform 0.25s, box-shadow var(--ease), border-color var(--ease);
 }
 
-.passport-pillar:nth-child(2) {
+.profile-pillar:nth-child(2) {
   border-left-color: var(--gold);
 }
-.passport-pillar:nth-child(3) {
+.profile-pillar:nth-child(3) {
   border-left-color: var(--coral);
 }
-.passport-pillar:nth-child(4) {
+.profile-pillar:nth-child(4) {
   border-left-color: var(--sky);
 }
 
-.passport-pillar:hover {
+.profile-pillar:hover {
   transform: translateX(6px);
   box-shadow: var(--lift);
 }
 
-.passport-pillar strong {
+.profile-pillar strong {
   display: block;
   font-family: var(--font-display);
   font-size: 1.25rem;
@@ -567,7 +567,7 @@ p {
   margin-bottom: 0.15rem;
 }
 
-.passport-pillar span {
+.profile-pillar span {
   font-size: 0.9rem;
   color: var(--ink-soft);
   font-weight: 500;
@@ -843,15 +843,15 @@ p {
   color: var(--ink-soft);
 }
 
-/* ——— Passport page ——— */
-.passport-hero {
+/* ——— Profile page ——— */
+.profile-hero {
   padding: 3.5rem 0 2rem;
   background:
     linear-gradient(120deg, rgba(13, 124, 107, 0.1), transparent 50%),
     linear-gradient(to bottom, #e6f5f1, transparent);
 }
 
-.passport-cover {
+.profile-cover {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 1.5rem;
@@ -867,7 +867,7 @@ p {
   overflow: hidden;
 }
 
-.passport-cover::after {
+.profile-cover::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -879,12 +879,12 @@ p {
   pointer-events: none;
 }
 
-.passport-cover-inner {
+.profile-cover-inner {
   position: relative;
   z-index: 1;
 }
 
-.passport-cover-eyebrow {
+.profile-cover-eyebrow {
   margin: 0 0 0.35rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -893,13 +893,13 @@ p {
   color: rgba(247, 243, 235, 0.72);
 }
 
-.passport-cover h1 {
+.profile-cover h1 {
   font-size: clamp(2rem, 4.5vw, 2.85rem);
   color: #f7f3eb;
   margin: 0;
 }
 
-.passport-id {
+.profile-id {
   margin: 0.65rem 0 0;
   font-family: var(--font-display);
   font-size: 1.15rem;
@@ -907,13 +907,13 @@ p {
   letter-spacing: 0.04em;
 }
 
-.passport-issued {
+.profile-issued {
   margin: 0.35rem 0 0;
   font-size: 0.88rem;
   color: rgba(247, 243, 235, 0.7);
 }
 
-.passport-cover-actions {
+.profile-cover-actions {
   position: relative;
   z-index: 1;
   display: grid;
@@ -921,7 +921,7 @@ p {
   justify-items: center;
 }
 
-.passport-cover-stamp {
+.profile-cover-stamp {
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 50%;
@@ -982,7 +982,7 @@ p {
   font-size: 1.35rem;
 }
 
-.passport-flash {
+.profile-flash {
   margin: 1rem 0 0;
   padding: 0.75rem 1rem;
   border-radius: 12px;
@@ -994,7 +994,7 @@ p {
   animation: rise 0.4s var(--ease) both;
 }
 
-.passport-next {
+.profile-next {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1002,18 +1002,18 @@ p {
   margin-top: 1.1rem;
 }
 
-.passport-demo {
+.profile-demo {
   max-width: 22rem;
   font-size: 0.88rem;
   color: var(--ink-soft);
 }
 
-.passport-demo summary {
+.profile-demo summary {
   cursor: pointer;
   font-weight: 600;
 }
 
-.passport-demo select {
+.profile-demo select {
   display: block;
   margin-top: 0.5rem;
   width: 100%;
@@ -1023,7 +1023,7 @@ p {
   background: var(--white);
 }
 
-.passport-chapters {
+.profile-chapters {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.65rem;
@@ -1032,12 +1032,12 @@ p {
 }
 
 @media (max-width: 640px) {
-  .passport-chapters {
+  .profile-chapters {
     grid-template-columns: 1fr;
   }
 }
 
-.passport-chapter {
+.profile-chapter {
   appearance: none;
   border: 1px solid var(--line);
   background: var(--white);
@@ -1051,36 +1051,36 @@ p {
   box-shadow: 0 4px 14px rgba(20, 35, 31, 0.04);
 }
 
-.passport-chapter:hover {
+.profile-chapter:hover {
   transform: translateY(-2px);
   border-color: var(--teal);
 }
 
-.passport-chapter.active {
+.profile-chapter.active {
   border-color: var(--coral);
   box-shadow: 0 0 0 3px rgba(232, 93, 76, 0.15);
   background: linear-gradient(180deg, #fff8f6, var(--white));
 }
 
-.passport-chapter.is-yours .passport-chapter-tag {
+.profile-chapter.is-yours .profile-chapter-tag {
   display: inline-block;
 }
 
-.passport-chapter-num {
+.profile-chapter-num {
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   color: var(--ink-soft);
 }
 
-.passport-chapter-label {
+.profile-chapter-label {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--ink);
 }
 
-.passport-chapter-tag {
+.profile-chapter-tag {
   display: none;
   width: fit-content;
   margin-top: 0.25rem;
@@ -1117,7 +1117,7 @@ p {
 }
 
 /* legacy pill tabs kept for safety */
-.passport-tabs {
+.profile-tabs {
   display: none;
 }
 
@@ -1214,7 +1214,7 @@ p {
   margin-top: 1rem;
 }
 
-.passport-tabs {
+.profile-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
@@ -1228,7 +1228,7 @@ p {
   max-width: 100%;
 }
 
-.passport-tab {
+.profile-tab {
   appearance: none;
   border: none;
   background: transparent;
@@ -1241,17 +1241,17 @@ p {
   transition: background var(--ease), color var(--ease);
 }
 
-.passport-tab.active {
+.profile-tab.active {
   background: linear-gradient(135deg, var(--coral), #d94a3a);
   color: var(--white);
 }
 
-.passport-panel {
+.profile-panel {
   display: none;
   animation: rise 0.4s var(--ease) both;
 }
 
-.passport-panel.active {
+.profile-panel.active {
   display: block;
 }
 

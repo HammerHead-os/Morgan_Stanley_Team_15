@@ -50,7 +50,7 @@
           cadence: "monthly",
         },
       });
-      L.goToPassport(
+      L.goToProfile(
         "impact",
         method + " · HKD " + amount + "/mo started · badge unlocked"
       );

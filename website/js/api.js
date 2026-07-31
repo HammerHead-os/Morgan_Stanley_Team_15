@@ -1,4 +1,4 @@
-/* Love 21 API client — Passport backend */
+/* Love 21 API client — Profile backend */
 
 (function (global) {
   const TOKEN_KEY = "love21_token";
@@ -109,19 +109,19 @@
     return data.person;
   }
 
-  function passportHref(hash) {
+  function profileHref(hash) {
     const inPages = /\/pages\//.test(location.pathname);
-    const base = inPages ? "my-love21.html" : "pages/my-love21.html";
+    const base = inPages ? "profile.html" : "pages/profile.html";
     return base + (hash ? "#" + hash.replace(/^#/, "") : "");
   }
 
-  function goToPassport(hash, flash) {
+  function goToProfile(hash, flash) {
     if (flash) {
       try {
         sessionStorage.setItem("love21_flash", flash);
       } catch (e) {}
     }
-    location.href = passportHref(hash);
+    location.href = profileHref(hash);
   }
 
   function showToast(msg) {
@@ -156,8 +156,8 @@
     demoLogin: demoLogin,
     ensureLogin: ensureLogin,
     showToast: showToast,
-    goToPassport: goToPassport,
-    passportHref: passportHref,
+    goToProfile: goToProfile,
+    profileHref: profileHref,
     friendlyError: friendlyError,
   };
 })(window);

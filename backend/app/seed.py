@@ -21,7 +21,7 @@ def seed(db: Session) -> None:
         role_primary="family",
         language="both",
         household_id=household.id,
-        passport_code="L21-HK-1001",
+        profile_code="L21-HK-1001",
     )
     member = models.Person(
         email="alex@chen.demo",
@@ -29,21 +29,21 @@ def seed(db: Session) -> None:
         role_primary="member",
         language="yue",
         household_id=household.id,
-        passport_code="L21-HK-1002",
+        profile_code="L21-HK-1002",
     )
     donor = models.Person(
         email="donor@demo.love21",
         name="Sam Wong",
         role_primary="donor",
         language="en",
-        passport_code="L21-HK-2001",
+        profile_code="L21-HK-2001",
     )
     volunteer = models.Person(
         email="volunteer@demo.love21",
         name="Taylor Ng",
         role_primary="volunteer",
         language="both",
-        passport_code="L21-HK-3001",
+        profile_code="L21-HK-3001",
     )
     db.add_all([carer, member, donor, volunteer])
     db.flush()

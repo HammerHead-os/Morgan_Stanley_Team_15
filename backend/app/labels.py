@@ -1,4 +1,4 @@
-"""Shared label helpers for human-readable Passport statuses."""
+"""Shared label helpers for human-readable Profile statuses."""
 
 STATUS_LABELS = {
     "registered": "Booked",

@@ -1,8 +1,8 @@
-/* Love 21 Passport — three chapters; preferences off to the side */
+/* Love 21 Profile — three chapters; preferences off to the side */
 
 (function () {
   const L = window.Love21;
-  if (!L || !document.querySelector("[data-passport-root]")) return;
+  if (!L || !document.querySelector("[data-profile-root]")) return;
 
   const TAB_META = {
     ability: { label: "Ability", chapter: "01" },
@@ -17,7 +17,7 @@
     volunteer: "contribution",
   };
 
-  let passportData = null;
+  let profileData = null;
 
   function escapeHtml(s) {
     return String(s || "")
@@ -67,17 +67,17 @@
   }
 
   function activateTab(id) {
-    const tabs = document.querySelectorAll("[data-passport-tab]");
-    const panels = document.querySelectorAll("[data-passport-panel]");
+    const tabs = document.querySelectorAll("[data-profile-tab]");
+    const panels = document.querySelectorAll("[data-profile-panel]");
     let found = false;
     tabs.forEach(function (t) {
-      const on = t.getAttribute("data-passport-tab") === id;
+      const on = t.getAttribute("data-profile-tab") === id;
       t.classList.toggle("active", on);
       t.setAttribute("aria-selected", on ? "true" : "false");
       if (on) found = true;
     });
     panels.forEach(function (p) {
-      const on = p.getAttribute("data-passport-panel") === id;
+      const on = p.getAttribute("data-profile-panel") === id;
       p.classList.toggle("active", on);
       p.hidden = !on;
     });
@@ -88,35 +88,35 @@
     const list = document.querySelector("[data-tablist]");
     if (!list) return;
     const role =
-      (passportData && passportData.person && passportData.person.role_primary) ||
+      (profileData && profileData.person && profileData.person.role_primary) ||
       "";
     list.innerHTML = visible
       .map(function (id) {
         const meta = TAB_META[id] || { label: id, chapter: "" };
         const mine = ownsChapter(role, id);
         return (
-          '<button type="button" class="passport-chapter' +
+          '<button type="button" class="profile-chapter' +
           (mine ? " is-yours" : "") +
-          '" role="tab" data-passport-tab="' +
+          '" role="tab" data-profile-tab="' +
           id +
           '" aria-selected="false" aria-controls="panel-' +
           id +
           '">' +
-          '<span class="passport-chapter-num">' +
+          '<span class="profile-chapter-num">' +
           escapeHtml(meta.chapter) +
           "</span>" +
-          '<span class="passport-chapter-label">' +
+          '<span class="profile-chapter-label">' +
           escapeHtml(meta.label) +
           "</span>" +
-          (mine ? '<span class="passport-chapter-tag">Yours</span>' : "") +
+          (mine ? '<span class="profile-chapter-tag">Yours</span>' : "") +
           "</button>"
         );
       })
       .join("");
 
-    list.querySelectorAll("[data-passport-tab]").forEach(function (tab) {
+    list.querySelectorAll("[data-profile-tab]").forEach(function (tab) {
       tab.addEventListener("click", function () {
-        activateTab(tab.getAttribute("data-passport-tab"));
+        activateTab(tab.getAttribute("data-profile-tab"));
       });
     });
 
@@ -144,7 +144,7 @@
     const roleEl = document.querySelector("[data-cover-role]");
     const issuedEl = document.querySelector("[data-cover-issued]");
     if (nameEl) nameEl.textContent = p.name;
-    if (codeEl) codeEl.textContent = p.passport_code || "L21-" + p.id;
+    if (codeEl) codeEl.textContent = p.profile_code || "L21-" + p.id;
     if (roleEl) roleEl.textContent = " · " + roleLabel(p.role_primary);
     if (issuedEl) issuedEl.textContent = fmtDate(p.issued_at);
   }
@@ -176,7 +176,7 @@
     if (!ownsChapter(role, "ability") || !data.family) {
       el.innerHTML = emptyChapter(
         "Ability chapter",
-        "Classes, waitlists, and session notes live here. Open a family demo account to see a filled Ability Passport — or browse classes to start one.",
+        "Classes, waitlists, and session notes live here. Open a family demo account to see a filled Ability Profile — or browse classes to start one.",
         "activity-finder.html",
         "Browse classes"
       );
@@ -529,13 +529,13 @@
       "</div>";
   }
 
-  async function reloadPassport() {
+  async function reloadProfile() {
     try {
       if (!L.getPerson() || !L.getToken()) {
         await L.ensureLogin("carer@chen.demo");
       }
-      const data = await L.api("/api/passport");
-      passportData = data;
+      const data = await L.api("/api/profile");
+      profileData = data;
       renderCover(data);
       const home =
         data.home_tab ||
@@ -561,18 +561,18 @@
       }
     } catch (err) {
       const cover = document.querySelector("[data-cover-name]");
-      if (cover) cover.textContent = "Passport offline";
+      if (cover) cover.textContent = "Profile offline";
       L.showToast(L.friendlyError(err));
     }
   }
 
-  window.reloadPassport = reloadPassport;
+  window.reloadProfile = reloadProfile;
 
   try {
     const flash = sessionStorage.getItem("love21_flash");
     if (flash) {
       sessionStorage.removeItem("love21_flash");
-      const el = document.querySelector("[data-passport-flash]");
+      const el = document.querySelector("[data-profile-flash]");
       if (el) {
         el.hidden = false;
         el.textContent = flash;
@@ -603,7 +603,7 @@
       try {
         await L.demoLogin(select.value);
         setPrefsOpen(false);
-        await reloadPassport();
+        await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
       }
@@ -618,9 +618,9 @@
       if (!title.trim()) return;
       try {
         const memberId =
-          (passportData &&
-            passportData.achievement &&
-            passportData.achievement.member.id) ||
+          (profileData &&
+            profileData.achievement &&
+            profileData.achievement.member.id) ||
           L.getPerson().id;
         await L.api("/api/achievements/goals", {
           method: "POST",
@@ -628,7 +628,7 @@
         });
         goalForm.reset();
         L.showToast("Goal saved — coach review next");
-        await reloadPassport();
+        await reloadProfile();
         activateTab("ability");
       } catch (err) {
         L.showToast(L.friendlyError(err));
@@ -648,7 +648,7 @@
           body: { feedback: text.trim() },
         });
         L.showToast("Feedback saved — stamped on your journey");
-        await reloadPassport();
+        await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
       }
@@ -667,7 +667,7 @@
           body: { reflection: reflection.trim() },
         });
         L.showToast("Shift complete — hours logged");
-        await reloadPassport();
+        await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
       }
@@ -684,7 +684,7 @@
         body: { share_consent: !!consent.checked },
       });
       L.showToast(consent.checked ? "Sharing on" : "Sharing off");
-      await reloadPassport();
+      await reloadProfile();
     } catch (err) {
       consent.checked = !consent.checked;
       L.showToast(L.friendlyError(err));
@@ -693,7 +693,7 @@
 
   document.addEventListener("click", async function (e) {
     const claimBtn = e.target.closest("[data-claim-shift]");
-    if (claimBtn && L && document.querySelector("[data-passport-root]")) {
+    if (claimBtn && L && document.querySelector("[data-profile-root]")) {
       e.preventDefault();
       e.stopPropagation();
       const shiftId = Number(claimBtn.getAttribute("data-claim-shift"));
@@ -703,7 +703,7 @@
           body: { shift_id: shiftId },
         });
         L.showToast("Shift claimed");
-        await reloadPassport();
+        await reloadProfile();
         activateTab("contribution");
       } catch (err) {
         L.showToast(L.friendlyError(err));
@@ -748,12 +748,12 @@
               ? "Gift active again"
               : "Fund updated"
         );
-        await reloadPassport();
+        await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
       }
     }
   });
 
-  reloadPassport();
+  reloadProfile();
 })();
