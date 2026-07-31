@@ -277,3 +277,29 @@ class ProfileOut(BaseModel):
     volunteer: VolunteerProfileSummaryOut
     journey_events: list[JourneyEventOut] = []
     hire_enquiries: list[HireOut] = []
+
+
+class AgentMessageIn(BaseModel):
+    role: str = Field(pattern="^(user|assistant)$")
+    content: str = Field(min_length=1, max_length=4000)
+
+
+class AgentChatIn(BaseModel):
+    role: str = Field(default="curious", max_length=40)
+    messages: list[AgentMessageIn] = Field(min_length=1, max_length=20)
+
+
+class AgentToolTrace(BaseModel):
+    name: str
+    result_count: int = 0
+
+
+class AgentChatOut(BaseModel):
+    answer: str
+    provider: str = "local-tool-demo"
+    configured: bool = False
+    tools: list[AgentToolTrace] = Field(default_factory=list)
+    notice: str = (
+        "This local demo uses the same read-only database queries that can be "
+        "connected to a hosted language model later."
+    )

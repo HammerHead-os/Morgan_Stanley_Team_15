@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from .routers import (
+    agent,
     achievements,
     activities,
     auth,
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(agent.router)
 app.include_router(activities.router)
 app.include_router(family.router)
 app.include_router(achievements.router)

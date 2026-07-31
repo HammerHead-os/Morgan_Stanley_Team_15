@@ -216,6 +216,209 @@
     });
   }
 
+  renderAssistant();
+
+  function renderAssistant() {
+    if (!L || qs("[data-agent-dock]")) return;
+    const inPages = /\/pages\//.test(location.pathname);
+    const assetPrefix = inPages ? "../" : "";
+    const dock = document.createElement("aside");
+    dock.className = "agent-dock";
+    dock.setAttribute("data-agent-dock", "");
+    dock.innerHTML =
+      '<button class="agent-launcher" type="button" aria-expanded="false">' +
+      '<img src="' +
+      assetPrefix +
+      'assets/media/love21-logo.png" alt="" />' +
+      "<span><strong>Ask Love 21</strong><small>Programmes, impact and reports</small></span>" +
+      "</button>" +
+      '<section class="agent-window" hidden aria-label="Love 21 assistant">' +
+      '<header class="agent-window-header"><div><span>Read-only assistant</span>' +
+      "<strong>Ask Love 21</strong></div>" +
+      '<button type="button" data-agent-close>Close</button></header>' +
+      '<div class="agent-suggestions" aria-label="Suggested questions">' +
+      '<button type="button">What programmes are available?</button>' +
+      '<button type="button">Show the 2024-2025 financial overview.</button>' +
+      '<button type="button">Who is on the Board of Directors?</button></div>' +
+      '<div class="agent-messages" data-agent-messages aria-live="polite"></div>' +
+      '<form class="agent-form" data-agent-form><label class="sr-only" for="agent-question">' +
+      "Ask a question</label><textarea id=\"agent-question\" rows=\"2\" " +
+      'placeholder="Ask about Love 21…" maxlength="1000"></textarea>' +
+      '<button type="submit">Ask</button></form>' +
+      '<p class="agent-note">Public, read-only demo using the foundation database.</p>' +
+      "</section>";
+    document.body.appendChild(dock);
+
+    const launcher = qs(".agent-launcher", dock);
+    const windowPanel = qs(".agent-window", dock);
+    const close = qs("[data-agent-close]", dock);
+    const form = qs("[data-agent-form]", dock);
+    const input = qs("textarea", form);
+    const messagesRoot = qs("[data-agent-messages]", dock);
+    const submit = qs('button[type="submit"]', form);
+    const messages = [
+      {
+        role: "assistant",
+        content:
+          "## How can I help?\n\nAsk about **programmes**, **impact**, **finances**, volunteering, or leadership.",
+      },
+    ];
+
+    function setOpen(open) {
+      windowPanel.hidden = !open;
+      launcher.hidden = open;
+      launcher.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) input.focus();
+    }
+
+    launcher.addEventListener("click", function () {
+      setOpen(true);
+    });
+    close.addEventListener("click", function () {
+      setOpen(false);
+    });
+
+    qsa(".agent-suggestions button", dock).forEach(function (button) {
+      button.addEventListener("click", function () {
+        input.value = button.textContent;
+        form.requestSubmit();
+      });
+    });
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      const content = input.value.trim();
+      if (!content || submit.disabled) return;
+      messages.push({ role: "user", content: content });
+      input.value = "";
+      submit.disabled = true;
+      renderMessages(messagesRoot, messages, true);
+      try {
+        const payload = await L.api("/api/agent/chat", {
+          method: "POST",
+          body: {
+            role: localStorage.getItem(ROLE_KEY) || "curious",
+            messages: messages.slice(-12),
+          },
+        });
+        messages.push({
+          role: "assistant",
+          content: payload.answer,
+          tools: payload.tools || [],
+        });
+      } catch (error) {
+        messages.push({
+          role: "assistant",
+          content:
+            "## I could not reach the assistant\n\nPlease try again, or use the navigation above to explore Love 21 directly.",
+        });
+      } finally {
+        submit.disabled = false;
+        renderMessages(messagesRoot, messages, false);
+        messagesRoot.scrollTop = messagesRoot.scrollHeight;
+      }
+    });
+
+    renderMessages(messagesRoot, messages, false);
+  }
+
+  function renderMessages(root, messages, waiting) {
+    root.innerHTML = messages
+      .map(function (message) {
+        const content =
+          message.role === "assistant"
+            ? renderMarkdown(message.content)
+            : "<p>" + escapeHtml(message.content) + "</p>";
+        const trace =
+          message.tools && message.tools.length
+            ? '<div class="agent-tool-trace">' +
+              message.tools
+                .map(function (tool) {
+                  return (
+                    "<span>" +
+                    escapeHtml(tool.name.replace(/_/g, " ")) +
+                    " · " +
+                    Number(tool.result_count || 0) +
+                    " results</span>"
+                  );
+                })
+                .join("") +
+              "</div>"
+            : "";
+        return (
+          '<article class="agent-message ' +
+          message.role +
+          '"><small>' +
+          (message.role === "assistant" ? "Love 21 assistant" : "You") +
+          '</small><div class="agent-markdown">' +
+          content +
+          "</div>" +
+          trace +
+          "</article>"
+        );
+      })
+      .join("");
+    if (waiting) {
+      root.insertAdjacentHTML(
+        "beforeend",
+        '<article class="agent-message assistant waiting"><small>Love 21 assistant</small>' +
+          "<p>Checking the allowed public data…</p></article>"
+      );
+    }
+  }
+
+  function renderMarkdown(markdown) {
+    const lines = String(markdown || "").split(/\r?\n/);
+    const html = [];
+    let listOpen = false;
+    let paragraph = [];
+
+    function inline(text) {
+      return escapeHtml(text)
+        .replace(
+          /\[([^\]]+)\]\(((?:https?:\/\/|\/)[^)]+)\)/g,
+          '<a href="$2">$1</a>'
+        )
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    }
+
+    function flushParagraph() {
+      if (!paragraph.length) return;
+      html.push("<p>" + paragraph.map(inline).join("<br />") + "</p>");
+      paragraph = [];
+    }
+
+    lines.forEach(function (line) {
+      if (/^##\s+/.test(line)) {
+        flushParagraph();
+        if (listOpen) {
+          html.push("</ul>");
+          listOpen = false;
+        }
+        html.push("<h3>" + inline(line.replace(/^##\s+/, "")) + "</h3>");
+      } else if (/^-\s+/.test(line)) {
+        flushParagraph();
+        if (!listOpen) {
+          html.push("<ul>");
+          listOpen = true;
+        }
+        html.push("<li>" + inline(line.replace(/^-\s+/, "")) + "</li>");
+      } else if (!line.trim()) {
+        flushParagraph();
+        if (listOpen) {
+          html.push("</ul>");
+          listOpen = false;
+        }
+      } else {
+        paragraph.push(line);
+      }
+    });
+    flushParagraph();
+    if (listOpen) html.push("</ul>");
+    return html.join("");
+  }
+
   const roleGrid = qs("[data-role-grid]");
   const roleGate = qs("[data-role-gate]");
   const roleHome = qs("[data-role-home]");
