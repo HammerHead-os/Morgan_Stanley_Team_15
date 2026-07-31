@@ -1,140 +1,307 @@
-from typing import List, Dict, Any, Optional
-from db_supabase import supabase
+from __future__ import annotations
 
-# ==============================================================================
-# PARTICIPANTS QUERIES
-# ==============================================================================
+from collections import Counter
+from decimal import Decimal
+from typing import Any
+
+from fastapi.encoders import jsonable_encoder
+
+from .db_supabase import supabase
+
+Row = dict[str, Any]
 
 
-def get_participant_by_auth(auth_id: str) -> Optional[Dict[str, Any]]:
-    """Fetch a participant profile using their Supabase auth_id."""
-    response = (
-        supabase.table("participants").select("*").eq("auth_id", auth_id).execute()
+class SupabaseBackendError(RuntimeError):
+    """Wrap Supabase client errors so routers can return a clean API response."""
+
+
+def _execute(query: Any) -> list[Row]:
+    try:
+        response = query.execute()
+    except Exception as exc:  # Supabase/postgrest exception classes vary by version.
+        raise SupabaseBackendError(str(exc)) from exc
+    return response.data or []
+
+
+def _payload(data: Row, *, drop_none: bool = False) -> Row:
+    encoded = jsonable_encoder(data)
+    if drop_none:
+        return {key: value for key, value in encoded.items() if value is not None}
+    return encoded
+
+
+def _first(rows: list[Row]) -> Row | None:
+    return rows[0] if rows else None
+
+
+def _get_by_id(table: str, row_id: str) -> Row | None:
+    return _first(_execute(supabase.table(table).select("*").eq("id", row_id).limit(1)))
+
+
+def _insert(table: str, data: Row) -> Row:
+    return _first(_execute(supabase.table(table).insert(_payload(data, drop_none=True)))) or {}
+
+
+def _update(table: str, row_id: str, data: Row) -> Row | None:
+    rows = _execute(
+        supabase.table(table).update(_payload(data)).eq("id", row_id)
     )
-    return response.data[0] if response.data else None
+    return _first(rows)
 
 
-def create_participant(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Create a new participant.
-    Expected keys: auth_id, name, country, home_district, family_members (list of dicts), etc.
-    """
-    response = supabase.table("participants").insert(data).execute()
-    return response.data[0] if response.data else {}
+def _delete(table: str, row_id: str) -> Row | None:
+    return _first(_execute(supabase.table(table).delete().eq("id", row_id)))
 
 
-def get_participant_activities(participant_id: str) -> List[Dict[str, Any]]:
-    """Fetch all activities joined by a specific participant."""
-    response = (
-        supabase.table("participant_activities")
-        .select("*")
-        .eq("participant_id", participant_id)
-        .execute()
+def _list(table: str, *, order: str = "created_at", desc: bool = True, **filters: Any) -> list[Row]:
+    query = supabase.table(table).select("*")
+    for key, value in filters.items():
+        if value is not None:
+            query = query.eq(key, str(value))
+    return _execute(query.order(order, desc=desc))
+
+
+def _sum_money(rows: list[Row], key: str) -> str:
+    total = sum(Decimal(str(row.get(key) or 0)) for row in rows)
+    return f"{total:.2f}"
+
+
+def _refresh_participant_counts(participant_id: str) -> None:
+    activities = get_participant_activities(participant_id)
+    programmes = {row["programme_type"] for row in activities if row.get("programme_type")}
+    supabase.table("participants").update(
+        {
+            "activities_joined_count": len(activities),
+            "programmes_explored_count": len(programmes),
+        }
+    ).eq("id", participant_id).execute()
+
+
+def _refresh_volunteer_counts(volunteer_id: str) -> None:
+    activities = get_volunteer_activities(volunteer_id)
+    days = {row["event_date"] for row in activities if row.get("event_date")}
+    supabase.table("volunteers").update(
+        {
+            "activities_supported_count": len(activities),
+            "days_volunteered": len(days),
+        }
+    ).eq("id", volunteer_id).execute()
+
+
+def _refresh_donor_counts(donor_id: str) -> None:
+    records = get_donor_records(donor_id)
+    dates = {row["donation_date"] for row in records if row.get("donation_date")}
+    update: Row = {
+        "total_donated": _sum_money(records, "amount_of_money"),
+        "gifts_made_count": len(records),
+        "giving_occasions": len(dates),
+    }
+    recurring = [
+        row for row in records if str(row.get("donation_type", "")).lower() in {"monthly", "regular"}
+    ]
+    if recurring:
+        most_common_amount = Counter(
+            str(row.get("amount_of_money") or "0.00") for row in recurring
+        ).most_common(1)[0][0]
+        update["regular_donation_amount"] = most_common_amount
+    supabase.table("donors").update(update).eq("id", donor_id).execute()
+
+
+# Participant profiles and activities
+
+
+def list_participants() -> list[Row]:
+    return _list("participants", order="register_date")
+
+
+def get_participant(participant_id: str) -> Row | None:
+    return _get_by_id("participants", participant_id)
+
+
+def get_participant_by_auth(auth_id: str) -> Row | None:
+    return _first(
+        _execute(supabase.table("participants").select("*").eq("auth_id", auth_id).limit(1))
     )
-    return response.data
 
 
-def add_participant_activity(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Record a new activity for a participant.
-    Expected keys: participant_id, event_date, programme_type, event_name, family_members_joined (list of strings).
-    """
-    response = supabase.table("participant_activities").insert(data).execute()
-    return response.data[0] if response.data else {}
+def create_participant(data: Row) -> Row:
+    return _insert("participants", data)
 
 
-# ==============================================================================
-# VOLUNTEERS QUERIES
-# ==============================================================================
+def update_participant(participant_id: str, data: Row) -> Row | None:
+    return _update("participants", participant_id, data)
 
 
-def get_volunteer_by_auth(auth_id: str) -> Optional[Dict[str, Any]]:
-    """Fetch a volunteer profile using their Supabase auth_id."""
-    response = supabase.table("volunteers").select("*").eq("auth_id", auth_id).execute()
-    return response.data[0] if response.data else None
+def delete_participant(participant_id: str) -> Row | None:
+    return _delete("participants", participant_id)
 
 
-def create_volunteer(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Create a new volunteer.
-    Expected keys: auth_id, name, country, skills (list), languages (list), etc.
-    """
-    response = supabase.table("volunteers").insert(data).execute()
-    return response.data[0] if response.data else {}
-
-
-def get_volunteer_activities(volunteer_id: str) -> List[Dict[str, Any]]:
-    """Fetch all events a volunteer has supported."""
-    response = (
-        supabase.table("volunteer_activities")
-        .select("*")
-        .eq("volunteer_id", volunteer_id)
-        .execute()
+def get_participant_activities(participant_id: str) -> list[Row]:
+    return _list(
+        "participant_activities",
+        order="event_date",
+        participant_id=participant_id,
     )
-    return response.data
 
 
-def add_volunteer_activity(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Record a new volunteer shift/activity.
-    Expected keys: volunteer_id, event_date, programme_type, event_name, role_in_event.
-    """
-    response = supabase.table("volunteer_activities").insert(data).execute()
-    return response.data[0] if response.data else {}
+def add_participant_activity(data: Row) -> Row:
+    row = _insert("participant_activities", data)
+    if row.get("participant_id"):
+        _refresh_participant_counts(row["participant_id"])
+    return row
 
 
-# ==============================================================================
-# DONORS QUERIES
-# ==============================================================================
+def update_participant_activity(activity_id: str, data: Row) -> Row | None:
+    row = _update("participant_activities", activity_id, data)
+    if row and row.get("participant_id"):
+        _refresh_participant_counts(row["participant_id"])
+    return row
 
 
-def get_donor_by_auth(auth_id: str) -> Optional[Dict[str, Any]]:
-    """Fetch a donor profile using their Supabase auth_id."""
-    response = supabase.table("donors").select("*").eq("auth_id", auth_id).execute()
-    return response.data[0] if response.data else None
+def delete_participant_activity(activity_id: str) -> Row | None:
+    row = _delete("participant_activities", activity_id)
+    if row and row.get("participant_id"):
+        _refresh_participant_counts(row["participant_id"])
+    return row
 
 
-def create_donor(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Create a new donor profile.
-    Expected keys: auth_id, name, country, primary_fund, etc.
-    """
-    response = supabase.table("donors").insert(data).execute()
-    return response.data[0] if response.data else {}
+# Volunteer profiles and activities
 
 
-def get_donor_records(donor_id: str) -> List[Dict[str, Any]]:
-    """Fetch all donation histories for a specific donor."""
-    response = (
-        supabase.table("donor_records").select("*").eq("donor_id", donor_id).execute()
+def list_volunteers() -> list[Row]:
+    return _list("volunteers", order="register_date")
+
+
+def get_volunteer(volunteer_id: str) -> Row | None:
+    return _get_by_id("volunteers", volunteer_id)
+
+
+def get_volunteer_by_auth(auth_id: str) -> Row | None:
+    return _first(
+        _execute(supabase.table("volunteers").select("*").eq("auth_id", auth_id).limit(1))
     )
-    return response.data
 
 
-def add_donor_record(data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Record a new donation.
-    Expected keys: donor_id, donation_date, donation_type, amount_of_money, description.
-    """
-    response = supabase.table("donor_records").insert(data).execute()
-    return response.data[0] if response.data else {}
+def create_volunteer(data: Row) -> Row:
+    return _insert("volunteers", data)
 
 
-# ==============================================================================
-# ADMIN QUERIES
-# ==============================================================================
+def update_volunteer(volunteer_id: str, data: Row) -> Row | None:
+    return _update("volunteers", volunteer_id, data)
+
+
+def delete_volunteer(volunteer_id: str) -> Row | None:
+    return _delete("volunteers", volunteer_id)
+
+
+def get_volunteer_activities(volunteer_id: str) -> list[Row]:
+    return _list(
+        "volunteer_activities",
+        order="event_date",
+        volunteer_id=volunteer_id,
+    )
+
+
+def add_volunteer_activity(data: Row) -> Row:
+    row = _insert("volunteer_activities", data)
+    if row.get("volunteer_id"):
+        _refresh_volunteer_counts(row["volunteer_id"])
+    return row
+
+
+def update_volunteer_activity(activity_id: str, data: Row) -> Row | None:
+    row = _update("volunteer_activities", activity_id, data)
+    if row and row.get("volunteer_id"):
+        _refresh_volunteer_counts(row["volunteer_id"])
+    return row
+
+
+def delete_volunteer_activity(activity_id: str) -> Row | None:
+    row = _delete("volunteer_activities", activity_id)
+    if row and row.get("volunteer_id"):
+        _refresh_volunteer_counts(row["volunteer_id"])
+    return row
+
+
+# Donor profiles and donation records
+
+
+def list_donors() -> list[Row]:
+    return _list("donors", order="register_date")
+
+
+def get_donor(donor_id: str) -> Row | None:
+    return _get_by_id("donors", donor_id)
+
+
+def get_donor_by_auth(auth_id: str) -> Row | None:
+    return _first(
+        _execute(supabase.table("donors").select("*").eq("auth_id", auth_id).limit(1))
+    )
+
+
+def create_donor(data: Row) -> Row:
+    return _insert("donors", data)
+
+
+def update_donor(donor_id: str, data: Row) -> Row | None:
+    return _update("donors", donor_id, data)
+
+
+def delete_donor(donor_id: str) -> Row | None:
+    return _delete("donors", donor_id)
+
+
+def get_donor_records(donor_id: str) -> list[Row]:
+    return _list("donor_records", order="donation_date", donor_id=donor_id)
+
+
+def add_donor_record(data: Row) -> Row:
+    row = _insert("donor_records", data)
+    if row.get("donor_id"):
+        _refresh_donor_counts(row["donor_id"])
+    return row
+
+
+def update_donor_record(record_id: str, data: Row) -> Row | None:
+    row = _update("donor_records", record_id, data)
+    if row and row.get("donor_id"):
+        _refresh_donor_counts(row["donor_id"])
+    return row
+
+
+def delete_donor_record(record_id: str) -> Row | None:
+    row = _delete("donor_records", record_id)
+    if row and row.get("donor_id"):
+        _refresh_donor_counts(row["donor_id"])
+    return row
+
+
+# Admins and cross-role helpers
 
 
 def check_is_admin(user_id: str) -> bool:
-    """Check if a specific auth.users ID is in the admins table."""
-    response = supabase.table("admins").select("*").eq("user_id", user_id).execute()
-    return len(response.data) > 0
+    rows = _execute(supabase.table("admins").select("user_id").eq("user_id", user_id).limit(1))
+    return bool(rows)
 
 
-def get_all_participants_for_admin() -> List[Dict[str, Any]]:
-    """
-    Example of an admin-only fetch.
-    If the caller's JWT doesn't belong to an admin, RLS will return an empty list.
-    """
-    response = supabase.table("participants").select("*").execute()
-    return response.data
+def list_admins() -> list[Row]:
+    return _list("admins", order="created_at")
+
+
+def add_admin(user_id: str) -> Row:
+    return _first(_execute(supabase.table("admins").insert({"user_id": user_id}))) or {}
+
+
+def remove_admin(user_id: str) -> Row | None:
+    return _first(_execute(supabase.table("admins").delete().eq("user_id", user_id)))
+
+
+def get_profiles_by_auth(auth_id: str) -> Row:
+    return {
+        "auth_id": auth_id,
+        "is_admin": check_is_admin(auth_id),
+        "participant": get_participant_by_auth(auth_id),
+        "volunteer": get_volunteer_by_auth(auth_id),
+        "donor": get_donor_by_auth(auth_id),
+    }
