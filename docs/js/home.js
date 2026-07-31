@@ -7,38 +7,22 @@
     if (L) L.showToast(msg);
   }
 
-  document.addEventListener("click", async function (e) {
-    const hire = e.target.closest("[data-hire]");
-    if (hire) {
-      e.preventDefault();
-      const label = hire.getAttribute("data-hire");
-      if (!L) {
-        toast("Enquiry noted for " + label);
-        return;
-      }
-      try {
-        if (!L.getPerson()) {
-          await L.ensureLogin("donor@demo.love21");
-        }
-        await L.api("/api/hire", {
-          method: "POST",
-          body: { creator_label: label },
-        });
-        L.goToProfile("impact", "Hire enquiry sent for " + label);
-      } catch (err) {
-        toast(L.friendlyError(err));
-      }
-      return;
-    }
-    const need = e.target.closest("[data-need-help]");
-    if (need) {
-      e.preventDefault();
-      toast("Thanks — noted: " + need.getAttribute("data-need-help"));
-    }
-  });
+  function escapeHtml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
 
-  const taskBox = document.querySelector("[data-home-tasks]");
-  if (taskBox && L) {
+  function volunteerHref() {
+    return /\/pages\//.test(location.pathname)
+      ? "volunteer.html"
+      : "pages/volunteer.html";
+  }
+
+  function loadHomeTasks() {
+    const taskBox = document.querySelector("[data-home-tasks]");
+    if (!taskBox || !L) return;
     L.api("/api/volunteers/shifts")
       .then(function (shifts) {
         taskBox.innerHTML = shifts
@@ -61,14 +45,49 @@
       .catch(function () {
         taskBox.innerHTML =
           '<div class="task"><div><h3>Cantonese flyer check</h3><p>45 min · start the API to claim live.</p></div>' +
-          '<a class="btn btn-sm btn-mint" href="volunteer.html">Open tasks</a></div>';
+          '<a class="btn btn-sm btn-mint" href="' +
+          volunteerHref() +
+          '">Open tasks</a></div>';
       });
   }
 
-  function escapeHtml(s) {
-    return String(s || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+  window.loadHomeTasks = loadHomeTasks;
+
+  document.addEventListener("click", async function (e) {
+    const hire = e.target.closest("[data-hire]");
+    if (hire) {
+      e.preventDefault();
+      const label = hire.getAttribute("data-hire");
+      if (!L) {
+        toast("Enquiry noted for " + label);
+        return;
+      }
+      try {
+        if (!L.getPerson()) {
+          await L.ensureLogin("donor@demo.love21");
+        }
+        await L.api("/api/hire", {
+          method: "POST",
+          body: { creator_label: label },
+        });
+        if (typeof L.goToProfile === "function") {
+          L.goToProfile("impact", "Hire enquiry sent for " + label);
+        } else {
+          toast("Hire enquiry sent for " + label);
+        }
+      } catch (err) {
+        toast(L.friendlyError ? L.friendlyError(err) : err.message);
+      }
+      return;
+    }
+    const need = e.target.closest("[data-need-help]");
+    if (need) {
+      e.preventDefault();
+      toast("Thanks — noted: " + need.getAttribute("data-need-help"));
+    }
+  });
+
+  if (document.querySelector("[data-home-tasks]")) {
+    loadHomeTasks();
   }
 })();

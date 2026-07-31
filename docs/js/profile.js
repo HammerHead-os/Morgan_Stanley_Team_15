@@ -87,28 +87,16 @@
   function buildTabs(visible, homeTab) {
     const list = document.querySelector("[data-tablist]");
     if (!list) return;
-    const role =
-      (profileData && profileData.person && profileData.person.role_primary) ||
-      "";
     list.innerHTML = visible
       .map(function (id) {
-        const meta = TAB_META[id] || { label: id, chapter: "" };
-        const mine = ownsChapter(role, id);
+        const meta = TAB_META[id] || { label: id };
         return (
-          '<button type="button" class="profile-chapter' +
-          (mine ? " is-yours" : "") +
-          '" role="tab" data-profile-tab="' +
+          '<button type="button" class="profile-tab" role="tab" data-profile-tab="' +
           id +
           '" aria-selected="false" aria-controls="panel-' +
           id +
           '">' +
-          '<span class="profile-chapter-num">' +
-          escapeHtml(meta.chapter) +
-          "</span>" +
-          '<span class="profile-chapter-label">' +
           escapeHtml(meta.label) +
-          "</span>" +
-          (mine ? '<span class="profile-chapter-tag">Yours</span>' : "") +
           "</button>"
         );
       })
@@ -142,11 +130,11 @@
     const nameEl = document.querySelector("[data-cover-name]");
     const codeEl = document.querySelector("[data-cover-code]");
     const roleEl = document.querySelector("[data-cover-role]");
-    const issuedEl = document.querySelector("[data-cover-issued]");
     if (nameEl) nameEl.textContent = p.name;
-    if (codeEl) codeEl.textContent = p.profile_code || "L21-" + p.id;
-    if (roleEl) roleEl.textContent = " · " + roleLabel(p.role_primary);
-    if (issuedEl) issuedEl.textContent = fmtDate(p.issued_at);
+    if (roleEl) roleEl.textContent = roleLabel(p.role_primary);
+    if (codeEl)
+      codeEl.textContent =
+        p.passport_code || p.profile_code || "L21-" + p.id;
   }
 
   function emptyChapter(title, body, ctaHref, ctaLabel) {

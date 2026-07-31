@@ -6,7 +6,7 @@
     <title>Love 21 Foundation</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
-  <body>
+  <body class="page-arrival">
     <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="index.html">
@@ -25,117 +25,61 @@
           <li>
             <a class="nav-home" href="index.html" aria-current="page">Home</a>
           </li>
-          <li><a href="pages/about.html">About</a></li>
           <li><a href="pages/profile.html">Profile</a></li>
-          <li><a href="pages/explore.html#marketplace">Marketplace</a></li>
-          <li><a href="pages/volunteer.html">Volunteer</a></li>
-          <li><a href="pages/impact.html">Give</a></li>
-          <li><a href="pages/activity-finder.html">Classes</a></li>
+          <li><a href="pages/about.html">About</a></li>
           <li><a href="pages/contact.html">Contact</a></li>
-          <li>
-            <a class="nav-cta" href="pages/profile.html">Open Profile</a>
-          </li>
         </ul>
       </div>
     </nav>
 
-    <header class="hero">
-      <div class="container">
-        <h1 class="hero-brand">Love <span>21</span></h1>
-        <p class="hero-tagline">
-          Sport, nutrition, and meaningful work in Hong Kong.
+    <header class="arrival" id="start">
+      <div class="container arrival-inner">
+        <p class="arrival-brand">Love <span>21</span></p>
+        <h1>Who are you here as?</h1>
+        <p class="arrival-lead">
+          Sport, nutrition, and support for Hong Kong’s Down syndrome,
+          autistic, and neurodiverse community. Pick your role — we’ll show
+          only what you need.
         </p>
-        <p class="hero-tag">
-          Love 21 is a Hong Kong NGO for children and young people with Down
-          syndrome, autism, and other neurodivergences — and a Profile that
-          keeps families, members, supporters, and volunteers connected after
-          they take part. Tell us why you're here and we'll show you the
-          right next step.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#choose-role">Get started</a>
-          <a class="btn" href="pages/about.html">What is Love 21?</a>
+
+        <div class="role-grid role-grid-main" data-role-grid>
+          <button type="button" class="role-option" data-role="family">
+            <span class="role-label">Parent / carer</span>
+            <span class="role-hint">Find a class for your child</span>
+          </button>
+          <button type="button" class="role-option" data-role="donor">
+            <span class="role-label">Donor</span>
+            <span class="role-hint">Give monthly · see the impact</span>
+          </button>
+          <button type="button" class="role-option" data-role="volunteer">
+            <span class="role-label">Volunteer</span>
+            <span class="role-hint">Short tasks · log hours</span>
+          </button>
+          <button type="button" class="role-option" data-role="company">
+            <span class="role-label">Company / CSR</span>
+            <span class="role-hint">Hire talent · team days · in-kind</span>
+          </button>
         </div>
+
+        <div class="journey-preview" data-journey-preview hidden></div>
       </div>
     </header>
 
-    <!-- Arrival — role chooser (Layer 1 primary objective) -->
-    <section class="section" id="choose-role">
-      <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">Get started</p>
-          <h2>Who are you here as?</h2>
-          <p class="muted" style="max-width: 34rem">
-            Pick the option that fits — we'll show the right next step
-            instead of one generic homepage.
-          </p>
-        </div>
-
-        <div class="role-grid" data-role-grid>
-          <button type="button" class="role-option" data-role="family">
-            <span class="role-label">Family</span>
-            <span class="role-hint"
-              >Find classes and support for your child</span
-            >
-          </button>
-          <button type="button" class="role-option" data-role="support">
-            <span class="role-label">Support Love 21</span>
-            <span class="role-hint"
-              >Donate, volunteer, or partner as a company</span
-            >
-          </button>
-          <button type="button" class="role-option" data-role="curious">
-            <span class="role-label">Just curious</span>
-            <span class="role-hint">See what Love 21 actually does</span>
-          </button>
-        </div>
-
-        <div class="journey-preview" data-journey-preview></div>
-      </div>
-    </section>
-
-    <footer class="site-footer">
-      <div class="footer-grid">
-        <div>
-          <div class="footer-brand">Love 21 Foundation</div>
-          <p>
-            Sport, nutrition, and support for Hong Kong's Down syndrome,
-            autistic, and neurodiverse community.
-          </p>
-        </div>
-        <div>
-          <h4>Explore</h4>
-          <ul class="footer-links">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="pages/about.html">About us</a></li>
-            <li><a href="pages/profile.html">Profile</a></li>
-            <li><a href="pages/explore.html">Explore the full site</a></li>
-            <li><a href="pages/contact.html">Contact</a></li>
-            <li><a href="pages/transparency.html">Where money goes</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4>Visit</h4>
-          <p>
-            Love 21 Space · 2/F, Trium Lab<br />
-            21 Luk Hop Street, San Po Kong<br />
-            <a href="tel:+85223222121">+852 2322 2121</a><br />
-            <a href="mailto:info@love21foundation.com"
-              >info@love21foundation.com</a
-            >
-          </p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <span>© Love 21 Foundation · Hackathon demo for Code to Give 2026</span>
-        <span
-          ><a href="pages/volunteer.html">Volunteer</a> ·
-          <a href="pages/impact.html">Give</a></span
-        >
+    <footer class="site-footer site-footer-compact">
+      <div class="footer-bottom" style="border: 0; margin: 0; padding: 1.25rem 0">
+        <span>Love 21 · San Po Kong</span>
+        <span>
+          <a href="pages/about.html">About</a>
+          ·
+          <a href="pages/contact.html">Contact</a>
+          ·
+          <a href="pages/transparency.html">Where money goes</a>
+        </span>
       </div>
     </footer>
 
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/home.js"></script>
   </body>
 </html>
