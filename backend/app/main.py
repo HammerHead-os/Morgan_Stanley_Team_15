@@ -2,12 +2,12 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .db_supabase import get_supabase
-from .posthog_client import initialize_posthog, shutdown_posthog
+from .posthog_client import get_posthog, initialize_posthog, shutdown_posthog
 from .routers import supabase_backend
 
 
@@ -32,6 +32,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def posthog_request_context(request: Request, call_next):
+    """Bind client-provided analytics identity to the lifetime of a request."""
+    posthog_client = get_posthog()
+    distinct_id = request.headers.get("X-POSTHOG-DISTINCT-ID")
+    session_id = request.headers.get("X-POSTHOG-SESSION-ID")
+
+    if posthog_client is None:
+        return await call_next(request)
+
+    with posthog_client.new_context(fresh=True):
+        if distinct_id:
+            posthog_client.identify_context(distinct_id)
+        if session_id:
+            posthog_client.set_context_session(session_id)
+        return await call_next(request)
+
 
 app.include_router(supabase_backend.router)
 

@@ -43,6 +43,6 @@ def get_posthog() -> Optional[Posthog]:
 
 
 def shutdown_posthog() -> None:
-    """Flush the client during application shutdown."""
+    """Flush and shut down the client during application shutdown."""
     if _client is not None:
-        _client.flush()
+        _client.shutdown()
