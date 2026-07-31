@@ -1,64 +1,61 @@
-# Design QA — Love 21 role gate, round 6
+# Design QA — Love 21 role entry and Family CTA, round 7
 
 ## Evidence
 
-- Source visual truth (previous dark treatment): `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-lines-desktop-round5.jpg`
 - Rendered implementation: `http://127.0.0.1:8001/?chooseRole=1`
-- First light-theme capture: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-light-desktop-round6.jpg`
-- Final desktop implementation: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-light-desktop-final-round6.jpg`
-- Final mobile implementation: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-light-mobile-round6.jpg`
-- Full-view before/after comparison: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-light-comparison-round6.png`
+- Role-gate source visual truth: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-light-desktop-final-round6.jpg`
+- Family-login source visual truth: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-family-login-cta-round3b.jpg`
+- Final desktop role gate: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-clear-photos-round7.jpg`
+- Final mobile role gate: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-clear-photos-mobile-round7.jpg`
+- Final solid ROLE control: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-family-nav-role-solid-round7.jpg`
+- Final Family login module: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-family-login-red-final-clean-round7.jpg`
+- Role-gate before/after comparison: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-role-gate-photo-clarity-comparison-round7.png`
+- Family-login before/after comparison: `/private/var/folders/mq/lbb_h2b978s86pf1_p1lh1w80000gn/T/team15-family-login-comparison-round7.png`
 
 ## Normalization and state
 
-- Source and desktop implementation: 1280 × 800 CSS pixels at 1× capture density.
+- Desktop implementation: 1280 × 800 CSS pixels at 1× capture density.
 - Mobile implementation: 390 × 844 CSS pixels at 1× capture density.
-- The comparison places equal 1280 × 800 states side-by-side without scaling or cropping.
-- Compared state: mandatory role gate, no navigation, all five choices visible.
-- The full-view comparison is sufficient as a focused comparison because the card treatment, photo-wall tonality, text, separators, and descriptions remain readable at the normalized size.
+- Role-gate comparisons use the mandatory role-selection state with no navigation and all five choices visible.
+- Family comparisons use the final profile-passport module and include the persistent navigation and AI Agent launcher.
 
 ## Comparison judgment
 
-The light version now aligns with the white interior pages without discarding the photographic entrance experience. The role gate and photo-wall gutters use white backgrounds, the photographs receive a translucent white veil, and the central card uses an 86% white glass surface. Black type and restrained grey secondary copy replace the dark-theme foreground tokens.
+The photo wall is now materially clearer while retaining the white visual relationship with the interior pages. The overlay opacity was reduced from 46% to 16%, and the photographs use lighter color correction rather than a washed-out treatment. The translucent white card continues to provide sufficient text contrast.
 
-The Love 21 red logo and mission accents remain unchanged, preserving hierarchy against the quieter white composition. The borderless role rows and horizontal separators also remain unchanged.
+Role selection now has a short, purposeful handoff: the gate card and wall recede before the selected homepage fades and rises into place. The navigation ROLE control is a solid Love 21 red control without a border. The Family login module now uses the same red conversion language as Donate, with a white high-contrast CTA.
 
-## Findings and comparison history
+## Findings
 
-### Iteration 1 — fixed
-
-- [P1] The first light-theme capture inherited white role-description text from the dark theme, making the supporting lines beneath each desktop role almost invisible.
-  - Location: `.role-choice span`.
-  - Fix: changed the resting description color to `rgba(25, 25, 25, 0.58)`.
-  - Post-fix evidence: `team15-role-gate-light-desktop-final-round6.jpg`.
-
-### Iteration 2 — passed
+### Iteration 1 — passed
 
 - No actionable P0, P1, or P2 issue remains.
-- The panel computes to `rgba(255, 255, 255, 0.86)` with `rgb(25, 25, 25)` foreground text.
-- The photo-wall base computes to white and its overlay to `rgba(255, 255, 255, 0.46)`.
+- The photo-wall overlay computes to `rgba(255, 255, 255, 0.16)`.
+- Photo treatment computes to `saturate(0.84) contrast(0.98)`.
+- The ROLE control computes to `#8e1820`, white text, and a zero-width border.
+- The Family login section computes to `#8e1820`; its nested CTA container is transparent and borderless, and the CTA button is white.
 - Desktop `scrollHeight` and `clientHeight` are both 800 pixels; mobile values are both 844 pixels.
 
 ## Required fidelity surfaces
 
-- Fonts and typography: display hierarchy, wrapping, weights, and brand-red mission accents are preserved.
-- Spacing and layout: card dimensions, row rhythm, separators, and fixed-height placement are unchanged.
-- Colors and tokens: the role card, page base, and wall treatment are white; primary copy is `#191919`; descriptions use a readable dark-grey token.
-- Image quality: real Love 21 photographs remain visible beneath the white veil without being replaced or excessively blurred.
-- Copy and content: the mission, question, descriptions, and all five role choices are unchanged.
-- Responsiveness: desktop and 390-pixel mobile layouts show the complete list without page scrolling.
-- Interaction: selecting Donor closes the gate and opens the expected donor experience.
+- Fonts and typography: hierarchy, wrapping, weights, logo color, and mission accents remain intact.
+- Spacing and layout: role-card geometry, separators, fixed-height placement, navigation rhythm, and Family CTA alignment remain stable.
+- Colors and tokens: the white page relationship is preserved while photography is more legible; solid ROLE and Family CTA treatments use the shared Love 21 red.
+- Image quality: real Love 21 photographs remain sharp enough to read as a wall rather than a pale texture.
+- Copy and content: mission, question, descriptions, role choices, and Family passport copy are unchanged.
+- Responsiveness: desktop and 390-pixel mobile role gates show all choices without document scrolling.
+- Interaction: selection exercises a 260 ms gate exit followed by a 360/420 ms homepage fade-and-rise. Direct role URLs and reduced-motion preferences remain immediate.
 
 ## Verification
 
 - [x] Desktop role gate at 1280 × 800
 - [x] Mobile role gate at 390 × 844
-- [x] White translucent card and black text verified
-- [x] White photo-wall background and overlay verified
-- [x] Supporting text contrast fixed and visually rechecked
+- [x] Reduced photo-wall overlay and revised image treatment verified
 - [x] All five choices visible without document scrolling
-- [x] Donor role-selection transition exercised
+- [x] Role-selection transition exercised through the final Family state
+- [x] Solid, borderless ROLE control verified
+- [x] Red Family login module and white CTA verified
 - [x] Browser console checked with no warnings or errors
-- [x] CSS and repository whitespace checks completed
+- [x] JavaScript syntax and repository whitespace checks completed
 
 final result: passed

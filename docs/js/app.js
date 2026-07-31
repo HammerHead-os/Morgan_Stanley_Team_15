@@ -494,6 +494,7 @@
     roleGrid.addEventListener("click", function (e) {
       const btn = e.target.closest("[data-role]");
       if (!btn) return;
+      if (roleGate.classList.contains("is-leaving")) return;
       const role = btn.getAttribute("data-role");
       showRoleHome(role, true);
     });
@@ -523,9 +524,6 @@
   function showRoleHome(role, shouldScroll) {
     const data = roleExperiences[role] || roleExperiences.curious;
     localStorage.setItem(ROLE_KEY, role);
-    document.body.classList.remove("role-gate-active");
-    if (roleGate) roleGate.hidden = true;
-    if (roleHome) roleHome.hidden = false;
 
     qsa("[data-role]", roleGrid).forEach(function (button) {
       button.classList.toggle(
@@ -573,8 +571,42 @@
     ) {
       window.loadHomeTasks();
     }
-    if (shouldScroll) {
-      qs("#top").scrollIntoView({ behavior: "instant", block: "start" });
+
+    function revealHome(animate) {
+      if (roleHome) {
+        if (animate) roleHome.classList.add("role-home-entering");
+        roleHome.hidden = false;
+      }
+      document.body.classList.remove("role-gate-active");
+      if (roleGate) {
+        roleGate.hidden = true;
+        roleGate.classList.remove("is-leaving");
+      }
+      if (animate && roleHome) {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            roleHome.classList.add("is-visible");
+          });
+        });
+        window.setTimeout(function () {
+          roleHome.classList.remove("role-home-entering", "is-visible");
+        }, 460);
+      }
+      if (shouldScroll) {
+        qs("#top").scrollIntoView({ behavior: "instant", block: "start" });
+      }
+    }
+
+    if (shouldScroll && roleGate) {
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
+      roleGate.classList.add("is-leaving");
+      window.setTimeout(function () {
+        revealHome(!reduceMotion);
+      }, reduceMotion ? 0 : 260);
+    } else {
+      revealHome(false);
     }
   }
 
