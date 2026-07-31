@@ -277,7 +277,7 @@
       window.loadHomeTasks();
     }
     if (shouldScroll) {
-      qs("#top").scrollIntoView({ behavior: "smooth", block: "start" });
+      qs("#top").scrollIntoView({ behavior: "instant", block: "start" });
     }
   }
 

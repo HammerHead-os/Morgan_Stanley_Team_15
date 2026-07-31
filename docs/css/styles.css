@@ -2479,6 +2479,7 @@ textarea:focus-visible {
 .page-banner h1,
 .profile-hero h1 {
   max-width: 900px;
+  font-size: clamp(2.8rem, 6vw, 4.8rem);
 }
 
 .page-banner p {
@@ -2497,7 +2498,20 @@ textarea:focus-visible {
 }
 
 .profile-tabs {
+  margin-top: 2.4rem;
   border-bottom-color: var(--line-strong);
+}
+
+.profile-hero {
+  padding: 2.75rem 0 0;
+}
+
+.profile-hero h1 {
+  font-size: clamp(2.4rem, 6vw, 3.8rem);
+}
+
+.profile-top {
+  align-items: flex-start;
 }
 
 .profile-tab {
@@ -2694,8 +2708,9 @@ textarea {
   }
 
   .nav-role {
-    max-width: 145px;
+    max-width: 112px;
     overflow: hidden;
+    font-size: 0.65rem;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
