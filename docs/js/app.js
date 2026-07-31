@@ -194,6 +194,7 @@
   }
 
   renderSiteShell();
+  renderRolePhotoWall();
 
   const toggle = qs(".nav-toggle");
   const links = qs(".nav-links");
@@ -220,6 +221,69 @@
   }
 
   renderAssistant();
+
+  function renderRolePhotoWall() {
+    const wall = qs("[data-role-photo-wall]");
+    const photos = window.LOVE21_PHOTO_WALL || [];
+    if (!wall || !photos.length) return;
+
+    const compact = window.matchMedia("(max-width: 680px)").matches;
+    const rowCount = compact ? 7 : 6;
+    const slotsPerRow = compact ? 12 : 16;
+    const durations = [56, 48, 62, 45, 58, 51, 64];
+    const batchCount = Math.ceil(
+      photos.length / (rowCount * slotsPerRow)
+    );
+
+    wall.innerHTML = "";
+
+    Array.from({ length: rowCount }, function (_, rowIndex) {
+      const row = document.createElement("div");
+      const track = document.createElement("div");
+      row.className = "role-photo-row";
+      track.className = "role-photo-row-track";
+      track.style.setProperty(
+        "--row-duration",
+        durations[rowIndex] + "s"
+      );
+
+      function fillGroup(group, batchIndex) {
+        Array.from({ length: slotsPerRow }, function (_, slotIndex) {
+          const image =
+            group.children[slotIndex] || document.createElement("img");
+          image.alt = "";
+          image.decoding = "async";
+          image.loading = slotIndex < 8 ? "eager" : "lazy";
+          image.draggable = false;
+          image.src =
+            photos[
+              (rowIndex +
+                (batchIndex * slotsPerRow + slotIndex) * rowCount) %
+                photos.length
+            ];
+          if (!image.parentElement) group.appendChild(image);
+        });
+      }
+
+      const firstGroup = document.createElement("div");
+      const secondGroup = document.createElement("div");
+      firstGroup.className = "role-photo-group";
+      secondGroup.className = "role-photo-group";
+      fillGroup(firstGroup, 0);
+      fillGroup(secondGroup, 0);
+      track.append(firstGroup, secondGroup);
+
+      row.appendChild(track);
+      wall.appendChild(row);
+
+      let batchIndex = 0;
+      track.addEventListener("animationiteration", function () {
+        batchIndex = (batchIndex + 1) % batchCount;
+        fillGroup(firstGroup, batchIndex);
+        fillGroup(secondGroup, batchIndex);
+      });
+    });
+  }
 
   function renderAssistant() {
     if (!L || qs("[data-agent-dock]")) return;

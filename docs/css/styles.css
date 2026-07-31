@@ -2040,11 +2040,10 @@ textarea:focus-visible {
 
 .role-gate-panel {
   padding: clamp(1.25rem, 3vw, 1.75rem);
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.985);
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 14px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
-  backdrop-filter: blur(16px);
 }
 
 .role-gate-logo {
@@ -2090,30 +2089,69 @@ textarea:focus-visible {
 .role-photo-wall {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-rows: repeat(6, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0.55rem;
   overflow: hidden;
 }
 
-.role-photo-track {
-  display: flex;
-  gap: 0.8rem;
-  width: max-content;
-  padding: 0.8rem;
-  animation: role-wall-scroll 54s linear infinite;
+.role-photo-wall::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(10, 10, 10, 0.48);
+  content: "";
+  pointer-events: none;
 }
 
-.role-photo-track img {
-  width: clamp(230px, 23vw, 360px);
-  height: min(68vh, 560px);
+.role-photo-row {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.role-photo-row-track {
+  display: flex;
+  gap: 0.55rem;
+  height: 100%;
+  width: max-content;
+  animation: role-wall-scroll var(--row-duration, 48s) linear infinite;
+  will-change: transform;
+}
+
+.role-photo-group {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.55rem;
+  height: 100%;
+}
+
+.role-photo-row img {
+  width: clamp(150px, 15vw, 230px);
+  height: 100%;
+  flex: 0 0 auto;
   object-fit: cover;
-  border-radius: 12px;
-  filter: saturate(0.72) brightness(0.72);
+  border-radius: 8px;
+  filter: saturate(0.78) contrast(0.96);
+}
+
+.role-photo-row img:nth-child(4n + 2) {
+  width: clamp(180px, 18vw, 270px);
+}
+
+.role-photo-row img:nth-child(5n) {
+  width: clamp(130px, 13vw, 200px);
 }
 
 @keyframes role-wall-scroll {
   to {
-    transform: translateX(calc(-50% - 0.4rem));
+    transform: translate3d(calc(-50% - 0.275rem), 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .role-photo-row-track {
+    animation-play-state: paused;
   }
 }
 
@@ -3112,9 +3150,30 @@ textarea {
     display: none;
   }
 
-  .role-photo-track img {
-    width: 72vw;
-    height: 74vh;
+  .role-photo-wall {
+    grid-template-rows: repeat(7, minmax(0, 1fr));
+    gap: 0.4rem;
+    padding: 0.4rem;
+  }
+
+  .role-photo-row-track {
+    gap: 0.4rem;
+  }
+
+  .role-photo-group {
+    gap: 0.4rem;
+  }
+
+  .role-photo-row img {
+    width: 38vw;
+  }
+
+  .role-photo-row img:nth-child(4n + 2) {
+    width: 46vw;
+  }
+
+  .role-photo-row img:nth-child(5n) {
+    width: 32vw;
   }
 
   .hero-photo-grid {
