@@ -1,8 +1,13 @@
+import json
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
+from ..config import settings
 from ..database import get_db
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
@@ -162,6 +167,57 @@ def _default_answer(role: str) -> tuple[str, list[schemas.AgentToolTrace]]:
     return answer, []
 
 
+def _deepseek_answer(
+    messages: list[schemas.AgentMessageIn],
+    verified_context: str,
+    role: str,
+) -> str:
+    if not settings.ai_provider_enabled or not settings.deepseek_api_key:
+        raise RuntimeError("DeepSeek is not configured.")
+
+    prompt = (
+        "You are the Love 21 AI Agent for a Hong Kong charity website. "
+        f"The visitor role is {role}. Use only the verified read-only tool "
+        "result supplied below for factual claims. Do not invent people, "
+        "figures, dates, eligibility, or services. Keep the answer concise, "
+        "warm, and easy to scan in Markdown. Preserve the most useful link.\n\n"
+        f"VERIFIED TOOL RESULT:\n{verified_context}"
+    )
+    request_messages = [{"role": "system", "content": prompt}]
+    request_messages.extend(
+        {"role": message.role, "content": message.content}
+        for message in messages[-10:]
+    )
+    payload = json.dumps(
+        {
+            "model": settings.deepseek_model,
+            "messages": request_messages,
+            "max_tokens": 900,
+            "temperature": 0.2,
+        }
+    ).encode("utf-8")
+    request = Request(
+        "https://api.deepseek.com/chat/completions",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {settings.deepseek_api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urlopen(request, timeout=20) as response:
+            body = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as error:
+        raise RuntimeError("The configured AI provider is unavailable.") from error
+
+    content = body.get("choices", [{}])[0].get("message", {}).get("content")
+    if not isinstance(content, str) or not content.strip():
+        raise RuntimeError("The configured AI provider returned no answer.")
+    return content.strip()
+
+
 @router.post("/chat", response_model=schemas.AgentChatOut)
 def chat(body: schemas.AgentChatIn, db: Session = Depends(get_db)):
     last_user = next(
@@ -184,5 +240,30 @@ def chat(body: schemas.AgentChatIn, db: Session = Depends(get_db)):
         answer, tools = _activity_answer(db)
     else:
         answer, tools = _default_answer(body.role)
+
+    if settings.ai_provider_enabled and settings.deepseek_api_key:
+        try:
+            ai_answer = _deepseek_answer(body.messages, answer, body.role)
+            return schemas.AgentChatOut(
+                answer=ai_answer,
+                provider="deepseek",
+                configured=True,
+                tools=tools,
+                notice=(
+                    "AI Agent response grounded in the read-only Love 21 "
+                    "tool result shown below."
+                ),
+            )
+        except RuntimeError:
+            return schemas.AgentChatOut(
+                answer=answer,
+                provider="local-tool-demo",
+                configured=True,
+                tools=tools,
+                notice=(
+                    "The AI provider could not be reached, so this answer "
+                    "uses the verified local tool result."
+                ),
+            )
 
     return schemas.AgentChatOut(answer=answer, tools=tools)

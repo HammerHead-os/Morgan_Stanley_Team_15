@@ -297,10 +297,10 @@
       '<img src="' +
       assetPrefix +
       'assets/media/love21-logo.png" alt="" />' +
-      "<span><strong>Ask Love 21</strong><small>Programmes, impact and reports</small></span>" +
+      "<span><strong>Love 21 AI Agent</strong><small>Ask about programmes &amp; impact</small></span>" +
       "</button>" +
-      '<section class="agent-window" hidden aria-label="Love 21 assistant">' +
-      '<header class="agent-window-header"><div><span>Read-only assistant</span>' +
+      '<section class="agent-window" hidden aria-label="Love 21 AI Agent">' +
+      '<header class="agent-window-header"><div><span>AI Agent</span>' +
       "<strong>Ask Love 21</strong></div>" +
       '<button type="button" data-agent-close>Close</button></header>' +
       '<div class="agent-suggestions" aria-label="Suggested questions">' +
@@ -312,7 +312,7 @@
       "Ask a question</label><textarea id=\"agent-question\" rows=\"2\" " +
       'placeholder="Ask about Love 21…" maxlength="1000"></textarea>' +
       '<button type="submit">Ask</button></form>' +
-      '<p class="agent-note">Public, read-only demo using the foundation database.</p>' +
+      '<p class="agent-note">AI Agent · public, read-only foundation data.</p>' +
       "</section>";
     document.body.appendChild(dock);
 
@@ -416,7 +416,7 @@
           '<article class="agent-message ' +
           message.role +
           '"><small>' +
-          (message.role === "assistant" ? "Love 21 assistant" : "You") +
+          (message.role === "assistant" ? "Love 21 AI Agent" : "You") +
           '</small><div class="agent-markdown">' +
           content +
           "</div>" +
@@ -428,7 +428,7 @@
     if (waiting) {
       root.insertAdjacentHTML(
         "beforeend",
-        '<article class="agent-message assistant waiting"><small>Love 21 assistant</small>' +
+        '<article class="agent-message assistant waiting"><small>Love 21 AI Agent</small>' +
           "<p>Checking the allowed public data…</p></article>"
       );
     }

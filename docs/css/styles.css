@@ -2706,7 +2706,7 @@ textarea {
   color: var(--ink);
   text-align: left;
   background: #ffffff;
-  border: 1px solid var(--line-strong);
+  border: 1px solid rgba(142, 24, 32, 0.22);
   border-radius: 12px;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
   cursor: pointer;
@@ -2742,8 +2742,8 @@ textarea {
   width: min(420px, calc(100vw - 2rem));
   overflow: hidden;
   color: var(--ink);
-  background: #ffffff;
-  border: 1px solid var(--line-strong);
+  background: #f8f8f6;
+  border: 1px solid rgba(25, 25, 25, 0.16);
   border-radius: 14px;
   box-shadow: 0 24px 72px rgba(0, 0, 0, 0.2);
 }
@@ -2752,8 +2752,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.9rem 1rem;
-  border-bottom: 1px solid var(--line);
+  padding: 1rem 1rem 0.65rem;
 }
 
 .agent-window-header span,
@@ -2778,7 +2777,7 @@ textarea {
   padding: 0.4rem 0.55rem;
   color: var(--ink-soft);
   background: #ffffff;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: 7px;
   font-size: 0.7rem;
   cursor: pointer;
@@ -2787,17 +2786,16 @@ textarea {
 .agent-suggestions {
   display: flex;
   gap: 0.45rem;
-  padding: 0.75rem 1rem;
+  padding: 0.55rem 1rem 0.8rem;
   overflow-x: auto;
-  border-bottom: 1px solid var(--line);
 }
 
 .agent-suggestions button {
   flex: 0 0 auto;
   padding: 0.42rem 0.58rem;
   color: var(--ink-soft);
-  background: var(--paper-deep);
-  border: 1px solid var(--line);
+  background: #ffffff;
+  border: 1px solid rgba(25, 25, 25, 0.12);
   border-radius: 999px;
   font-size: 0.65rem;
   cursor: pointer;
@@ -2812,24 +2810,25 @@ textarea {
   display: grid;
   gap: 0.7rem;
   height: min(390px, 48vh);
-  padding: 1rem;
+  padding: 0.75rem 1rem 1rem;
   overflow-y: auto;
-  background: #fbfbfa;
+  background: transparent;
 }
 
 .agent-message {
   max-width: 92%;
   padding: 0.75rem 0.8rem;
   background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 rgba(25, 25, 25, 0.06);
 }
 
 .agent-message.user {
   justify-self: end;
   color: #ffffff;
   background: #191919;
-  border-color: #191919;
+  box-shadow: none;
 }
 
 .agent-message > small {
@@ -2907,8 +2906,7 @@ textarea {
 .agent-form {
   display: flex;
   gap: 0.55rem;
-  padding: 0.8rem 1rem;
-  border-top: 1px solid var(--line);
+  padding: 0.75rem 1rem;
 }
 
 .agent-form textarea {
@@ -3682,6 +3680,44 @@ textarea {
 .board-portrait-grid a:hover img {
   transform: scale(1.035);
   filter: saturate(1);
+}
+
+.board-portrait-grid .board-member-no-photo {
+  display: flex;
+  min-height: 225px;
+  padding: 1.15rem;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: #ffffff;
+  background: #2a2927;
+}
+
+.board-member-no-photo p,
+.board-member-no-photo strong,
+.board-member-no-photo small {
+  position: static;
+  display: block;
+  width: 100%;
+}
+
+.board-member-no-photo p {
+  margin: 0 0 auto;
+  color: #bbb8b2;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.board-member-no-photo strong {
+  font-size: 1.05rem;
+}
+
+.board-member-no-photo small {
+  margin-top: 0.25rem;
+  color: #aaa7a1;
+  font-size: 0.68rem;
 }
 
 .board-portrait-grid span {

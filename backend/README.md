@@ -12,6 +12,34 @@ uvicorn app.main:app --reload --port 8000
 
 Then open http://127.0.0.1:8000 (serves the website + API) or http://127.0.0.1:8000/docs
 
+## Connect the AI Agent
+
+The assistant works without an external key in a clearly labelled local-tool
+mode. To enable DeepSeek:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Add the real key to `backend/.env`:
+
+```text
+AI_PROVIDER_ENABLED=true
+DEEPSEEK_API_KEY=your_real_key
+DEEPSEEK_MODEL=deepseek-v4-flash
+```
+
+Restart FastAPI after changing the file. `backend/.env` is ignored by Git;
+`backend/.env.example` is the tracked, key-free template. Never place the key
+inside `docs/`, JavaScript, HTML, or any committed file.
+
+The separate `AI_PROVIDER_ENABLED` switch prevents an ambient shell variable
+from activating an external provider unexpectedly.
+
+With a key, the model receives the visitor's recent public conversation and a
+verified read-only tool result. Without a key—or if the provider is
+unavailable—the same endpoint returns the deterministic local result.
+
 ## Demo accounts
 
 | Email | Role |
