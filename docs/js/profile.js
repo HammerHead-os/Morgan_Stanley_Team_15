@@ -1,21 +1,8 @@
-/* Love 21 Profile */
+/* Love 21 Profile — unified activity + role actions */
 
 (function () {
   const L = window.Love21;
   if (!L || !document.querySelector("[data-profile-root]")) return;
-
-  const TAB_META = {
-    ability: { label: "Ability", chapter: "01" },
-    contribution: { label: "Contribution", chapter: "02" },
-    impact: { label: "Impact", chapter: "03" },
-  };
-
-  const ROLE_HOME = {
-    family: "ability",
-    member: "ability",
-    donor: "impact",
-    volunteer: "contribution",
-  };
 
   let profileData = null;
 
@@ -40,22 +27,26 @@
     }
   }
 
-  function roleLabel(role) {
+  function roleLabel(role, householdRole) {
+    if (householdRole) {
+      const map = {
+        mom: "Mom",
+        dad: "Dad",
+        caregiver: "Caregiver",
+        helper: "Helper",
+        child: "Child / member",
+      };
+      return map[householdRole] || householdRole;
+    }
     return (
       {
         family: "Family carer",
         member: "Member",
         donor: "Supporter",
         volunteer: "Volunteer",
+        corporate: "Company",
       }[role] || role
     );
-  }
-
-  function ownsChapter(role, id) {
-    if (id === "ability") return role === "family" || role === "member";
-    if (id === "contribution") return role === "volunteer";
-    if (id === "impact") return role === "donor";
-    return false;
   }
 
   function setPrefsOpen(open) {
@@ -66,509 +57,386 @@
     if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
   }
 
-  function activateTab(id) {
-    const tabs = document.querySelectorAll("[data-profile-tab]");
-    const panels = document.querySelectorAll("[data-profile-panel]");
-    let found = false;
-    tabs.forEach(function (t) {
-      const on = t.getAttribute("data-profile-tab") === id;
-      t.classList.toggle("active", on);
-      t.setAttribute("aria-selected", on ? "true" : "false");
-      if (on) found = true;
-    });
-    panels.forEach(function (p) {
-      const on = p.getAttribute("data-profile-panel") === id;
-      p.classList.toggle("active", on);
-      p.hidden = !on;
-    });
-    if (found) history.replaceState(null, "", "#" + id);
+  function personRoles(data) {
+    const p = data.person || {};
+    const roles = p.roles && p.roles.length ? p.roles.slice() : [];
+    if (p.role_primary && roles.indexOf(p.role_primary) < 0) {
+      roles.unshift(p.role_primary);
+    }
+    return roles;
   }
 
-  function buildTabs(visible, homeTab) {
-    const list = document.querySelector("[data-tablist]");
-    if (!list) return;
-    list.innerHTML = visible
-      .map(function (id) {
-        const meta = TAB_META[id] || { label: id };
+  function hasRole(data, role) {
+    return personRoles(data).indexOf(role) >= 0;
+  }
+
+  function renderActions(data) {
+    const el = document.querySelector("[data-role-actions]");
+    if (!el) return;
+    const links = [];
+    const seen = {};
+
+    function add(href, label, primary) {
+      if (seen[href + label]) return;
+      seen[href + label] = true;
+      links.push({ href: href, label: label, primary: !!primary });
+    }
+
+    add("impact.html", "Give monthly", true);
+    add("profile.html#calendar", "Open calendar");
+
+    if (hasRole(data, "family") || hasRole(data, "member") || data.family) {
+      add("activity-finder.html", "Browse classes");
+      add("family.html", "Family hub");
+    }
+    if (hasRole(data, "volunteer") || hasRole(data, "corporate")) {
+      add("volunteer.html", "Volunteer tasks");
+      add("explore.html#marketplace", "Hire talent");
+      add("opportunity.html", "Current needs");
+      add("contributor.html", "Contributor hub");
+    }
+    if (hasRole(data, "donor")) {
+      add("impact.html#achievements", "What we achieved");
+    }
+
+    el.innerHTML = links
+      .map(function (l) {
         return (
-          '<button type="button" class="profile-tab" role="tab" data-profile-tab="' +
-          id +
-          '" aria-selected="false" aria-controls="panel-' +
-          id +
+          '<a class="btn' +
+          (l.primary ? " btn-primary" : "") +
+          '" href="' +
+          l.href +
           '">' +
-          escapeHtml(meta.label) +
-          "</button>"
+          escapeHtml(l.label) +
+          "</a>"
         );
       })
       .join("");
+  }
 
-    list.querySelectorAll("[data-profile-tab]").forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        activateTab(tab.getAttribute("data-profile-tab"));
-      });
+  function renderRoleToggles(data) {
+    const box = document.querySelector("[data-role-toggles]");
+    if (!box) return;
+    const roles = personRoles(data);
+    box.querySelectorAll('input[type="checkbox"]').forEach(function (input) {
+      input.checked = roles.indexOf(input.value) >= 0;
+      if (data.person.household_role === "child" && input.value === "family") {
+        input.disabled = true;
+      }
     });
-
-    const hash = (location.hash || "").replace("#", "");
-    const legacy = {
-      family: "ability",
-      achievement: "ability",
-      volunteer: "contribution",
-      settings: homeTab || "ability",
-    };
-    const mapped = legacy[hash] || hash;
-    const start =
-      mapped && visible.indexOf(mapped) >= 0
-        ? mapped
-        : homeTab && visible.indexOf(homeTab) >= 0
-          ? homeTab
-          : visible[0];
-    activateTab(start);
-  }
-
-  function renderCover(data) {
-    const p = data.person;
-    const nameEl = document.querySelector("[data-cover-name]");
-    const codeEl = document.querySelector("[data-cover-code]");
-    const roleEl = document.querySelector("[data-cover-role]");
-    if (nameEl) nameEl.textContent = p.name;
-    if (roleEl) roleEl.textContent = roleLabel(p.role_primary);
-    if (codeEl) codeEl.textContent = p.profile_code || "L21-" + p.id;
-  }
-
-  function emptyChapter(title, body, ctaHref, ctaLabel) {
-    return (
-      '<div class="chapter-empty">' +
-      "<h3>" +
-      escapeHtml(title) +
-      "</h3>" +
-      '<p class="muted">' +
-      escapeHtml(body) +
-      "</p>" +
-      (ctaHref
-        ? '<a class="btn btn-sm btn-primary mt-1" href="' +
-          ctaHref +
-          '">' +
-          escapeHtml(ctaLabel || "Continue") +
-          "</a>"
-        : "") +
-      "</div>"
-    );
   }
 
   function renderFamily(data) {
-    const el = document.querySelector("[data-family-panel]");
-    if (!el) return;
-    const role = data.person.role_primary;
-    if (!ownsChapter(role, "ability") || !data.family) {
-      el.innerHTML = emptyChapter(
-        "Ability",
-        "Class bookings and notes show up here. Switch to a family demo account, or browse classes to start.",
-        "activity-finder.html",
-        "Browse classes"
-      );
+    const section = document.querySelector("[data-family-section]");
+    const list = document.querySelector("[data-family-members]");
+    if (!section || !list) return;
+    const family = data.family;
+    const show =
+      !!family &&
+      (hasRole(data, "family") ||
+        hasRole(data, "member") ||
+        !!data.person.household_id);
+    section.hidden = !show;
+    if (!show) return;
+
+    const canAdd = data.person.household_role !== "child";
+    const form = document.querySelector("[data-add-member-form]");
+    if (form) form.hidden = !canAdd;
+
+    const members = family.members || [];
+    if (!members.length) {
+      list.innerHTML = '<p class="muted">No members yet.</p>';
       return;
     }
-    const f = data.family;
-    const regs = (f.registrations || [])
-      .map(function (r) {
-        const pendingFeedback = r.status === "attended" && !r.feedback;
-        return (
-          '<div class="timeline-item' +
-          (pendingFeedback ? " pending" : "") +
-          '">' +
-          '<div class="timeline-date">' +
-          escapeHtml(r.status_label || r.status) +
-          "</div>" +
-          '<div class="timeline-title">' +
-          escapeHtml(r.activity_title || "Activity") +
-          " · " +
-          escapeHtml(r.member_name || "") +
-          "</div>" +
-          (r.activity_location
-            ? '<p class="muted" style="margin:0;font-size:0.85rem">' +
-              escapeHtml(r.activity_location) +
-              "</p>"
-            : "") +
-          (pendingFeedback
-            ? '<form class="feedback-form mt-1" data-feedback-form="' +
-              r.id +
-              '">' +
-              '<textarea name="feedback" rows="2" required maxlength="2000" placeholder="How was the session?"></textarea>' +
-              '<button type="submit" class="btn btn-sm btn-primary mt-1">Save feedback</button></form>'
-            : r.feedback
-              ? '<p class="muted" style="margin:0.35rem 0 0;font-size:0.9rem">' +
-                escapeHtml(r.feedback) +
-                "</p>"
-              : "") +
-          "</div>"
-        );
-      })
-      .join("");
-
-    el.innerHTML =
-      "<h3>Classes · " +
-      escapeHtml(f.household_name) +
-      "</h3>" +
-      '<p class="muted" style="font-size:0.9rem">Members: ' +
-      f.members
+    list.innerHTML =
+      '<ul class="family-member-list">' +
+      members
         .map(function (m) {
-          return escapeHtml(m.name);
-        })
-        .join(", ") +
-      "</p>" +
-      '<div class="timeline">' +
-      (regs || '<p class="muted">No bookings yet.</p>') +
-      "</div>";
-  }
-
-  function renderAchievement(data) {
-    const el = document.querySelector("[data-achievement-panel]");
-    if (!el) return;
-    const role = data.person.role_primary;
-    if (!ownsChapter(role, "ability") || !data.achievement) {
-      el.innerHTML = "";
-      return;
-    }
-    const a = data.achievement;
-    const stamps = (a.achievements || [])
-      .map(function (x) {
-        return (
-          '<div class="stamp-card' +
-          (x.share_consent ? " shared" : "") +
-          '">' +
-          '<div class="stamp-seal" aria-hidden="true">' +
-          escapeHtml((x.pillar || "L21").slice(0, 4)) +
-          "</div>" +
-          "<div>" +
-          '<div class="timeline-date">' +
-          escapeHtml(x.status_label || x.status) +
-          "</div>" +
-          '<div class="timeline-title">' +
-          escapeHtml(x.title) +
-          "</div>" +
-          '<p class="muted" style="margin:0.25rem 0 0;font-size:0.85rem">' +
-          escapeHtml(x.coach_name || "Coach") +
-          (x.approved_at ? " · " + fmtDate(x.approved_at) : "") +
-          "</p>" +
-          '<label class="consent-row">' +
-          '<input type="checkbox" data-consent="' +
-          x.id +
-          '"' +
-          (x.share_consent ? " checked" : "") +
-          " /> Share this milestone</label>" +
-          "</div></div>"
-        );
-      })
-      .join("");
-
-    const goals = (a.goals || [])
-      .map(function (g) {
-        return (
-          '<div class="timeline-item pending">' +
-          '<div class="timeline-date">' +
-          escapeHtml(g.status_label || g.status) +
-          "</div>" +
-          '<div class="timeline-title">' +
-          escapeHtml(g.title) +
-          "</div></div>"
-        );
-      })
-      .join("");
-
-    el.innerHTML =
-      "<h3>" +
-      escapeHtml(a.member.name) +
-      " · milestones</h3>" +
-      '<div class="stamp-grid">' +
-      (stamps || '<p class="muted">No milestones yet. Set a goal.</p>') +
-      "</div>" +
-      (goals
-        ? '<h3 class="mt-2">Goals</h3><div class="timeline">' + goals + "</div>"
-        : "");
-  }
-
-  function renderImpact(data) {
-    const el = document.querySelector("[data-impact-panel]");
-    const manage = document.querySelector("[data-gift-manage]");
-    if (!el) return;
-    const role = data.person.role_primary;
-    const impact = data.impact || {};
-    const c = (impact.commitments || [])[0];
-    const receipt = (impact.receipts || [])[0];
-    const badges = impact.badges || [];
-
-    if (!ownsChapter(role, "impact") && !c) {
-      el.innerHTML = emptyChapter(
-        "Impact",
-        "Gifts and receipts show up here. Switch to the supporter demo, or start a gift from Give.",
-        "impact.html",
-        "See what HKD 300 covers"
-      );
-      if (manage) manage.hidden = true;
-      const hireEl = document.querySelector("[data-hire-panel]");
-      if (hireEl) hireEl.innerHTML = "";
-      return;
-    }
-
-    if (manage) manage.hidden = false;
-
-    if (!c) {
-      el.innerHTML =
-        '<p class="muted">No monthly gift yet.</p>' +
-        '<a class="btn btn-sm btn-primary" href="impact.html">Start giving</a>';
-    } else {
-      el.innerHTML =
-        '<div class="impact-tile" style="border:none;padding:0">' +
-        "<h3>Monthly · HKD " +
-        c.amount_hkd +
-        " · " +
-        escapeHtml(c.status_label || c.status) +
-        "</h3>" +
-        '<p class="muted" style="font-size:0.88rem;margin:0">Fund: ' +
-        escapeHtml(c.fund_category) +
-        "</p>" +
-        '<div class="meter" style="--pct:74.6%"><div class="meter-fill"></div></div>' +
-        '<p class="muted" style="font-size:0.8rem;margin:0">74.6% of gifts go to programmes</p>' +
-        (c.office_perk_unlocked
-          ? '<p class="badge-stamp mt-1">Office workshop perk available</p>'
-          : "") +
-        (receipt && receipt.story_back
-          ? '<p class="mt-1" style="font-size:0.9rem">' +
-            escapeHtml(receipt.story_back) +
-            "</p>"
-          : "") +
-        (badges.length
-          ? '<div class="badge-row mt-1">' +
-            badges
-              .map(function (b) {
-                return (
-                  '<span class="badge-stamp">' +
-                  escapeHtml(b.title) +
-                  " · " +
-                  escapeHtml(b.level) +
-                  "</span>"
-                );
-              })
-              .join("") +
-            "</div>"
-          : "") +
-        "</div>";
-
-      const fundSel = document.querySelector("[data-fund-select]");
-      if (fundSel && c.fund_category) fundSel.value = c.fund_category;
-    }
-
-    const hireEl = document.querySelector("[data-hire-panel]");
-    if (hireEl) {
-      const hires = data.hire_enquiries || [];
-      if (!hires.length) {
-        hireEl.innerHTML = "";
-      } else {
-        hireEl.innerHTML =
-          "<h3>Hire enquiries</h3>" +
-          '<div class="timeline">' +
-          hires
-            .map(function (h) {
-              return (
-                '<div class="timeline-item">' +
-                '<div class="timeline-date">' +
-                escapeHtml(h.status) +
-                "</div>" +
-                '<div class="timeline-title">' +
-                escapeHtml(h.creator_label) +
-                "</div>" +
-                '<p class="muted" style="margin:0;font-size:0.85rem">' +
-                fmtDate(h.created_at) +
-                "</p></div>"
-              );
-            })
-            .join("") +
-          "</div>";
-      }
-    }
-  }
-
-  function renderVolunteer(data) {
-    const el = document.querySelector("[data-volunteer-panel]");
-    const hoursEl = document.querySelector("[data-volunteer-hours]");
-    if (!el) return;
-    const role = data.person.role_primary;
-    const v = data.volunteer || {};
-    const claims = v.claims || [];
-
-    if (!ownsChapter(role, "contribution") && !claims.length) {
-      if (hoursEl) hoursEl.textContent = "0";
-      el.innerHTML = emptyChapter(
-        "Contribution",
-        "Shifts and hours show up here. Switch to the volunteer demo, or claim a short task.",
-        "volunteer.html",
-        "See open shifts"
-      );
-      return;
-    }
-
-    if (hoursEl && v.profile) {
-      hoursEl.textContent = String(v.profile.hours_logged || 0);
-    } else if (hoursEl) {
-      hoursEl.textContent = "0";
-    }
-
-    const claimHtml = claims
-      .map(function (c) {
-        const open = c.status === "claimed";
-        return (
-          '<div class="timeline-item' +
-          (open ? " pending" : "") +
-          '">' +
-          '<div class="timeline-date">' +
-          escapeHtml(c.status_label || c.status) +
-          "</div>" +
-          '<div class="timeline-title">' +
-          escapeHtml(c.shift_title || "Shift") +
-          "</div>" +
-          '<p class="muted" style="margin:0;font-size:0.9rem">' +
-          c.hours +
-          " hrs" +
-          (c.reflection ? " · " + escapeHtml(c.reflection) : "") +
-          "</p>" +
-          (open
-            ? '<form class="feedback-form mt-1" data-complete-claim="' +
-              c.id +
-              '">' +
-              '<textarea name="reflection" rows="2" required placeholder="Quick reflection…"></textarea>' +
-              '<button type="submit" class="btn btn-sm btn-primary mt-1">Mark complete</button></form>'
-            : "") +
-          "</div>"
-        );
-      })
-      .join("");
-
-    let next = "";
-    if (v.suggested_next && ownsChapter(role, "contribution")) {
-      next =
-        '<div class="timeline-item pending">' +
-        '<div class="timeline-date">Suggested for you</div>' +
-        '<div class="timeline-title">' +
-        escapeHtml(v.suggested_next.title) +
-        "</div>" +
-        '<p class="muted" style="margin:0;font-size:0.85rem">' +
-        escapeHtml(v.suggested_next.description || "") +
-        "</p>" +
-        '<button type="button" class="btn btn-sm btn-primary mt-1" data-claim-shift="' +
-        v.suggested_next.id +
-        '">Claim this shift</button></div>';
-    }
-    el.innerHTML =
-      '<div class="timeline">' +
-      (claimHtml || next
-        ? claimHtml + next
-        : '<p class="muted">No shifts yet. Claim one from Volunteer.</p>') +
-      "</div>";
-  }
-
-  function renderPrefs(prefs) {
-    if (!prefs) return;
-    document.querySelectorAll("[data-toggle]").forEach(function (btn) {
-      const key = btn.getAttribute("data-toggle");
-      const on = !!prefs[key];
-      btn.classList.toggle("on", on);
-      btn.setAttribute("aria-pressed", on ? "true" : "false");
-    });
-    const opt = document.querySelector("[data-opt-out]");
-    if (opt && prefs.opt_out_token) {
-      opt.textContent =
-        "One-click opt-out token (demo): " + prefs.opt_out_token.slice(0, 8) + "…";
-    }
-  }
-
-  function renderJourney(data) {
-    const el = document.querySelector("[data-journey-panel]");
-    if (!el) return;
-    const events = data.journey_events || [];
-    if (!events.length) {
-      el.innerHTML =
-        "<h3>Recent activity</h3><p class=\"muted\">Your recent activity shows up here.</p>";
-      return;
-    }
-    el.innerHTML =
-      "<h3>Recent activity</h3>" +
-      '<div class="timeline">' +
-      events
-        .map(function (ev) {
           return (
-            '<div class="timeline-item">' +
-            '<div class="timeline-date">' +
-            fmtDate(ev.created_at) +
-            "</div>" +
-            '<div class="timeline-title">' +
-            escapeHtml(ev.event_label || ev.event_type) +
-            "</div>" +
-            (ev.payload
-              ? '<p class="muted" style="margin:0;font-size:0.85rem">' +
-                escapeHtml(ev.payload) +
-                "</p>"
-              : "") +
-            "</div>"
+            "<li><strong>" +
+            escapeHtml(m.name) +
+            "</strong> · " +
+            escapeHtml(roleLabel(m.role_primary, m.household_role)) +
+            ' <span class="muted">(' +
+            escapeHtml(m.profile_code || "") +
+            ")</span></li>"
           );
         })
         .join("") +
-      "</div>";
+      "</ul>" +
+      '<p class="muted" style="font-size:0.88rem;margin-top:0.75rem">Everyone listed here sees Alex’s class records on this household.</p>';
+  }
+
+  function renderGiftManage(data) {
+    const manage = document.querySelector("[data-gift-manage]");
+    if (!manage) return;
+    const hasGift =
+      data.impact &&
+      data.impact.commitments &&
+      data.impact.commitments.length;
+    manage.hidden = !(hasRole(data, "donor") || hasGift);
+  }
+
+  let calCursor = new Date();
+  calCursor.setDate(1);
+
+  function renderCalendar(data) {
+    const grid = document.querySelector("[data-cal-grid]");
+    const label = document.querySelector("[data-cal-label]");
+    const dayList = document.querySelector("[data-cal-day-list]");
+    if (!grid || !label) return;
+
+    const events = data.calendar_events || [];
+    const y = calCursor.getFullYear();
+    const m = calCursor.getMonth();
+    label.textContent = calCursor.toLocaleDateString(undefined, {
+      month: "long",
+      year: "numeric",
+    });
+
+    const firstDow = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const byDay = {};
+    events.forEach(function (ev) {
+      const d = String(ev.date).slice(0, 10);
+      const parts = d.split("-");
+      if (Number(parts[0]) !== y || Number(parts[1]) !== m + 1) return;
+      const day = Number(parts[2]);
+      if (!byDay[day]) byDay[day] = [];
+      byDay[day].push(ev);
+    });
+
+    let html =
+      '<div class="cal-dow">Sun</div><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div><div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div>';
+    for (let i = 0; i < firstDow; i++) {
+      html += '<div class="cal-cell empty"></div>';
+    }
+    for (let day = 1; day <= daysInMonth; day++) {
+      const evs = byDay[day] || [];
+      const kinds = evs
+        .map(function (e) {
+          return e.kind;
+        })
+        .join(" ");
+      html +=
+        '<button type="button" class="cal-cell' +
+        (evs.length ? " has-event" : "") +
+        '" data-cal-day="' +
+        day +
+        '"><span class="cal-num">' +
+        day +
+        "</span>";
+      if (evs.length) {
+        html += '<span class="cal-marks ' + escapeHtml(kinds) + '"></span>';
+      }
+      html += "</button>";
+    }
+    grid.innerHTML = html;
+
+    function showDay(day) {
+      if (!dayList) return;
+      const evs = byDay[day] || [];
+      if (!evs.length) {
+        dayList.innerHTML =
+          '<li class="muted">No classes or shifts on this day.</li>';
+        return;
+      }
+      dayList.innerHTML = evs
+        .map(function (e) {
+          return (
+            "<li><strong>" +
+            escapeHtml(e.title) +
+            "</strong> · " +
+            escapeHtml(e.kind) +
+            (e.detail ? " · " + escapeHtml(e.detail) : "") +
+            (e.status ? " · " + escapeHtml(e.status) : "") +
+            "</li>"
+          );
+        })
+        .join("");
+    }
+
+    grid.querySelectorAll("[data-cal-day]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        showDay(Number(btn.getAttribute("data-cal-day")));
+      });
+    });
+
+    const today = new Date();
+    if (today.getFullYear() === y && today.getMonth() === m) {
+      showDay(today.getDate());
+    } else if (dayList) {
+      dayList.innerHTML =
+        '<li class="muted">Tap a day to see classes and volunteer shifts.</li>';
+    }
+  }
+
+  function feedItem(dateIso, title, body, tag) {
+    return {
+      t: dateIso ? new Date(dateIso).getTime() : 0,
+      html:
+        '<article class="feed-item">' +
+        '<div class="feed-meta"><span class="tag">' +
+        escapeHtml(tag) +
+        "</span> · " +
+        escapeHtml(fmtDate(dateIso)) +
+        "</div>" +
+        "<h3>" +
+        escapeHtml(title) +
+        "</h3>" +
+        (body ? "<p>" + body + "</p>" : "") +
+        "</article>",
+    };
+  }
+
+  function renderFeed(data) {
+    const el = document.querySelector("[data-activity-feed]");
+    if (!el) return;
+    const items = [];
+
+    const family = data.family;
+    if (family && family.registrations) {
+      family.registrations.forEach(function (r) {
+        items.push(
+          feedItem(
+            r.created_at,
+            (r.activity_title || "Class") +
+              (r.member_name ? " · " + r.member_name : ""),
+            escapeHtml(r.status_label || r.status) +
+              (r.feedback
+                ? "<br/>Note: " + escapeHtml(r.feedback)
+                : ""),
+            "Class"
+          )
+        );
+      });
+    }
+
+    if (data.achievement && data.achievement.achievements) {
+      data.achievement.achievements.forEach(function (a) {
+        items.push(
+          feedItem(
+            a.approved_at || a.created_at,
+            a.title,
+            escapeHtml(a.status_label || a.status) +
+              (a.coach_name ? " · " + escapeHtml(a.coach_name) : ""),
+            "Milestone"
+          )
+        );
+      });
+    }
+
+    if (data.volunteer && data.volunteer.claims) {
+      data.volunteer.claims.forEach(function (c) {
+        items.push(
+          feedItem(
+            c.completed_at || c.claimed_at,
+            c.shift_title || "Volunteer shift",
+            escapeHtml(c.status_label || c.status) +
+              (c.hours ? " · " + c.hours + " hrs" : ""),
+            "Volunteer"
+          )
+        );
+      });
+    }
+
+    if (data.impact && data.impact.receipts) {
+      data.impact.receipts.forEach(function (r) {
+        const story = r.story_back
+          ? escapeHtml(r.story_back)
+          : "HKD " + r.amount_hkd + " gift recorded.";
+        items.push(
+          feedItem(r.paid_at, "Gift · HKD " + r.amount_hkd, story, "Give")
+        );
+      });
+    }
+
+    if (data.hire_enquiries) {
+      data.hire_enquiries.forEach(function (h) {
+        items.push(
+          feedItem(
+            h.created_at,
+            "Hire · " + (h.creator_label || "Creator"),
+            h.preferred_date
+              ? "Requested date: " + escapeHtml(h.preferred_date)
+              : escapeHtml(h.status || "received"),
+            "Hire"
+          )
+        );
+      });
+    }
+
+    if (data.journey_events) {
+      data.journey_events.forEach(function (ev) {
+        items.push(
+          feedItem(
+            ev.created_at,
+            ev.event_label || ev.event_type,
+            escapeHtml(ev.payload || ""),
+            "Update"
+          )
+        );
+      });
+    }
+
+    items.sort(function (a, b) {
+      return b.t - a.t;
+    });
+
+    if (!items.length) {
+      el.innerHTML =
+        '<p class="muted">No activity yet. Use the actions above to get started.</p>';
+      return;
+    }
+    el.innerHTML = items
+      .slice(0, 40)
+      .map(function (i) {
+        return i.html;
+      })
+      .join("");
+  }
+
+  function paint(data) {
+    profileData = data;
+    const p = data.person;
+    const nameEl = document.querySelector("[data-cover-name]");
+    const roleEl = document.querySelector("[data-cover-role]");
+    const codeEl = document.querySelector("[data-cover-code]");
+    if (nameEl) nameEl.textContent = p.name;
+    if (roleEl) {
+      const roles = personRoles(data);
+      const bits = roles.map(function (r) {
+        return roleLabel(r, r === "family" || r === "member" ? p.household_role : null);
+      });
+      roleEl.textContent = bits.join(" · ");
+    }
+    if (codeEl) codeEl.textContent = p.profile_code || data.profile_code || "";
+
+    if (data.prefs) {
+      ["email_on", "sms_on", "whatsapp_on"].forEach(function (key) {
+        const btn = document.querySelector('[data-toggle="' + key + '"]');
+        if (!btn) return;
+        const on = !!data.prefs[key];
+        btn.classList.toggle("on", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    }
+
+    renderActions(data);
+    renderRoleToggles(data);
+    renderFamily(data);
+    renderGiftManage(data);
+    renderCalendar(data);
+    renderFeed(data);
   }
 
   async function reloadProfile() {
-    try {
-      if (!L.getPerson() || !L.getToken()) {
-        await L.ensureLogin("carer@chen.demo");
-      }
-      const data = await L.api("/api/profile");
-      profileData = data;
-      renderCover(data);
-      const home =
-        data.home_tab ||
-        ROLE_HOME[data.person.role_primary] ||
-        "ability";
-      buildTabs(data.visible_tabs || ["ability", "contribution", "impact"], home);
-      renderFamily(data);
-      renderAchievement(data);
-      renderImpact(data);
-      renderVolunteer(data);
-      renderPrefs(data.prefs);
-      renderJourney(data);
-
-      const select = document.querySelector("[data-account-select]");
-      if (select && data.person && data.person.email) {
-        select.value = data.person.email;
-      }
-
-      const slot = document.querySelector("[data-session]");
-      if (slot) {
-        slot.textContent = data.person.name;
-        slot.title = data.person.email;
-      }
-    } catch (err) {
-      const cover = document.querySelector("[data-cover-name]");
-      if (cover) cover.textContent = "Profile offline";
-      L.showToast(L.friendlyError(err));
-    }
+    const data = await L.api("/api/profile");
+    paint(data);
+    return data;
   }
 
   window.reloadProfile = reloadProfile;
-
-  try {
-    const flash = sessionStorage.getItem("love21_flash");
-    if (flash) {
-      sessionStorage.removeItem("love21_flash");
-      const el = document.querySelector("[data-profile-flash]");
-      if (el) {
-        el.hidden = false;
-        el.textContent = flash;
-        setTimeout(function () {
-          el.hidden = true;
-        }, 5000);
-      }
-      L.showToast(flash);
-    }
-  } catch (e) {}
 
   const prefsToggle = document.querySelector("[data-prefs-toggle]");
   if (prefsToggle) {
@@ -577,18 +445,46 @@
       setPrefsOpen(drawer && drawer.hidden);
     });
   }
-  document.querySelectorAll("[data-prefs-close]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
+  const prefsClose = document.querySelector("[data-prefs-close]");
+  if (prefsClose) {
+    prefsClose.addEventListener("click", function () {
       setPrefsOpen(false);
     });
-  });
+  }
 
-  const select = document.querySelector("[data-account-select]");
-  if (select) {
-    select.addEventListener("change", async function () {
+  const accountSel = document.querySelector("[data-account-select]");
+  if (accountSel) {
+    accountSel.addEventListener("change", async function () {
       try {
-        await L.demoLogin(select.value);
-        setPrefsOpen(false);
+        await L.demoLogin(accountSel.value);
+        await reloadProfile();
+        L.showToast("Switched account");
+      } catch (err) {
+        L.showToast(L.friendlyError(err));
+      }
+    });
+  }
+
+  const addForm = document.querySelector("[data-add-member-form]");
+  if (addForm) {
+    addForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const name = (addForm.name && addForm.name.value) || "";
+      const household_role =
+        (addForm.household_role && addForm.household_role.value) || "helper";
+      const email = (addForm.email && addForm.email.value) || "";
+      try {
+        await L.api("/api/family/members", {
+          method: "POST",
+          body: {
+            name: name.trim(),
+            household_role: household_role,
+            email: email.trim() || null,
+            is_child: household_role === "child",
+          },
+        });
+        addForm.reset();
+        L.showToast("Family member added. They share the child records.");
         await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
@@ -596,111 +492,51 @@
     });
   }
 
-  const goalForm = document.querySelector("[data-goal-form]");
-  if (goalForm) {
-    goalForm.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const title = (goalForm.title && goalForm.title.value) || "";
-      if (!title.trim()) return;
-      try {
-        const memberId =
-          (profileData &&
-            profileData.achievement &&
-            profileData.achievement.member.id) ||
-          L.getPerson().id;
-        await L.api("/api/achievements/goals", {
-          method: "POST",
-          body: { title: title.trim(), member_person_id: memberId },
-        });
-        goalForm.reset();
-        L.showToast("Goal saved. A coach will review it next.");
-        await reloadProfile();
-        activateTab("ability");
-      } catch (err) {
-        L.showToast(L.friendlyError(err));
-      }
-    });
-  }
-
-  document.addEventListener("submit", async function (e) {
-    const fb = e.target.closest("[data-feedback-form]");
-    if (fb && L) {
-      e.preventDefault();
-      const regId = Number(fb.getAttribute("data-feedback-form"));
-      const text = (fb.feedback && fb.feedback.value) || "";
-      try {
-        await L.api("/api/family/registrations/" + regId + "/feedback", {
-          method: "POST",
-          body: { feedback: text.trim() },
-        });
-        L.showToast("Feedback saved");
-        await reloadProfile();
-      } catch (err) {
-        L.showToast(L.friendlyError(err));
-      }
-      return;
-    }
-
-    const complete = e.target.closest("[data-complete-claim]");
-    if (complete && L) {
-      e.preventDefault();
-      const claimId = Number(complete.getAttribute("data-complete-claim"));
-      const reflection =
-        (complete.reflection && complete.reflection.value) || "";
-      try {
-        await L.api("/api/volunteers/claims/" + claimId + "/complete", {
-          method: "POST",
-          body: { reflection: reflection.trim() },
-        });
-        L.showToast("Shift complete. Hours logged.");
-        await reloadProfile();
-      } catch (err) {
-        L.showToast(L.friendlyError(err));
-      }
-    }
-  });
-
-  document.addEventListener("change", async function (e) {
-    const consent = e.target.closest("[data-consent]");
-    if (!consent || !L) return;
-    const id = Number(consent.getAttribute("data-consent"));
-    try {
-      await L.api("/api/achievements/" + id + "/consent", {
-        method: "PATCH",
-        body: { share_consent: !!consent.checked },
+  const saveRoles = document.querySelector("[data-save-roles]");
+  if (saveRoles) {
+    saveRoles.addEventListener("click", async function () {
+      const box = document.querySelector("[data-role-toggles]");
+      if (!box) return;
+      const roles = [];
+      box.querySelectorAll('input[type="checkbox"]:checked').forEach(function (input) {
+        roles.push(input.value);
       });
-      L.showToast(consent.checked ? "Sharing on" : "Sharing off");
-      await reloadProfile();
-    } catch (err) {
-      consent.checked = !consent.checked;
-      L.showToast(L.friendlyError(err));
-    }
-  });
+      if (!roles.length) {
+        L.showToast("Pick at least one role");
+        return;
+      }
+      try {
+        await L.api("/api/profile/roles", {
+          method: "PATCH",
+          body: { roles: roles },
+        });
+        L.showToast("Roles updated");
+        await reloadProfile();
+      } catch (err) {
+        L.showToast(L.friendlyError(err));
+      }
+    });
+  }
+
+  const calPrev = document.querySelector("[data-cal-prev]");
+  const calNext = document.querySelector("[data-cal-next]");
+  if (calPrev) {
+    calPrev.addEventListener("click", function () {
+      calCursor.setMonth(calCursor.getMonth() - 1);
+      if (profileData) renderCalendar(profileData);
+    });
+  }
+  if (calNext) {
+    calNext.addEventListener("click", function () {
+      calCursor.setMonth(calCursor.getMonth() + 1);
+      if (profileData) renderCalendar(profileData);
+    });
+  }
 
   document.addEventListener("click", async function (e) {
-    const claimBtn = e.target.closest("[data-claim-shift]");
-    if (claimBtn && L && document.querySelector("[data-profile-root]")) {
-      e.preventDefault();
-      e.stopPropagation();
-      const shiftId = Number(claimBtn.getAttribute("data-claim-shift"));
-      try {
-        await L.api("/api/volunteers/claims", {
-          method: "POST",
-          body: { shift_id: shiftId },
-        });
-        L.showToast("Shift claimed");
-        await reloadProfile();
-        activateTab("contribution");
-      } catch (err) {
-        L.showToast(L.friendlyError(err));
-      }
-      return;
-    }
-
     const commitAction = e.target.closest("[data-commitment-action]");
     if (commitAction && document.querySelector("[data-gift-manage]")) {
       e.preventDefault();
-      e.stopPropagation();
       const action = commitAction.getAttribute("data-commitment-action");
       const fundSel = document.querySelector("[data-fund-select]");
       const fund = fundSel ? fundSel.value : "Sports programmes";
@@ -708,8 +544,8 @@
         action === "pause"
           ? "Pause your monthly gift?"
           : action === "renew"
-            ? "Renew / reactivate your monthly gift?"
-            : "Change fund to “" + fund + "”?";
+            ? "Renew your monthly gift?"
+            : 'Change fund to "' + fund + '"?';
       if (!window.confirm(confirmMsg)) return;
       try {
         const list = await L.api("/api/impact/commitments");
@@ -727,13 +563,7 @@
           method: "PATCH",
           body: body,
         });
-        L.showToast(
-          action === "pause"
-            ? "Gift paused"
-            : action === "renew"
-              ? "Gift active again"
-              : "Fund updated"
-        );
+        L.showToast("Gift updated");
         await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
@@ -741,5 +571,26 @@
     }
   });
 
-  reloadProfile();
+  (async function init() {
+    try {
+      await L.ensureLogin();
+      const data = await reloadProfile();
+      if (accountSel && data.person && data.person.email) {
+        accountSel.value = data.person.email;
+      }
+      const flash = sessionStorage.getItem("love21_flash");
+      const flashEl = document.querySelector("[data-profile-flash]");
+      if (flash && flashEl) {
+        flashEl.hidden = false;
+        flashEl.textContent = flash;
+        sessionStorage.removeItem("love21_flash");
+      }
+    } catch (err) {
+      const feed = document.querySelector("[data-activity-feed]");
+      if (feed) {
+        feed.innerHTML =
+          '<p class="muted">Profile needs the local API. Run the backend, then refresh.</p>';
+      }
+    }
+  })();
 })();

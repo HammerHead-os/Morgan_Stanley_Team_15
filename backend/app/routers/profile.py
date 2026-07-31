@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
 from ..labels import event_label, status_label
+from ..roles_util import has_role, parse_roles, pick_primary, serialize_roles
 from .family import _registration_out
 from .volunteers import _claim_out, _ensure_profile
 
@@ -17,8 +18,10 @@ def _person_out(p: models.Person) -> schemas.PersonOut:
         email=p.email,
         name=p.name,
         role_primary=p.role_primary,
+        roles=parse_roles(p),
         language=p.language,
         household_id=p.household_id,
+        household_role=p.household_role,
         profile_code=p.profile_code or f"L21-{p.id:04d}",
         issued_at=p.issued_at or p.created_at,
     )
@@ -186,7 +189,10 @@ def get_profile(
         )
 
     ach_member = person
-    if person.role_primary == "family" and person.household_id:
+    is_familyish = has_role(person, "family") or has_role(person, "member") or bool(
+        person.household_id
+    )
+    if is_familyish and person.household_id:
         kid = (
             db.query(models.Person)
             .filter(
@@ -197,15 +203,13 @@ def get_profile(
         )
         if kid:
             ach_member = kid
-    elif person.role_primary != "member" and person.role_primary != "family":
-        ach_member = person
 
     achievements = (
         db.query(models.Achievement)
         .filter(models.Achievement.member_person_id == ach_member.id)
         .order_by(models.Achievement.created_at.desc())
         .all()
-        if person.role_primary in ("family", "member")
+        if is_familyish
         else []
     )
     goals = (
@@ -213,11 +217,11 @@ def get_profile(
         .filter(models.Goal.member_person_id == ach_member.id)
         .order_by(models.Goal.created_at.desc())
         .all()
-        if person.role_primary in ("family", "member")
+        if is_familyish
         else []
     )
     achievement = None
-    if person.role_primary in ("family", "member"):
+    if is_familyish:
         achievement = schemas.AchievementProfileOut(
             member=_person_out(ach_member),
             achievements=[_achievement_out(a) for a in achievements],
@@ -255,7 +259,7 @@ def get_profile(
     )
     claims = []
     suggested = None
-    if person.role_primary == "volunteer":
+    if has_role(person, "volunteer") or has_role(person, "corporate"):
         if not profile:
             profile = _ensure_profile(db, person)
         claims = (
@@ -302,6 +306,41 @@ def get_profile(
         .all()
     )
 
+    calendar_events: list[schemas.CalendarEventOut] = []
+    if family:
+        for r in family.registrations:
+            if not r.session_date:
+                continue
+            calendar_events.append(
+                schemas.CalendarEventOut(
+                    id=f"class-{r.id}",
+                    title=r.activity_title or "Class",
+                    date=r.session_date,
+                    kind="class",
+                    detail=r.member_name or "",
+                    status=r.status_label or r.status,
+                )
+            )
+    for c in claims:
+        shift = db.get(models.VolunteerShift, c.shift_id)
+        if not shift or not shift.scheduled_date:
+            continue
+        calendar_events.append(
+            schemas.CalendarEventOut(
+                id=f"vol-{c.id}",
+                title=shift.title,
+                date=shift.scheduled_date,
+                kind="volunteer",
+                detail=f"{shift.duration_min} min",
+                status=status_label(c.status),
+            )
+        )
+    for h in hires:
+        # preferred_date is a display string; skip if not ISO-like — seed uses readable dates
+        pass
+    calendar_events.sort(key=lambda e: e.date)
+
+    roles = parse_roles(person)
     tabs = _visible_tabs(person.role_primary)
     home_tab = _home_tab(person.role_primary)
     next_action = _next_action(
@@ -325,4 +364,32 @@ def get_profile(
         volunteer=volunteer,
         journey_events=journey,
         hire_enquiries=[schemas.HireOut.model_validate(h) for h in hires],
+        calendar_events=calendar_events,
     )
+
+
+@router.patch("/roles", response_model=schemas.PersonOut)
+def update_roles(
+    body: schemas.RolesUpdateIn,
+    person: models.Person = Depends(get_current_person),
+    db: Session = Depends(get_db),
+):
+    roles = serialize_roles(body.roles)
+    if not roles:
+        raise HTTPException(status_code=400, detail="Pick at least one role")
+    person.roles = roles
+    person.role_primary = pick_primary(parse_roles(person))
+    # Ensure volunteer profile exists when enabling volunteer
+    if "volunteer" in parse_roles(person):
+        _ensure_profile(db, person)
+    db.add(
+        models.JourneyEvent(
+            person_id=person.id,
+            event_type="roles_updated",
+            channel="email",
+            payload=roles,
+        )
+    )
+    db.commit()
+    db.refresh(person)
+    return _person_out(person)

@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class OrmModel(BaseModel):
@@ -13,10 +13,35 @@ class PersonOut(OrmModel):
     email: str
     name: str
     role_primary: str
+    roles: list[str] = []
     language: str
     household_id: Optional[int] = None
+    household_role: Optional[str] = None
     profile_code: str = ""
     issued_at: Optional[datetime] = None
+
+    @field_validator("roles", mode="before")
+    @classmethod
+    def coerce_roles(cls, v, info):
+        if isinstance(v, str):
+            parts = [x.strip() for x in v.split(",") if x.strip()]
+            return parts
+        if v is None:
+            return []
+        return list(v)
+
+
+class RolesUpdateIn(BaseModel):
+    roles: list[str] = Field(min_length=1)
+
+
+class CalendarEventOut(BaseModel):
+    id: str
+    title: str
+    date: date
+    kind: str  # class | volunteer | hire
+    detail: str = ""
+    status: str = ""
 
 
 class DemoLoginIn(BaseModel):
@@ -58,6 +83,7 @@ class RegistrationOut(OrmModel):
     waitlist_position: Optional[int] = None
     reminder_channel: str
     created_at: datetime
+    session_date: Optional[date] = None
     feedback: Optional[str] = None
     activity_title: Optional[str] = None
     activity_location: Optional[str] = None
@@ -162,6 +188,7 @@ class VolunteerShiftOut(OrmModel):
     remote: bool
     spots_left: int
     requires_onboarding: bool
+    scheduled_date: Optional[date] = None
 
 
 class ClaimShiftIn(BaseModel):
@@ -203,13 +230,23 @@ class OnboardIn(BaseModel):
 
 class HireIn(BaseModel):
     creator_label: str = Field(min_length=2, max_length=200)
+    preferred_date: Optional[str] = Field(default=None, max_length=40)
 
 
 class HireOut(OrmModel):
     id: int
     creator_label: str
+    preferred_date: Optional[str] = None
     status: str
     created_at: datetime
+
+
+class FamilyMemberIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    household_role: str = Field(min_length=2, max_length=40)
+    email: Optional[str] = Field(default=None, max_length=255)
+    # mom | dad | caregiver | helper | child
+    is_child: bool = False
 
 
 class PrefsOut(OrmModel):
@@ -277,3 +314,4 @@ class ProfileOut(BaseModel):
     volunteer: VolunteerProfileSummaryOut
     journey_events: list[JourneyEventOut] = []
     hire_enquiries: list[HireOut] = []
+    calendar_events: list[CalendarEventOut] = []

@@ -46,7 +46,7 @@
           note: "Big Saturday shifts are hard to keep.",
         },
         {
-          t: "Claim a 15-min micro-task (flyer check / photo sort)",
+          t: "Claim a 15-min task (flyer check or photo sort)",
           next: 3,
           note: "Short task. Done before your next stop.",
           good: true,
@@ -83,10 +83,10 @@
         steps.length +
         " right picks</p>" +
         "<h3>Nice. Next step?</h3>" +
-        "<p class=\"muted\">Hire talent, claim a task, or start a monthly gift.</p>" +
+        "<p class=\"muted\">Hire someone, claim a short task, or start a monthly gift.</p>" +
         '<div class="game-choices">' +
-        '<a class="btn btn-primary" href="explore.html#marketplace">Hire a creator</a>' +
-        '<a class="btn btn-mint" href="volunteer.html">15-min task</a>' +
+        '<a class="btn btn-primary" href="explore.html#marketplace">Hire someone</a>' +
+        '<a class="btn btn-mint" href="volunteer.html">Short task</a>' +
         '<a class="btn btn-yellow" href="impact.html">Give monthly</a>' +
         "</div>";
       return;

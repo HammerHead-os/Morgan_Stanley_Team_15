@@ -7,11 +7,10 @@
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
   <body>
-            <nav class="site-nav" aria-label="Primary">
+    <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
-          <span class="brand-mark" aria-hidden="true">21</span>
-          Love 21
+          <img class="brand-logo" src="../img/logo.png" alt="Love 21" width="120" height="74" />
         </a>
         <button
           class="nav-toggle"
@@ -21,10 +20,9 @@
         >
           Menu
         </button>
-                <ul class="nav-links" id="nav-menu">
+        <ul class="nav-links" id="nav-menu">
           <li><a class="nav-home" href="../index.html">Home</a></li>
           <li><a href="profile.html">Profile</a></li>
-          <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
           <li><span class="nav-session" data-session>…</span></li>
         </ul>
@@ -38,6 +36,11 @@
           Check a rough tax estimate, then start a monthly gift. Payment buttons
           here are demo only.
         </p>
+        <div class="action-bar">
+          <a class="btn btn-primary" href="#achievements"
+            >What we achieved with your help</a
+          >
+        </div>
       </div>
     </header>
 
@@ -79,21 +82,13 @@
               ~74.6% goes to programmes (prototype figure).
             </p>
             <div class="pay-row">
-              <button
-                type="button"
-                class="btn btn-sm btn-primary pay-btn"
-                data-pay="PayMe"
-              >
+              <button type="button" class="btn btn-sm btn-primary pay-btn" data-pay="PayMe">
                 PayMe
               </button>
               <button type="button" class="btn btn-sm pay-btn" data-pay="Apple Pay">
                 Apple Pay
               </button>
-              <button
-                type="button"
-                class="btn btn-sm pay-btn"
-                data-pay="Google Pay"
-              >
+              <button type="button" class="btn btn-sm pay-btn" data-pay="Google Pay">
                 Google Pay
               </button>
             </div>
@@ -106,26 +101,61 @@
             </button>
           </div>
         </div>
+
+        <section class="donor-achievements mt-2" id="achievements">
+          <h2>What we achieved with your help</h2>
+          <p class="muted">
+            Specific records from gifts. Switch to the supporter demo in Profile
+            to load live receipts from the API.
+          </p>
+          <div class="achievement-list" data-donor-achievements>
+            <article class="feed-item">
+              <div class="feed-meta"><span class="tag">Give</span> · Demo</div>
+              <h3>Gift · HKD 300</h3>
+              <p>
+                Your donation of HKD 300 allowed us to fund two coach-led swim
+                sessions, cover lane fees, and print bilingual class sheets.
+              </p>
+            </article>
+            <article class="feed-item">
+              <div class="feed-meta"><span class="tag">Give</span> · Demo</div>
+              <h3>Gift · HKD 500</h3>
+              <p>
+                Your donation of HKD 500 allowed us to run two coach-led sport
+                sessions, cover pool lane fees, and print bilingual class sheets
+                for Sports programmes.
+              </p>
+            </article>
+            <article class="feed-item">
+              <div class="feed-meta"><span class="tag">Give</span> · Demo</div>
+              <h3>Gift · HKD 200</h3>
+              <p>
+                Your donation of HKD 200 allowed us to cover coach transport and
+                session materials for Nutrition programmes.
+              </p>
+            </article>
+          </div>
+          <div class="action-bar">
+            <a class="btn" href="profile.html">See all activity on Profile</a>
+            <a class="btn" href="transparency.html">Where money goes</a>
+          </div>
+        </section>
       </div>
     </main>
 
-        <footer class="site-footer">
+    <footer class="site-footer">
       <div class="footer-grid">
         <div>
           <div class="footer-brand">Love 21 Foundation</div>
-          <p>
-            Sport, nutrition, and support for Hong Kongâ€™s Down syndrome,
-            autistic, and neurodiverse community.
-          </p>
+          <p>Classes and support in San Po Kong, Hong Kong.</p>
         </div>
         <div>
-          <h4>Explore</h4>
+          <h4>Links</h4>
           <ul class="footer-links">
             <li><a href="../index.html">Home</a></li>
-            <li><a href="about.html">About us</a></li>
             <li><a href="profile.html">Profile</a></li>
             <li><a href="contact.html">Contact</a></li>
-            <li><a href="transparency.html">Where money goes</a></li>
+            <li><a href="about.html">About</a></li>
           </ul>
         </div>
         <div>
@@ -133,21 +163,49 @@
           <p>
             Love 21 Space · 2/F, Trium Lab<br />
             21 Luk Hop Street, San Po Kong<br />
-            <a href="tel:+85223222121">+852 2322 2121</a><br />
-            <a href="mailto:info@love21foundation.com"
-              >info@love21foundation.com</a
-            >
+            <a href="tel:+85223222121">+852 2322 2121</a>
           </p>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>Â© Love 21 Foundation · Hackathon demo for Code to Give 2026</span>
-        <a href="../index.html">â† Home</a>
+        <span>© Love 21 · Code to Give 2026 demo</span>
+        <a href="../index.html">← Home</a>
       </div>
     </footer>
 
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
     <script src="../js/tax.js"></script>
+    <script>
+      (function () {
+        var L = window.Love21;
+        var box = document.querySelector("[data-donor-achievements]");
+        if (!L || !box) return;
+        L.ensureLogin("donor@demo.love21")
+          .then(function () {
+            return L.api("/api/impact/receipts");
+          })
+          .then(function (rows) {
+            if (!rows || !rows.length) return;
+            box.innerHTML = rows
+              .map(function (r) {
+                var story =
+                  r.story_back ||
+                  "Your donation of HKD " +
+                    r.amount_hkd +
+                    " supported Love 21 programmes.";
+                return (
+                  '<article class="feed-item"><div class="feed-meta"><span class="tag">Give</span></div><h3>Gift · HKD ' +
+                  r.amount_hkd +
+                  "</h3><p>" +
+                  story.replace(/</g, "&lt;") +
+                  "</p></article>"
+                );
+              })
+              .join("");
+          })
+          .catch(function () {});
+      })();
+    </script>
   </body>
 </html>

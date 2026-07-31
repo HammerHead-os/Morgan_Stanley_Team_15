@@ -60,13 +60,29 @@ def start_commitment(
     )
     db.add(commitment)
     db.flush()
+    amount = body.amount_hkd
+    fund = body.fund_category
+    if amount >= 500:
+        story = (
+            f"Your donation of HKD {amount:.0f} allowed us to run two coach-led "
+            f"sport sessions, cover pool lane fees, and print bilingual class sheets "
+            f"for {fund}."
+        )
+    elif amount >= 300:
+        story = (
+            f"Your donation of HKD {amount:.0f} allowed us to fund about two "
+            f"coach-led programme sessions and snack support under {fund}."
+        )
+    else:
+        story = (
+            f"Your donation of HKD {amount:.0f} allowed us to cover coach transport "
+            f"and session materials for {fund}."
+        )
     db.add(
         models.DonationReceipt(
             commitment_id=commitment.id,
             amount_hkd=body.amount_hkd,
-            story_back=(
-                f"Mei’s swim stamp unlocked after your gift to {body.fund_category}."
-            ),
+            story_back=story,
         )
     )
     db.add(

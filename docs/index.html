@@ -7,12 +7,31 @@
     <link rel="stylesheet" href="css/styles.css" />
     <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
   </head>
-  <body class="page-arrival">
-    <nav class="site-nav" aria-label="Primary">
+  <body class="page-gate">
+    <div class="gate-media" aria-hidden="true">
+      <video
+        class="gate-video"
+        autoplay
+        muted
+        loop
+        playsinline
+        poster="img/logo.png"
+      >
+        <source src="videoplayback.mp4" type="video/mp4" />
+      </video>
+      <div class="gate-scrim"></div>
+    </div>
+
+    <nav class="site-nav site-nav-gate" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="index.html">
-          <span class="brand-mark" aria-hidden="true">21</span>
-          Love 21
+          <img
+            class="brand-logo brand-logo-light"
+            src="img/logo.png"
+            alt="Love 21"
+            width="120"
+            height="74"
+          />
         </a>
         <button
           class="nav-toggle"
@@ -27,67 +46,85 @@
             <a class="nav-home" href="index.html" aria-current="page">Home</a>
           </li>
           <li><a href="pages/profile.html">Profile</a></li>
-          <li><a href="pages/about.html">About</a></li>
           <li><a href="pages/contact.html">Contact</a></li>
+          <li>
+            <button type="button" class="btn btn-sm gate-open-btn" data-open-iam>
+              Choose role
+            </button>
+          </li>
         </ul>
       </div>
     </nav>
 
-    <header class="arrival" id="start">
-      <div class="container arrival-inner">
-        <div class="arrival-copy">
-          <p class="arrival-brand">Love <span>21</span></p>
-          <h1>Who are you here as?</h1>
-          <p class="arrival-lead">
-            Classes and programmes in Hong Kong for kids and young people with
-            Down syndrome, autism, and other neurodivergences. Pick your role
-            and we will send you the right next step.
-          </p>
-        </div>
-
-        <div class="arrival-roles">
-          <div class="role-grid role-grid-main" data-role-grid>
-            <button type="button" class="role-option" data-role="family">
-              <span class="role-label">Parent / carer</span>
-              <span class="role-hint">Book a class</span>
-            </button>
-            <button type="button" class="role-option" data-role="support">
-              <span class="role-label">Support Love 21</span>
-              <span class="role-hint"
-                >Donate, volunteer, or partner as a company</span
-              >
-            </button>
-            <button type="button" class="role-option" data-role="curious">
-              <span class="role-label">Just curious</span>
-              <span class="role-hint">See what Love 21 actually does</span>
-            </button>
-          </div>
-
-          <div class="journey-preview" data-journey-preview hidden></div>
-        </div>
-      </div>
-    </header>
-
-    <footer class="site-footer site-footer-compact">
-      <div class="footer-bottom" style="border: 0; margin: 0; padding: 1.25rem 0">
-        <span>Love 21 · San Po Kong</span>
-        <span>
-          <a href="pages/about.html">About</a>
+    <main class="gate-stage">
+      <div class="gate-intro">
+        <p class="gate-kicker">Love 21 · Hong Kong</p>
+        <h1 class="gate-title">#Somuchability</h1>
+        <p class="gate-lead">
+          Classes and support in Hong Kong for kids and young people with Down
+          syndrome, autism, and other neurodivergences.
+        </p>
+        <button type="button" class="btn btn-primary btn-lg" data-open-iam>
+          What are you looking for?
+        </button>
+        <p class="gate-about-link">
+          <a href="pages/about.html">About Love 21</a>
           ·
-          <a href="pages/contact.html">Contact</a>
-          ·
-          <a href="pages/transparency.html">Where money goes</a>
-        </span>
+          <a href="https://www.instagram.com/love21foundation/" target="_blank" rel="noopener">Instagram</a>
+        </p>
       </div>
-    </footer>
-    <script type="module">
-	      import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
-	  createChat({
-		  webhookUrl: 'https://cllaiaj.app.n8n.cloud/webhook/78545d1e-8801-449c-a75e-5f8e0fb68ed9/chat'
-	});
-</script>
+      <button type="button" class="gate-sound" data-gate-sound aria-pressed="false">
+        Sound off
+      </button>
+    </main>
+
+    <div
+      class="iam-overlay"
+      data-iam-overlay
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="iam-title"
+    >
+      <div class="iam-backdrop" data-iam-close tabindex="-1"></div>
+      <div class="iam-panel">
+        <button type="button" class="iam-close" data-iam-close aria-label="Close">
+          Close
+        </button>
+        <p class="iam-eyebrow">Quick question</p>
+        <h2 id="iam-title">What are you looking for?</h2>
+        <p class="iam-copy">
+          Choose one so we can send you to the right page. You can still give
+          money from any of them.
+        </p>
+        <div class="iam-roles" data-iam-roles>
+          <button type="button" class="iam-role" data-role="family">
+            <span class="iam-role-label">Family</span>
+            <span class="iam-role-hint">I want to book a class for my kid</span>
+          </button>
+          <button type="button" class="iam-role" data-role="contributor">
+            <span class="iam-role-label">Contributor</span>
+            <span class="iam-role-hint">I want to volunteer or hire someone</span>
+          </button>
+          <button type="button" class="iam-role" data-role="curious">
+            <span class="iam-role-label">Just curious</span>
+            <span class="iam-role-hint">I am just looking around</span>
+          </button>
+        </div>
+        <p class="iam-note muted">
+          After this, a short walkthrough starts. You can skip it.
+        </p>
+      </div>
+    </div>
+
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
-    <script src="js/home.js"></script>
+    <script src="js/gate.js"></script>
+    <script type="module">
+      import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
+      createChat({
+        webhookUrl: 'https://cllaiaj.app.n8n.cloud/webhook/78545d1e-8801-449c-a75e-5f8e0fb68ed9/chat'
+      });
+    </script>
   </body>
 </html>

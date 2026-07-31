@@ -19,22 +19,37 @@ def seed(db: Session) -> None:
         email="carer@chen.demo",
         name="Jamie Chen",
         role_primary="family",
+        roles="family,volunteer,donor",
         language="both",
         household_id=household.id,
+        household_role="mom",
         profile_code="L21-HK-1001",
     )
     member = models.Person(
         email="alex@chen.demo",
         name="Alex Chen",
         role_primary="member",
+        roles="member",
         language="yue",
         household_id=household.id,
+        household_role="child",
         profile_code="L21-HK-1002",
+    )
+    dad = models.Person(
+        email="dad@chen.demo",
+        name="Chris Chen",
+        role_primary="family",
+        roles="family,donor",
+        language="en",
+        household_id=household.id,
+        household_role="dad",
+        profile_code="L21-HK-1003",
     )
     donor = models.Person(
         email="donor@demo.love21",
         name="Sam Wong",
         role_primary="donor",
+        roles="donor,volunteer",
         language="en",
         profile_code="L21-HK-2001",
     )
@@ -42,15 +57,16 @@ def seed(db: Session) -> None:
         email="volunteer@demo.love21",
         name="Taylor Ng",
         role_primary="volunteer",
+        roles="volunteer,donor",
         language="both",
         profile_code="L21-HK-3001",
     )
-    db.add_all([carer, member, donor, volunteer])
+    db.add_all([carer, member, dad, donor, volunteer])
     db.flush()
 
     household.carer_person_id = carer.id
 
-    for person in (carer, member, donor, volunteer):
+    for person in (carer, member, dad, donor, volunteer):
         db.add(
             models.CommPreferences(
                 person_id=person.id,
@@ -140,6 +156,7 @@ def seed(db: Session) -> None:
             member_person_id=member.id,
             status="registered",
             reminder_channel="email",
+            session_date=date.today() + timedelta(days=(5 - date.today().weekday()) % 7 or 7),
         )
     )
     db.add(
@@ -150,6 +167,7 @@ def seed(db: Session) -> None:
             status="waitlist",
             waitlist_position=4,
             reminder_channel="email",
+            session_date=date.today() + timedelta(days=10),
         )
     )
     db.add(
@@ -159,6 +177,7 @@ def seed(db: Session) -> None:
             member_person_id=member.id,
             status="attended",
             reminder_channel="email",
+            session_date=date.today() - timedelta(days=7),
             feedback="Alex loved the quiet hour and helped plate snacks.",
         )
     )
@@ -206,7 +225,10 @@ def seed(db: Session) -> None:
             commitment_id=commitment.id,
             amount_hkd=300,
             paid_at=datetime.utcnow() - timedelta(days=20),
-            story_back="Mei’s swim stamp unlocked after your June gift.",
+            story_back=(
+                "Your donation of HKD 300 allowed us to fund two coach-led swim "
+                "sessions, cover lane fees, and print bilingual class sheets."
+            ),
         )
     )
     db.add(
@@ -227,45 +249,70 @@ def seed(db: Session) -> None:
         hours_logged=6.5,
     )
     db.add(vprofile)
+    # Jamie is also a volunteer in the multi-role demo
+    db.add(
+        models.VolunteerProfile(
+            person_id=carer.id,
+            skills="photos,voice",
+            languages="both",
+            availability="weekday evenings",
+            onboarded=True,
+            hours_logged=1.0,
+        )
+    )
+    db.add(
+        models.VolunteerProfile(
+            person_id=donor.id,
+            skills="photos",
+            languages="en",
+            availability="remote",
+            onboarded=False,
+            hours_logged=0.0,
+        )
+    )
     db.flush()
 
     shifts = [
         models.VolunteerShift(
             title="Cantonese flyer check",
-            description="Proof sports flyer text before print. LinkedIn-ready badge.",
-            duration_min=45,
+            description="Proofread banquet flyers.",
+            duration_min=15,
             skills_needed="cantonese",
             language="yue",
             remote=True,
             spots_left=3,
+            scheduled_date=date.today() + timedelta(days=2),
         ),
         models.VolunteerShift(
-            title="Hiking photo sort",
-            description="Organise last month’s hike and yoga images for the social wall.",
-            duration_min=90,
+            title="Photo sort",
+            description="Sort July hike photos into swim, kitchen, and track folders.",
+            duration_min=30,
             skills_needed="photos",
             language="en",
             remote=True,
             spots_left=2,
+            scheduled_date=date.today() + timedelta(days=6),
         ),
         models.VolunteerShift(
-            title="Voice cheers for racers",
-            description="Record a short cheer members hear before race day.",
-            duration_min=30,
+            title="Voice cheers",
+            description="Record a few short cheers for Saturday track.",
+            duration_min=45,
             skills_needed="voice",
             language="en",
             remote=True,
             spots_left=5,
+            scheduled_date=date.today() + timedelta(days=9),
         ),
         models.VolunteerShift(
             title="Session buddy · swimming",
-            description="Support one lane · onboarded volunteers only.",
+            description="Help one swim lane. Onboarded volunteers only.",
             duration_min=120,
             skills_needed="sports",
             language="both",
             remote=False,
             spots_left=2,
             requires_onboarding=True,
+            scheduled_date=date.today() + timedelta(days=12),
         ),
     ]
     db.add_all(shifts)
@@ -276,8 +323,8 @@ def seed(db: Session) -> None:
             shift_id=shifts[0].id,
             volunteer_profile_id=vprofile.id,
             status="completed",
-            hours=0.75,
-            reflection="Quick and useful — flyers clearer in Cantonese.",
+            hours=0.25,
+            reflection="Quick. Flyers look clearer in Cantonese.",
             completed_at=datetime.utcnow() - timedelta(days=18),
         )
     )

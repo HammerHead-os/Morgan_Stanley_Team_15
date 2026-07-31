@@ -10,8 +10,7 @@
     <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
-          <span class="brand-mark" aria-hidden="true">21</span>
-          Love 21
+          <img class="brand-logo" src="../img/logo.png" alt="Love 21" width="120" height="74" />
         </a>
         <button
           class="nav-toggle"
@@ -21,10 +20,9 @@
         >
           Menu
         </button>
-                <ul class="nav-links" id="nav-menu">
+                        <ul class="nav-links" id="nav-menu">
           <li><a class="nav-home" href="../index.html">Home</a></li>
           <li><a href="profile.html">Profile</a></li>
-          <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
           <li><span class="nav-session" data-session>…</span></li>
         </ul>
@@ -34,150 +32,173 @@
     <header class="page-banner">
       <div class="container">
         <p class="eyebrow">Explore</p>
-        <h1>Marketplace and open needs</h1>
+        <h1>Hire people, or help out</h1>
         <p class="muted" style="max-width: 34rem">
-          Hire a member for your team, or help with something we need this
-          week.
+          Click someone to see open dates and times. Short volunteer tasks are
+          further down.
         </p>
       </div>
     </header>
 
-    <section class="section section-profile" id="profile">
-      <div class="container">
-        <div class="profile-intro">
-          <div>
-            <p class="eyebrow">Profile</p>
-            <h2>Your classes, hours, and gifts</h2>
-            <p class="muted">
-              Ability is classes. Contribution is volunteer hours. Impact is
-              gifts.
-            </p>
-            <div class="action-bar">
-              <a class="btn btn-primary" href="profile.html">Go to Profile</a>
-              <a class="btn" href="activity-finder.html">Start with a class</a>
-            </div>
-          </div>
-          <div class="profile-pillars">
-            <a class="profile-pillar" href="profile.html#ability">
-              <strong>Ability</strong>
-              <span>Classes and milestones</span>
-            </a>
-            <a class="profile-pillar" href="profile.html#contribution">
-              <strong>Contribution</strong>
-              <span>Volunteer hours</span>
-            </a>
-            <a class="profile-pillar" href="profile.html#impact">
-              <strong>Impact</strong>
-              <span>Gifts and receipts</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <section class="section" id="marketplace">
       <div class="container">
         <div class="section-head">
-          <h2>Talent marketplace</h2>
+          <h2>People you can hire</h2>
+          <p class="muted">Click someone to see open dates and times.</p>
         </div>
-        <p
-          class="muted"
-          style="max-width: 34rem; margin-top: -0.5rem; margin-bottom: 1.75rem"
-        >
-          Book members for cooking, art, sport, or wellness sessions at your
-          office or event.
-        </p>
-        <div class="creator-grid">
-          <article class="creator">
-            <div class="creator-art swim">Mei</div>
-            <div class="creator-body">
-              <div class="creator-skill">Sport · swimming</div>
-              <h3>Mei</h3>
-              <p>Race-day warm-ups and lane coaching for younger members.</p>
-              <button
-                type="button"
-                class="btn btn-sm btn-primary"
-                data-hire="Mei · swimming coach"
-              >
-                Hire creator
+        <div class="hire-people">
+          <article class="hire-person" data-hire-person>
+            <button type="button" class="hire-person-main" data-hire-select>
+              <span class="creator-art swim">Mei</span>
+              <span>
+                <strong>Mei</strong>
+                <span class="muted">Swimming coach</span>
+              </span>
+            </button>
+            <div class="hire-slots" data-hire-slots hidden>
+              <p>Office or CSR warm-up · about 60 minutes · teams of 8–15</p>
+              <label class="hire-date-label">
+                Date and time
+                <select class="hire-date" data-hire-date>
+                  <option value="">Choose a slot</option>
+                  <option>Sat 8 Aug 2026 · 10:00–11:00</option>
+                  <option>Sat 15 Aug 2026 · 10:00–11:00</option>
+                  <option>Sat 15 Aug 2026 · 14:00–15:00</option>
+                  <option>Wed 26 Aug 2026 · 18:30–19:30</option>
+                </select>
+              </label>
+              <button type="button" class="btn btn-sm btn-primary" data-hire="Mei · swimming coach">
+                Request Mei
               </button>
             </div>
           </article>
-          <article class="creator">
-            <div class="creator-art cook">Jordan</div>
-            <div class="creator-body">
-              <div class="creator-skill">Cooking · kitchen</div>
-              <h3>Jordan</h3>
-              <p>Saturday kitchen demos for office teams.</p>
-              <button
-                type="button"
-                class="btn btn-sm btn-primary"
-                data-hire="Jordan · kitchen demo"
-              >
-                Hire creator
+
+          <article class="hire-person" data-hire-person>
+            <button type="button" class="hire-person-main" data-hire-select>
+              <span class="creator-art cook">Jordan</span>
+              <span>
+                <strong>Jordan</strong>
+                <span class="muted">Kitchen demo</span>
+              </span>
+            </button>
+            <div class="hire-slots" data-hire-slots hidden>
+              <p>Member-led cooking for 8–12 people · half day</p>
+              <label class="hire-date-label">
+                Date and time
+                <select class="hire-date" data-hire-date>
+                  <option value="">Choose a slot</option>
+                  <option>Sat 8 Aug 2026 · 09:30–12:30</option>
+                  <option>Wed 26 Aug 2026 · 13:00–16:00</option>
+                  <option>Sat 5 Sep 2026 · 09:30–12:30</option>
+                </select>
+              </label>
+              <button type="button" class="btn btn-sm btn-primary" data-hire="Jordan · kitchen demo">
+                Request Jordan
               </button>
             </div>
           </article>
-          <article class="creator">
-            <div class="creator-art art">Sam</div>
-            <div class="creator-body">
-              <div class="creator-skill">Art · illustration</div>
-              <h3>Sam</h3>
-              <p>Original prints and event murals.</p>
-              <button
-                type="button"
-                class="btn btn-sm btn-primary"
-                data-hire="Sam · art commission"
-              >
-                Hire creator
+
+          <article class="hire-person" data-hire-person>
+            <button type="button" class="hire-person-main" data-hire-select>
+              <span class="creator-art art">Sam</span>
+              <span>
+                <strong>Sam</strong>
+                <span class="muted">Art / illustration</span>
+              </span>
+            </button>
+            <div class="hire-slots" data-hire-slots hidden>
+              <p>Prints, murals, or a short workshop</p>
+              <label class="hire-date-label">
+                Date and time
+                <select class="hire-date" data-hire-date>
+                  <option value="">Choose a slot</option>
+                  <option>Fri 14 Aug 2026 · 15:00–17:00</option>
+                  <option>Sat 22 Aug 2026 · 11:00–13:00</option>
+                  <option>Tue 1 Sep 2026 · 18:00–20:00</option>
+                </select>
+              </label>
+              <button type="button" class="btn btn-sm btn-primary" data-hire="Sam · art commission">
+                Request Sam
               </button>
             </div>
           </article>
-          <article class="creator">
-            <div class="creator-art dance">Ava</div>
-            <div class="creator-body">
-              <div class="creator-skill">Movement · dance</div>
-              <h3>Ava</h3>
-              <p>Group dance sessions for company wellness afternoons.</p>
-              <button
-                type="button"
-                class="btn btn-sm btn-primary"
-                data-hire="Ava · dance session"
-              >
-                Hire creator
+
+          <article class="hire-person" data-hire-person>
+            <button type="button" class="hire-person-main" data-hire-select>
+              <span class="creator-art dance">Ava</span>
+              <span>
+                <strong>Ava</strong>
+                <span class="muted">Dance</span>
+              </span>
+            </button>
+            <div class="hire-slots" data-hire-slots hidden>
+              <p>Group dance for a wellness afternoon</p>
+              <label class="hire-date-label">
+                Date and time
+                <select class="hire-date" data-hire-date>
+                  <option value="">Choose a slot</option>
+                  <option>Thu 13 Aug 2026 · 17:30–18:30</option>
+                  <option>Sat 29 Aug 2026 · 10:00–11:00</option>
+                </select>
+              </label>
+              <button type="button" class="btn btn-sm btn-primary" data-hire="Ava · dance session">
+                Request Ava
               </button>
             </div>
           </article>
-          <article class="creator">
-            <div class="creator-art yoga">Leo</div>
-            <div class="creator-body">
-              <div class="creator-skill">Wellness · yoga</div>
-              <h3>Leo</h3>
-              <p>Calm-room yoga with coaches. Available for offices.</p>
-              <button
-                type="button"
-                class="btn btn-sm btn-primary"
-                data-hire="Leo · office yoga"
-              >
-                Hire creator
+
+          <article class="hire-person" data-hire-person>
+            <button type="button" class="hire-person-main" data-hire-select>
+              <span class="creator-art yoga">Leo</span>
+              <span>
+                <strong>Leo</strong>
+                <span class="muted">Yoga / calm room</span>
+              </span>
+            </button>
+            <div class="hire-slots" data-hire-slots hidden>
+              <p>Quiet yoga for an office group</p>
+              <label class="hire-date-label">
+                Date and time
+                <select class="hire-date" data-hire-date>
+                  <option value="">Choose a slot</option>
+                  <option>Mon 10 Aug 2026 · 12:30–13:15</option>
+                  <option>Wed 19 Aug 2026 · 18:00–18:45</option>
+                  <option>Fri 4 Sep 2026 · 12:30–13:15</option>
+                </select>
+              </label>
+              <button type="button" class="btn btn-sm btn-primary" data-hire="Leo · office yoga">
+                Request Leo
               </button>
             </div>
           </article>
-          <article class="creator">
-            <div class="creator-art race">Kai</div>
-            <div class="creator-body">
-              <div class="creator-skill">Sport · racing</div>
-              <h3>Kai</h3>
-              <p>Track days and race-weekend cheer packages.</p>
-              <button
-                type="button"
-                class="btn btn-sm btn-primary"
-                data-hire="Kai · race day"
-              >
-                Hire creator
+
+          <article class="hire-person" data-hire-person>
+            <button type="button" class="hire-person-main" data-hire-select>
+              <span class="creator-art race">Kai</span>
+              <span>
+                <strong>Kai</strong>
+                <span class="muted">Race day / track</span>
+              </span>
+            </button>
+            <div class="hire-slots" data-hire-slots hidden>
+              <p>Track day support or race-weekend cheer</p>
+              <label class="hire-date-label">
+                Date and time
+                <select class="hire-date" data-hire-date>
+                  <option value="">Choose a slot</option>
+                  <option>Sat 22 Aug 2026 · 08:00–12:00</option>
+                  <option>Sun 6 Sep 2026 · 08:00–12:00</option>
+                </select>
+              </label>
+              <button type="button" class="btn btn-sm btn-primary" data-hire="Kai · race day">
+                Request Kai
               </button>
             </div>
           </article>
+        </div>
+        <div class="action-bar" style="margin-top: 1.25rem">
+          <a class="btn" href="contributor.html">Contributor page</a>
+          <a class="btn" href="profile.html">Open profile</a>
         </div>
       </div>
     </section>
@@ -200,7 +221,7 @@
             <p class="muted">
               Monthly supporters can book member-led wellness for their team.
             </p>
-            <a class="btn btn-sm mt-1" href="explore.html#marketplace">See creators</a>
+              <a class="btn btn-sm mt-1" href="explore.html#marketplace">See who you can hire</a>
           </div>
           <div class="card card-yellow">
             <h3>Tracked in your Profile</h3>
@@ -225,8 +246,8 @@
           class="muted"
           style="max-width: 34rem; margin-top: -0.5rem; margin-bottom: 1.5rem"
         >
-          Short tasks like flyer checks and photo sorting. Hours go to your
-          profile.
+          Short tasks like flyer checks and photo sorting. Points go on your
+          profile when you finish.
         </p>
         <div class="task-list" data-home-tasks>
           <p class="empty-hint">Loading open tasks…</p>

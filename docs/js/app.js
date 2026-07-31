@@ -1,4 +1,4 @@
-/* Love 21 — Part 2 front-end (wired to FastAPI) */
+/* Love 21 - Part 2 front-end (wired to FastAPI) */
 
 (function () {
   const ROLE_KEY = "love21_role";
@@ -6,34 +6,21 @@
   const journeys = {
     family: {
       title: "Find a class",
-      note: "Filter by age, day, or language. If a class is full, join the waitlist and we email you.",
+      note: "Filter by age, day, or language.",
       loginEmail: "carer@chen.demo",
-      actions: [
-        {
-          label: "Browse classes",
-          href: "pages/activity-finder.html",
-          primary: true,
-        },
-        { label: "Open Ability profile", href: "pages/profile.html#ability" },
-      ],
+      href: "pages/family.html",
     },
-    support: {
-      title: "Ways to support Love 21",
-      note: "Give monthly, claim a volunteer shift, or bring your company on board — pick one to see the details.",
-      actions: [
-        { label: "Give monthly", href: "pages/impact.html", primary: true },
-        { label: "See all tasks", href: "pages/volunteer.html" },
-        { label: "Hire talent / current needs", href: "pages/opportunity.html" },
-      ],
-      showTasks: true,
+    contributor: {
+      title: "Contribute",
+      note: "Claim a task, hire someone, or cover a need.",
+      loginEmail: "volunteer@demo.love21",
+      href: "pages/contributor.html",
     },
     curious: {
-      title: "New here? Start with the basics",
-      note: "Love 21 runs sport, nutrition, and meaningful-work programmes for the Down syndrome, autistic, and neurodiverse community in Hong Kong.",
-      actions: [
-        { label: "About Love 21", href: "pages/about.html", primary: true },
-        { label: "Where money goes", href: "pages/transparency.html" },
-      ],
+      title: "Explore",
+      note: "Learn about programmes and where gifts go.",
+      loginEmail: null,
+      href: "pages/curious.html",
     },
   };
 
@@ -61,69 +48,23 @@
   }
 
   const roleGrid = qs("[data-role-grid]");
-  const preview = qs("[data-journey-preview]");
-  if (roleGrid && preview) {
-    const saved = localStorage.getItem(ROLE_KEY);
+  if (roleGrid) {
     roleGrid.addEventListener("click", async function (e) {
       const btn = e.target.closest("[data-role]");
       if (!btn) return;
-      const role = btn.getAttribute("data-role");
+      let role = btn.getAttribute("data-role");
+      if (role === "volunteer" || role === "company" || role === "support")
+        role = "contributor";
+      if (role === "donor") role = "curious";
       localStorage.setItem(ROLE_KEY, role);
-      qsa("[data-role]", roleGrid).forEach(function (el) {
-        el.classList.toggle("selected", el === btn);
-      });
-      showJourney(role);
-      const email = journeys[role] && journeys[role].loginEmail;
-      if (L && email) {
+      const data = journeys[role];
+      if (data && data.loginEmail && L) {
         try {
-          await L.demoLogin(email);
+          await L.demoLogin(data.loginEmail);
         } catch (err) {}
       }
-      preview.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (data && data.href) window.location.href = data.href;
     });
-    if (saved && journeys[saved]) {
-      const match = qs('[data-role="' + saved + '"]', roleGrid);
-      if (match) {
-        match.classList.add("selected");
-        showJourney(saved);
-      }
-    }
-  }
-
-  function showJourney(role) {
-    const data = journeys[role];
-    if (!data || !preview) return;
-    const base = preview.getAttribute("data-base") || "";
-    preview.hidden = false;
-    preview.classList.add("visible");
-
-    let html =
-      "<h2>" + data.title + '</h2><p class="muted">' + data.note + "</p>";
-
-    html += '<div class="action-bar arrival-actions">';
-    (data.actions || []).forEach(function (a) {
-      html +=
-        '<a class="btn' +
-        (a.primary ? " btn-primary" : "") +
-        '" href="' +
-        base +
-        a.href +
-        '">' +
-        a.label +
-        "</a>";
-    });
-    html += "</div>";
-
-    if (data.showTasks) {
-      html +=
-        '<div class="task-list arrival-tasks" data-home-tasks><p class="muted">Loading tasks…</p></div>';
-    }
-
-    preview.innerHTML = html;
-
-    if (data.showTasks && typeof window.loadHomeTasks === "function") {
-      window.loadHomeTasks();
-    }
   }
 
   qsa("[data-toggle]").forEach(function (btn) {
@@ -231,7 +172,7 @@
         const profile = await L.api("/api/profile");
         if (!profile.family) {
           L.showToast(
-            "This account has no household — switch demo account in Profile."
+            "This account has no household .  switch demo account in Profile."
           );
           return;
         }
@@ -249,7 +190,7 @@
         });
         const msg =
           result.status === "waitlist"
-            ? "Waitlist #" + result.waitlist_position + " — saved to profile"
+            ? "Waitlist #" + result.waitlist_position + " .  saved to profile"
             : "Booked · " + (result.activity_title || "class");
         if (onProfile && typeof window.reloadProfile === "function") {
           L.showToast(msg);
@@ -318,7 +259,7 @@
         if (!L.getPerson()) await L.ensureLogin("donor@demo.love21");
         const list = await L.api("/api/impact/commitments");
         if (!list.length) {
-          L.showToast("No commitment yet — start one first");
+          L.showToast("No commitment yet .  start one first");
           return;
         }
         const body =

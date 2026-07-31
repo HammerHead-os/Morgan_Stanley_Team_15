@@ -7,10 +7,11 @@ from ..database import get_db
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 DEMO_ACCOUNTS = {
-    "carer@chen.demo": "Family carer (Chen household)",
-    "alex@chen.demo": "Member Alex",
-    "donor@demo.love21": "Supporter Sam",
-    "volunteer@demo.love21": "Volunteer Taylor",
+    "carer@chen.demo": "Jamie · Mom (family + volunteer + donor)",
+    "dad@chen.demo": "Chris · Dad (family + donor)",
+    "alex@chen.demo": "Alex · Child member",
+    "donor@demo.love21": "Sam · Donor + volunteer",
+    "volunteer@demo.love21": "Taylor · Volunteer + donor",
 }
 
 

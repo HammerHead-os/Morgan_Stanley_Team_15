@@ -25,9 +25,13 @@ class Person(Base):
     name: Mapped[str] = mapped_column(String(120))
     role_primary: Mapped[str] = mapped_column(String(40), default="family")
     # family (carer) | member | donor | volunteer | corporate
+    # Multi-role: comma list e.g. "family,volunteer,donor"
+    roles: Mapped[str] = mapped_column(String(120), default="family")
     language: Mapped[str] = mapped_column(String(20), default="both")
     phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     profile_code: Mapped[str] = mapped_column(String(32), unique=True)
+    # mom | dad | caregiver | helper | child | (blank for non-family)
+    household_role: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -115,6 +119,7 @@ class Registration(Base):
     waitlist_position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     reminder_channel: Mapped[str] = mapped_column(String(20), default="email")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    session_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     feedback: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     feedback_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
@@ -158,6 +163,7 @@ class HireEnquiry(Base):
         ForeignKey("people.id"), nullable=True
     )
     creator_label: Mapped[str] = mapped_column(String(200))
+    preferred_date: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     status: Mapped[str] = mapped_column(String(40), default="received")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -238,6 +244,7 @@ class VolunteerShift(Base):
     remote: Mapped[bool] = mapped_column(Boolean, default=True)
     spots_left: Mapped[int] = mapped_column(Integer, default=5)
     requires_onboarding: Mapped[bool] = mapped_column(Boolean, default=False)
+    scheduled_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
 
     claims: Mapped[list["VolunteerShiftClaim"]] = relationship(back_populates="shift")
 

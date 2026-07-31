@@ -10,8 +10,13 @@
     <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
-          <span class="brand-mark" aria-hidden="true">21</span>
-          Love 21
+          <img
+            class="brand-logo"
+            src="../img/logo.png"
+            alt="Love 21"
+            width="120"
+            height="74"
+          />
         </a>
         <button
           class="nav-toggle"
@@ -21,10 +26,9 @@
         >
           Menu
         </button>
-                <ul class="nav-links" id="nav-menu">
+        <ul class="nav-links" id="nav-menu">
           <li><a class="nav-home" href="../index.html">Home</a></li>
           <li><a href="profile.html" aria-current="page">Profile</a></li>
-          <li><a href="about.html">About</a></li>
           <li><a href="contact.html">Contact</a></li>
           <li><span class="nav-session" data-session>…</span></li>
         </ul>
@@ -105,23 +109,17 @@
               ></button>
             </div>
           </div>
-          <p
-            class="muted"
-            style="font-size: 0.85rem; margin-top: 1rem"
-            data-opt-out
-          ></p>
           <details class="profile-demo" style="margin-top: 1.25rem">
             <summary>Demo accounts</summary>
             <label class="muted" style="font-size: 0.85rem">
-              Switch role for the hackathon demo
+              Switch demo account
               <select data-account-select>
-                <option value="carer@chen.demo">Jamie Chen · Ability</option>
-                <option value="alex@chen.demo">
-                  Alex Chen · Ability (member)
-                </option>
-                <option value="donor@demo.love21">Sam Wong · Impact</option>
+                <option value="carer@chen.demo">Jamie Chen · Mom (multi-role)</option>
+                <option value="dad@chen.demo">Chris Chen · Dad</option>
+                <option value="alex@chen.demo">Alex Chen · Child</option>
+                <option value="donor@demo.love21">Sam Wong · Donor + volunteer</option>
                 <option value="volunteer@demo.love21">
-                  Taylor Ng · Contribution
+                  Taylor Ng · Volunteer + donor
                 </option>
               </select>
             </label>
@@ -129,168 +127,129 @@
         </div>
 
         <p class="profile-flash" data-profile-flash hidden></p>
-
-        <nav
-          class="profile-tabs"
-          role="tablist"
-          aria-label="Profile sections"
-          data-tablist
-        ></nav>
       </div>
     </header>
 
     <main class="section section-tight" data-profile-root>
-      <div class="container">
-        <section
-          class="profile-panel"
-          data-profile-panel="ability"
-          role="tabpanel"
-          id="panel-ability"
-          hidden
-        >
-          <div class="chapter-head">
-            <h2>Ability</h2>
-            <p class="muted">
-              Your class bookings and coach-confirmed milestones.
-            </p>
+      <div class="container profile-layout">
+        <section class="panel-soft" data-actions-panel>
+          <h2>What you can do</h2>
+          <p class="muted">Actions match the roles on this profile.</p>
+          <div class="action-bar" data-role-actions></div>
+        </section>
+
+        <section class="panel-soft mt-2">
+          <h2>Your roles</h2>
+          <p class="muted">
+            One profile can be family, volunteer, and donor at the same time.
+          </p>
+          <div class="role-toggles" data-role-toggles>
+            <label class="role-toggle"
+              ><input type="checkbox" value="family" /> Family</label
+            >
+            <label class="role-toggle"
+              ><input type="checkbox" value="volunteer" /> Volunteer</label
+            >
+            <label class="role-toggle"
+              ><input type="checkbox" value="donor" /> Donor</label
+            >
+            <label class="role-toggle"
+              ><input type="checkbox" value="corporate" /> Company</label
+            >
           </div>
-          <div class="split">
-            <div>
-              <div class="action-bar" style="margin-top: 0">
-                <a class="btn btn-primary" href="activity-finder.html"
-                  >Browse classes</a
-                >
-              </div>
-              <form class="goal-form stack mt-2" data-goal-form>
-                <label>
-                  New goal
-                  <input
-                    type="text"
-                    name="title"
-                    required
-                    maxlength="200"
-                    placeholder="e.g. Swim 50m without stopping"
-                  />
-                </label>
-                <button type="submit" class="btn btn-primary btn-sm">
-                  Save goal
-                </button>
-              </form>
-            </div>
-            <div class="stack">
-              <div class="panel-soft" data-family-panel>
-                <p class="muted">Loading…</p>
-              </div>
-              <div class="panel-soft" data-achievement-panel>
-                <p class="muted">Loading…</p>
-              </div>
-            </div>
+          <button type="button" class="btn btn-sm btn-primary mt-1" data-save-roles>
+            Save roles
+          </button>
+        </section>
+
+        <section class="panel-soft mt-2" data-family-section hidden>
+          <h2>Family members</h2>
+          <p class="muted">
+            Mom, dad, caregivers, and helpers share the same child records.
+          </p>
+          <div data-family-members></div>
+          <form class="stack mt-2" data-add-member-form>
+            <h3>Add someone</h3>
+            <label>
+              Name
+              <input type="text" name="name" required maxlength="120" />
+            </label>
+            <label>
+              Role in household
+              <select name="household_role" required>
+                <option value="mom">Mom</option>
+                <option value="dad">Dad</option>
+                <option value="caregiver">Caregiver</option>
+                <option value="helper">Helper</option>
+                <option value="child">Child / member</option>
+              </select>
+            </label>
+            <label>
+              Email (optional)
+              <input type="email" name="email" maxlength="200" />
+            </label>
+            <button type="submit" class="btn btn-primary btn-sm">Add member</button>
+          </form>
+        </section>
+
+        <section class="panel-soft mt-2" data-gift-manage hidden>
+          <h2>Manage gift</h2>
+          <p class="muted" style="font-size: 0.88rem">
+            We ask you to confirm before we change anything.
+          </p>
+          <label>
+            Fund
+            <select data-fund-select>
+              <option>Sports programmes</option>
+              <option>Nutrition programmes</option>
+              <option>Family support</option>
+              <option>Where needed most</option>
+            </select>
+          </label>
+          <div class="action-bar">
+            <button type="button" class="btn btn-ghost btn-sm" data-commitment-action="pause">
+              Pause
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" data-commitment-action="change">
+              Change fund
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" data-commitment-action="renew">
+              Renew
+            </button>
           </div>
         </section>
 
-        <section
-          class="profile-panel"
-          data-profile-panel="contribution"
-          role="tabpanel"
-          id="panel-contribution"
-          hidden
-        >
-          <div class="chapter-head">
-            <h2>Contribution</h2>
-            <p class="muted">Shifts you claimed and hours you logged.</p>
-          </div>
-          <div class="split">
-            <div>
-              <div class="action-bar" style="margin-top: 0">
-                <a class="btn btn-primary" href="volunteer.html"
-                  >See open shifts</a
-                >
-              </div>
-            </div>
-            <div class="panel-soft">
-              <h3>Hours logged</h3>
-              <p>
-                <span
-                  class="stat-value"
-                  style="font-size: 2.4rem"
-                  data-volunteer-hours
-                  >0</span
-                >
-                <span class="muted"> hrs</span>
-              </p>
-              <div data-volunteer-panel>
-                <p class="muted">Loading…</p>
-              </div>
+        <section class="panel-soft mt-2" id="calendar">
+          <div class="cal-head">
+            <h2>Calendar</h2>
+            <div class="action-bar" style="margin-top: 0">
+              <button type="button" class="btn btn-ghost btn-sm" data-cal-prev>
+                Prev
+              </button>
+              <span data-cal-label></span>
+              <button type="button" class="btn btn-ghost btn-sm" data-cal-next>
+                Next
+              </button>
             </div>
           </div>
+          <p class="muted">Classes and volunteer shifts on this profile.</p>
+          <div class="cal-grid" data-cal-grid></div>
+          <div class="cal-legend">
+            <span class="cal-dot class"></span> Class
+            <span class="cal-dot volunteer"></span> Volunteer
+          </div>
+          <ul class="cal-day-list" data-cal-day-list></ul>
         </section>
 
-        <section
-          class="profile-panel"
-          data-profile-panel="impact"
-          role="tabpanel"
-          id="panel-impact"
-          hidden
-        >
-          <div class="chapter-head">
-            <h2>Impact</h2>
-            <p class="muted">Your monthly gift, receipts, and hire requests.</p>
-          </div>
-          <div class="split">
-            <div>
-              <div class="mt-2" data-impact-panel style="margin-top: 0">
-                <p class="muted">Loading…</p>
-              </div>
-              <div class="action-bar">
-                <a class="btn btn-primary" href="impact.html"
-                  >What HKD 300 covers</a
-                >
-              </div>
-              <div class="mt-2" data-hire-panel></div>
-            </div>
-            <div class="panel-soft stack" data-gift-manage>
-              <h3>Manage gift</h3>
-              <p class="muted" style="font-size: 0.88rem; margin: 0">
-                We will ask you to confirm before we change anything.
-              </p>
-              <label>
-                Fund
-                <select data-fund-select>
-                  <option>Sports programmes</option>
-                  <option>Nutrition programmes</option>
-                  <option>Family support</option>
-                  <option>Where needed most</option>
-                </select>
-              </label>
-              <button
-                type="button"
-                class="btn btn-ghost btn-sm"
-                data-commitment-action="pause"
-              >
-                Pause
-              </button>
-              <button
-                type="button"
-                class="btn btn-ghost btn-sm"
-                data-commitment-action="change"
-              >
-                Change fund
-              </button>
-              <button
-                type="button"
-                class="btn btn-sm btn-primary"
-                data-commitment-action="renew"
-              >
-                Renew
-              </button>
-            </div>
+        <section class="mt-2">
+          <h2>All activity</h2>
+          <p class="muted">
+            One feed for classes, volunteer hours, gifts, hires, and milestones.
+          </p>
+          <div class="activity-feed panel-soft mt-1" data-activity-feed>
+            <p class="muted">Loading…</p>
           </div>
         </section>
-
-        <aside class="journey-rail panel-soft mt-2" data-journey-panel>
-          <h3>Recent activity</h3>
-          <p class="muted">Stuff you did across Ability, Contribution, and Impact.</p>
-        </aside>
       </div>
     </main>
 
@@ -298,18 +257,15 @@
       <div class="footer-grid">
         <div>
           <div class="footer-brand">Love 21 Foundation</div>
-          <p>
-            Classes and support in San Po Kong, Hong Kong.
-          </p>
+          <p>Classes and support in San Po Kong, Hong Kong.</p>
         </div>
         <div>
-          <h4>Explore</h4>
+          <h4>Links</h4>
           <ul class="footer-links">
             <li><a href="../index.html">Home</a></li>
-            <li><a href="about.html">About us</a></li>
             <li><a href="profile.html">Profile</a></li>
             <li><a href="contact.html">Contact</a></li>
-            <li><a href="transparency.html">Where money goes</a></li>
+            <li><a href="about.html">About</a></li>
           </ul>
         </div>
         <div>
@@ -317,10 +273,7 @@
           <p>
             Love 21 Space · 2/F, Trium Lab<br />
             21 Luk Hop Street, San Po Kong<br />
-            <a href="tel:+85223222121">+852 2322 2121</a><br />
-            <a href="mailto:info@love21foundation.com"
-              >info@love21foundation.com</a
-            >
+            <a href="tel:+85223222121">+852 2322 2121</a>
           </p>
         </div>
       </div>

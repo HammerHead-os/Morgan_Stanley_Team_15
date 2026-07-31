@@ -25,6 +25,7 @@ def hire_creator(
     enquiry = models.HireEnquiry(
         person_id=person.id if person else None,
         creator_label=body.creator_label,
+        preferred_date=body.preferred_date,
         status="received",
     )
     db.add(enquiry)
@@ -34,7 +35,8 @@ def hire_creator(
                 person_id=person.id,
                 event_type="hire_enquiry",
                 channel="email",
-                payload=body.creator_label,
+                payload=body.creator_label
+                + (f";date={body.preferred_date}" if body.preferred_date else ""),
             )
         )
     db.commit()

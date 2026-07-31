@@ -25,6 +25,7 @@ def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
         waitlist_position=reg.waitlist_position,
         reminder_channel=reg.reminder_channel,
         created_at=reg.created_at,
+        session_date=reg.session_date,
         feedback=reg.feedback,
         activity_title=reg.activity.title if reg.activity else None,
         activity_location=reg.activity.location if reg.activity else None,
@@ -158,3 +159,85 @@ def post_feedback(
     db.commit()
     db.refresh(reg)
     return _registration_out(reg)
+
+
+@router.post("/members", response_model=schemas.PersonOut)
+def add_family_member(
+    body: schemas.FamilyMemberIn,
+    person: models.Person = Depends(get_current_person),
+    db: Session = Depends(get_db),
+):
+    from ..roles_util import has_role, parse_roles
+
+    if not person.household_id:
+        raise HTTPException(status_code=400, detail="You need a household first")
+    if not (has_role(person, "family") or person.household_id):
+        raise HTTPException(status_code=403, detail="Not a household account")
+    if person.household_role == "child":
+        raise HTTPException(
+            status_code=403, detail="Ask a parent or caregiver to add members"
+        )
+
+    role = body.household_role.strip().lower()
+    allowed = {"mom", "dad", "caregiver", "helper", "child"}
+    if role not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail="Role must be mom, dad, caregiver, helper, or child",
+        )
+
+    import secrets
+
+    email = (body.email or "").strip().lower()
+    if not email:
+        slug = body.name.lower().replace(" ", ".")[:40]
+        email = f"{slug}.{person.household_id}.{secrets.token_hex(3)}@family.love21"
+
+    existing = db.query(models.Person).filter(models.Person.email == email).first()
+    if existing:
+        raise HTTPException(status_code=409, detail="That email is already in use")
+
+    is_child = body.is_child or role == "child"
+    new_roles = "member" if is_child else "family"
+    new_person = models.Person(
+        email=email,
+        name=body.name.strip(),
+        role_primary="member" if is_child else "family",
+        roles=new_roles,
+        language=person.language or "both",
+        household_id=person.household_id,
+        household_role=role,
+        profile_code=f"L21-HK-{secrets.randbelow(9000) + 1000}",
+    )
+    db.add(new_person)
+    db.flush()
+    db.add(
+        models.CommPreferences(
+            person_id=new_person.id,
+            email_on=True,
+            sms_on=False,
+            whatsapp_on=False,
+            opt_out_token=secrets.token_urlsafe(16),
+        )
+    )
+    _log_journey(
+        db,
+        person.id,
+        "family_member_added",
+        "email",
+        f"member={new_person.id};role={role}",
+    )
+    db.commit()
+    db.refresh(new_person)
+    return schemas.PersonOut(
+        id=new_person.id,
+        email=new_person.email,
+        name=new_person.name,
+        role_primary=new_person.role_primary,
+        roles=parse_roles(new_person),
+        language=new_person.language,
+        household_id=new_person.household_id,
+        household_role=new_person.household_role,
+        profile_code=new_person.profile_code,
+        issued_at=new_person.issued_at or new_person.created_at,
+    )

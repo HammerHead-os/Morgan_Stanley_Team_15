@@ -5,6 +5,32 @@
   const grid = document.querySelector("[data-shift-grid]");
   if (!L || !grid) return;
 
+  const SKILL_LABELS = {
+    cantonese: "Cantonese reading",
+    photos: "basic photo sorting",
+    voice: "phone mic, English or Cantonese",
+    sports: "on-site sports help",
+  };
+
+  function skillLine(raw) {
+    return String(raw || "")
+      .split(",")
+      .map(function (s) {
+        s = s.trim().toLowerCase();
+        return SKILL_LABELS[s] || s;
+      })
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  function pointsGiven(durationMin) {
+    // Roughly matches the static contributor examples
+    if (durationMin <= 15) return 20;
+    if (durationMin <= 30) return 35;
+    if (durationMin <= 45) return 40;
+    return durationMin + 5;
+  }
+
   async function reloadVolunteerShifts() {
     try {
       const shifts = await L.api("/api/volunteers/shifts");
@@ -15,9 +41,6 @@
             '<span class="tag">' +
             s.duration_min +
             " min</span>" +
-            '<span class="tag">' +
-            escapeHtml(s.language) +
-            "</span>" +
             (s.remote
               ? '<span class="tag">Remote</span>'
               : '<span class="tag">On-site</span>') +
@@ -26,7 +49,8 @@
             ? '<button type="button" class="btn btn-sm btn-ink" data-onboard>Start onboarding</button>'
             : '<button type="button" class="btn btn-sm btn-primary" data-claim-shift="' +
               s.id +
-              '">Claim shift</button>';
+              '">Claim task</button>';
+          const skills = skillLine(s.skills_needed);
           return (
             '<article class="activity">' +
             tags +
@@ -35,6 +59,14 @@
             "</h3><p>" +
             escapeHtml(s.description) +
             "</p>" +
+            (skills
+              ? '<p class="task-meta-line">Skills needed: ' +
+                escapeHtml(skills) +
+                "</p>"
+              : "") +
+            '<p class="task-meta-line">Points given: ' +
+            pointsGiven(s.duration_min) +
+            "</p>" +
             btn +
             "</article>"
           );
@@ -42,7 +74,7 @@
         .join("");
     } catch (err) {
       grid.innerHTML =
-        '<p class="empty-hint">Shifts will not load. Run the local server, then refresh.</p>';
+        '<p class="empty-hint">Tasks will not load. Start the local API, then refresh.</p>';
     }
   }
 
@@ -63,7 +95,7 @@
           availability: "weekends",
         },
       });
-      L.goToProfile("contribution", "Onboarding complete");
+      L.goToProfile(null, "Onboarding done");
     } catch (err) {
       L.showToast(L.friendlyError(err));
     }
