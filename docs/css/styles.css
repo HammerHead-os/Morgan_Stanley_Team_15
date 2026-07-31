@@ -382,6 +382,30 @@ p {
   margin: 0;
 }
 
+/* google map code*/
+.location-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 45%);
+  gap: 2rem;
+  align-items: start;
+}
+
+.location-map iframe {
+  width: 100%;
+  min-height: 340px;
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: var(--lift);
+}
+
+@media (max-width: 900px) {
+  .location-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* end of google map code*/
+
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
