@@ -7,7 +7,7 @@ load_dotenv()
 
 # Retrieve credentials
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY")
 
 # Validate that the credentials exist
 if not SUPABASE_URL or not SUPABASE_KEY:
