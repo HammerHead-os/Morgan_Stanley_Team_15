@@ -3,84 +3,437 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Love 21 helps Hong Kong's Down syndrome, autistic, and neurodiverse community build health, confidence, and connection."
+    />
     <title>Love 21 Foundation</title>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
-  <body class="page-arrival">
-    <nav class="site-nav" aria-label="Primary">
-      <div class="inner">
-        <a class="brand" href="index.html">
-          <span class="brand-mark" aria-hidden="true">21</span>
-          Love 21
-        </a>
-        <button
-          class="nav-toggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="nav-menu"
-        >
-          Menu
-        </button>
-        <ul class="nav-links" id="nav-menu">
-          <li>
-            <a class="nav-home" href="index.html" aria-current="page">Home</a>
-          </li>
-          <li><a href="pages/profile.html">Profile</a></li>
-          <li><a href="pages/about.html">About</a></li>
-          <li><a href="pages/contact.html">Contact</a></li>
-        </ul>
-      </div>
-    </nav>
+  <body class="page-home-v2">
+    <nav class="site-nav" aria-label="Primary"></nav>
 
-    <header class="arrival" id="start">
-      <div class="container arrival-inner">
-        <div class="arrival-copy">
-          <p class="arrival-brand">Love <span>21</span></p>
-          <h1>Who are you here as?</h1>
-          <p class="arrival-lead">
-            Classes and programmes in Hong Kong for kids and young people with
-            Down syndrome, autism, and other neurodivergences. Pick your role
-            and we will send you the right next step.
+    <section
+      class="role-gate"
+      data-role-gate
+      aria-labelledby="role-question"
+      aria-describedby="role-description"
+    >
+      <div class="role-gate-inner">
+        <div class="role-gate-copy">
+          <p class="eyebrow">Welcome to Love 21</p>
+          <h1 id="role-question">What brings you here today?</h1>
+          <p id="role-description">
+            Choose a role and we will put the most useful information first.
+            Your choice is remembered and can be changed at any time.
           </p>
         </div>
 
-        <div class="arrival-roles">
-          <div class="role-grid role-grid-main" data-role-grid>
-            <button type="button" class="role-option" data-role="family">
-              <span class="role-label">Parent / carer</span>
-              <span class="role-hint">Book a class</span>
+        <div class="role-choice-grid" data-role-grid>
+          <button type="button" class="role-choice" data-role="family">
+            <strong>Family or participant</strong>
+            <span>Find classes and follow your progress</span>
+          </button>
+          <button type="button" class="role-choice" data-role="volunteer">
+            <strong>Volunteer</strong>
+            <span>Offer time or find community talent</span>
+          </button>
+          <button type="button" class="role-choice" data-role="donor">
+            <strong>Donor</strong>
+            <span>Understand the work and give with confidence</span>
+          </button>
+          <button type="button" class="role-choice" data-role="company">
+            <strong>Corporate partner</strong>
+            <span>Plan a CSR session or support a need</span>
+          </button>
+        </div>
+
+        <button type="button" class="role-skip" data-role-skip>
+          Just curious — show me around
+        </button>
+      </div>
+    </section>
+
+    <main data-role-home hidden>
+      <header class="home-hero" id="top">
+        <div class="container home-hero-grid">
+          <div class="home-hero-copy">
+            <button type="button" class="role-current" data-role-change>
+              <span data-role-current>Just curious</span>
+              <small>Change</small>
             </button>
-            <button type="button" class="role-option" data-role="donor">
-              <span class="role-label">Donor</span>
-              <span class="role-hint">Set up a monthly gift</span>
-            </button>
-            <button type="button" class="role-option" data-role="volunteer">
-              <span class="role-label">Volunteer</span>
-              <span class="role-hint">Grab a short task</span>
-            </button>
-            <button type="button" class="role-option" data-role="company">
-              <span class="role-label">Company / CSR</span>
-              <span class="role-hint">Hire talent or help with a need</span>
-            </button>
+            <p class="eyebrow" data-hero-kicker>So much ability</p>
+            <h1 data-hero-title>Every person deserves room to thrive.</h1>
+            <p class="hero-copy" data-hero-copy>
+              Free sport, nutrition, family, and community programmes for Hong
+              Kong's Down syndrome, autistic, and neurodiverse community.
+            </p>
+            <div class="action-bar home-hero-actions">
+              <a class="btn btn-primary" data-hero-primary href="pages/about.html"
+                >Meet Love 21</a
+              >
+              <a class="btn btn-quiet" data-hero-secondary href="pages/join.html"
+                >Explore every way to join</a
+              >
+            </div>
           </div>
 
-          <div class="journey-preview" data-journey-preview hidden></div>
+          <div class="hero-photo-grid" aria-label="Love 21 community moments">
+            <figure class="hero-photo hero-photo-main">
+              <img
+                src="assets/media/programme-sport.jpeg"
+                alt="Love 21 members and coaches together after a sports session"
+              />
+            </figure>
+            <figure class="hero-photo">
+              <img
+                src="assets/media/programme-nutrition.jpeg"
+                alt="Love 21 members taking part in a cooking programme"
+              />
+            </figure>
+            <figure class="hero-photo">
+              <img
+                src="assets/media/social-board-game.jpg"
+                alt="Love 21 members practising communication through a board game"
+              />
+            </figure>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <footer class="site-footer site-footer-compact">
-      <div class="footer-bottom" style="border: 0; margin: 0; padding: 1.25rem 0">
-        <span>Love 21 · San Po Kong</span>
-        <span>
-          <a href="pages/about.html">About</a>
-          ·
-          <a href="pages/contact.html">Contact</a>
-          ·
-          <a href="pages/transparency.html">Where money goes</a>
-        </span>
+      <div class="role-content" data-role-content>
+        <section
+          class="home-module module-activities"
+          id="activities"
+          data-home-module="activities"
+        >
+          <div class="container">
+            <div class="module-heading">
+              <div>
+                <p class="eyebrow">Find your next class</p>
+                <h2>Activities built around ability.</h2>
+              </div>
+              <a class="text-link" href="pages/activity-finder.html"
+                >Browse all activities</a
+              >
+            </div>
+            <div class="activity-grid home-activity-grid" data-featured-activities>
+              <p class="empty-hint">Loading current activities…</p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="home-module module-programmes"
+          id="programmes"
+          data-home-module="programmes"
+        >
+          <div class="container">
+            <div class="module-heading">
+              <div>
+                <p class="eyebrow">Our programmes</p>
+                <h2>Support for the whole person.</h2>
+              </div>
+              <a class="text-link" href="pages/about.html#programmes"
+                >Explore our programmes</a
+              >
+            </div>
+            <div class="programme-grid">
+              <article class="programme-card">
+                <img
+                  src="assets/media/programme-sport.jpeg"
+                  alt="Love 21 sports programme group"
+                />
+                <div>
+                  <span>01</span>
+                  <h3>Sport and fitness</h3>
+                  <p>Movement, confidence, coordination, and team spirit.</p>
+                </div>
+              </article>
+              <article class="programme-card">
+                <img
+                  src="assets/media/programme-nutrition.jpeg"
+                  alt="Love 21 nutrition and cooking session"
+                />
+                <div>
+                  <span>02</span>
+                  <h3>Nutrition</h3>
+                  <p>One-to-one guidance and practical cooking skills.</p>
+                </div>
+              </article>
+              <article class="programme-card">
+                <img
+                  src="assets/media/programme-family.jpg"
+                  alt="Love 21 members, families, and coaches together"
+                />
+                <div>
+                  <span>03</span>
+                  <h3>Family</h3>
+                  <p>Counselling, parent connection, and shared activities.</p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="home-module module-story"
+          id="story"
+          data-home-module="story"
+        >
+          <div class="container story-layout">
+            <figure class="story-photo">
+              <img
+                src="assets/media/our-story.jpg"
+                alt="The Love 21 community gathered together"
+              />
+            </figure>
+            <div class="story-copy">
+              <p class="eyebrow">Our story</p>
+              <h2>Start with what people can do.</h2>
+              <p class="story-lead">
+                Love 21 is a Hong Kong charity dedicated to empowering the Down
+                syndrome and autistic community through sport, nutrition, and
+                holistic support.
+              </p>
+              <p>
+                We pair practical programmes with family support, visible
+                pathways to participation, and a simple belief: every person
+                brings ability worth recognising.
+              </p>
+              <div class="stat-row" aria-label="Love 21 at a glance">
+                <div><strong>90+</strong><span>activities</span></div>
+                <div><strong>1,000+</strong><span>monthly sessions</span></div>
+                <div><strong>500+</strong><span>families</span></div>
+              </div>
+              <a class="text-link" href="pages/about.html#story"
+                >Read the full story</a
+              >
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="home-module module-volunteer"
+          id="volunteer-marketplace"
+          data-home-module="volunteer"
+        >
+          <div class="container">
+            <div class="module-heading">
+              <div>
+                <p class="eyebrow">Volunteer marketplace</p>
+                <h2>Give your time. Discover their talent.</h2>
+              </div>
+            </div>
+            <div class="marketplace-grid">
+              <article class="marketplace-card">
+                <span class="card-number">01</span>
+                <h3>Be a volunteer</h3>
+                <p>
+                  Pick a short task, support a weekly class, or bring a useful
+                  skill to the community.
+                </p>
+                <div class="task-list home-task-list" data-home-tasks>
+                  <p class="muted">Loading open roles…</p>
+                </div>
+                <a class="btn btn-primary" href="pages/volunteer.html"
+                  >See volunteer roles</a
+                >
+              </article>
+              <article class="marketplace-card marketplace-card-dark">
+                <span class="card-number">02</span>
+                <h3>Find a volunteer or member talent</h3>
+                <p>
+                  Book a member-led workshop, find creative talent, or ask the
+                  Love 21 community for support.
+                </p>
+                <a class="btn btn-light" href="pages/explore.html#marketplace"
+                  >Open the talent marketplace</a
+                >
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="home-module module-reports"
+          id="reports"
+          data-home-module="reports"
+        >
+          <div class="container report-layout">
+            <div>
+              <p class="eyebrow">Our reports</p>
+              <h2>See the work behind every gift.</h2>
+              <p class="story-lead">
+                Love 21 is a Section 88 registered charity. Official annual
+                reports explain the programmes, outcomes, and financial
+                stewardship behind the numbers.
+              </p>
+              <a class="btn btn-primary" href="pages/about.html#reports"
+                >View financial reports</a
+              >
+            </div>
+            <div class="report-list">
+              <a
+                href="https://love21foundation.com/wp-content/uploads/2026/04/Annualreport_final.pdf"
+                target="_blank"
+                rel="noopener"
+              >
+                <span>Annual report</span>
+                <strong>2024–2025</strong>
+              </a>
+              <a
+                href="https://love21foundation.com/wp-content/uploads/2025/10/Love21-ANNUAL-REPORT_2324.pdf"
+                target="_blank"
+                rel="noopener"
+              >
+                <span>Annual report</span>
+                <strong>2023–2024</strong>
+              </a>
+              <a
+                href="https://love21foundation.com/wp-content/uploads/2024/03/Love-21-Annual-Report-2022-2023-ENG-3.pdf"
+                target="_blank"
+                rel="noopener"
+              >
+                <span>Annual report</span>
+                <strong>2022–2023</strong>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="home-module module-donate"
+          id="donate"
+          data-home-module="donate"
+        >
+          <div class="container compact-cta">
+            <div>
+              <p class="eyebrow">Give with confidence</p>
+              <h2>See what HKD 300 can do.</h2>
+              <p>
+                Estimate the tax-adjusted cost, choose a programme fund, and
+                keep receipts inside your Profile Passport.
+              </p>
+            </div>
+            <a class="btn btn-primary" href="pages/impact.html#tax"
+              >Open donation calculator</a
+            >
+          </div>
+        </section>
+
+        <section
+          class="home-module module-support"
+          id="support"
+          data-home-module="support"
+        >
+          <div class="container support-layout">
+            <div>
+              <p class="eyebrow">Corporate partnerships</p>
+              <h2>Build inclusion into the working day.</h2>
+              <p class="story-lead">
+                Join a CSR programme, invite a member-led workshop to your
+                office, sponsor a programme, or help with a current community
+                need.
+              </p>
+              <div class="action-bar">
+                <a class="btn btn-primary" href="pages/opportunity.html"
+                  >See current needs</a
+                >
+                <a class="btn" href="pages/contact.html">Talk to our team</a>
+              </div>
+            </div>
+            <img
+              src="assets/media/programme-community.jpg"
+              alt="Love 21 members and volunteers in a community session"
+            />
+          </div>
+        </section>
+
+        <section
+          class="home-module module-social"
+          id="social"
+          data-home-module="social"
+        >
+          <div class="container">
+            <div class="module-heading">
+              <div>
+                <p class="eyebrow">From the community</p>
+                <h2>Small moments. Lasting progress.</h2>
+              </div>
+              <a
+                class="text-link"
+                href="https://www.instagram.com/love21foundation/"
+                target="_blank"
+                rel="noopener"
+                >Visit Instagram</a
+              >
+            </div>
+            <div class="social-wall">
+              <a
+                href="https://www.instagram.com/love21foundation/"
+                target="_blank"
+                rel="noopener"
+              >
+                <img
+                  src="assets/media/social-mission.jpg"
+                  alt="Love 21 mission post: every neurodiverse individual deserves opportunity"
+                />
+                <span>Our mission</span>
+              </a>
+              <a
+                href="https://www.instagram.com/love21foundation/"
+                target="_blank"
+                rel="noopener"
+              >
+                <img
+                  src="assets/media/social-communication.jpg"
+                  alt="Love 21 members celebrating communication progress"
+                />
+                <span>Communication milestones</span>
+              </a>
+              <a
+                href="https://www.instagram.com/love21foundation/"
+                target="_blank"
+                rel="noopener"
+              >
+                <img
+                  src="assets/media/social-board-game.jpg"
+                  alt="Love 21 board game group practising social skills"
+                />
+                <span>Learning through play</span>
+              </a>
+            </div>
+            <p class="source-note">
+              Local archive preview from Love 21's official Instagram. Reuse
+              rights and participant consent remain subject to staff review.
+            </p>
+          </div>
+        </section>
+
+        <section
+          class="home-module module-login"
+          id="login"
+          data-home-module="login"
+        >
+          <div class="container passport-cta">
+            <div>
+              <p class="eyebrow">Your Profile Passport</p>
+              <h2>Turn participation into a journey you can see.</h2>
+              <p>
+                Keep class bookings, milestones, volunteer hours, gifts, and
+                receipts together in one personal place.
+              </p>
+            </div>
+            <a class="btn btn-light" href="pages/profile.html"
+              >Log in to start</a
+            >
+          </div>
+        </section>
       </div>
-    </footer>
+    </main>
+
+    <footer class="site-footer"></footer>
 
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>

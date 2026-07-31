@@ -3,56 +3,51 @@
 (function () {
   const ROLE_KEY = "love21_role";
 
-  const journeys = {
+  const roleExperiences = {
     family: {
-      title: "Find a class",
-      note: "Filter by age, day, or language. If a class is full, join the waitlist and we email you.",
-      loginEmail: "carer@chen.demo",
-      actions: [
-        {
-          label: "Browse classes",
-          href: "pages/activity-finder.html",
-          primary: true,
-        },
-        { label: "Open Ability profile", href: "pages/profile.html#ability" },
-      ],
-    },
-    donor: {
-      title: "Give monthly",
-      note: "HKD 300 a month covers about two coach-led sessions. You can pause or change the fund later in Impact.",
-      loginEmail: "donor@demo.love21",
-      actions: [
-        { label: "Start giving", href: "pages/impact.html", primary: true },
-        { label: "Tax calculator", href: "pages/impact.html#tax" },
-        { label: "Impact profile", href: "pages/profile.html#impact" },
-      ],
+      label: "Family or participant",
+      kicker: "For families and participants",
+      title: "A place to move, grow, and belong.",
+      copy: "Find a class that fits, understand the support around it, and keep every booking and milestone inside your Profile Passport.",
+      primary: ["Find an activity", "pages/activity-finder.html"],
+      secondary: ["Open your Profile Passport", "pages/profile.html#ability"],
+      modules: ["activities", "programmes", "story", "login"],
     },
     volunteer: {
-      title: "Pick a task",
-      note: "Most tasks take under 90 minutes. Claim one and log the hours under Contribution.",
-      loginEmail: "volunteer@demo.love21",
-      actions: [
-        { label: "See all tasks", href: "pages/volunteer.html", primary: true },
-        {
-          label: "Contribution profile",
-          href: "pages/profile.html#contribution",
-        },
-      ],
-      showTasks: true,
+      label: "Volunteer",
+      kicker: "For volunteers",
+      title: "Bring a little time. Leave with a bigger view.",
+      copy: "Pick a role that fits your schedule, support a programme, or discover the skills and talent already inside the Love 21 community.",
+      primary: ["See volunteer roles", "pages/volunteer.html"],
+      secondary: ["Find community talent", "pages/explore.html#marketplace"],
+      modules: ["volunteer", "story", "social", "login"],
+    },
+    donor: {
+      label: "Donor",
+      kicker: "For donors",
+      title: "Give with a clear view of the impact.",
+      copy: "Meet the community, read the official reports, estimate the tax-adjusted cost, and keep every contribution inside your Profile Passport.",
+      primary: ["See what HKD 300 does", "pages/impact.html#tax"],
+      secondary: ["Read the latest report", "pages/about.html#reports"],
+      modules: ["story", "reports", "donate", "social"],
     },
     company: {
-      title: "Work with us",
-      note: "Book a member for an office session, or help with something we need right now.",
-      loginEmail: "donor@demo.love21",
-      actions: [
-        {
-          label: "Hire talent",
-          href: "pages/explore.html#marketplace",
-          primary: true,
-        },
-        { label: "Current needs", href: "pages/opportunity.html" },
-        { label: "Contact us", href: "pages/contact.html" },
-      ],
+      label: "Corporate partner",
+      kicker: "For corporate partners",
+      title: "Make inclusion part of how your team works.",
+      copy: "Start with the story, review the evidence, then plan a CSR session, sponsor a programme, or book member-led talent.",
+      primary: ["Explore partnership options", "pages/join.html#support"],
+      secondary: ["Talk to our team", "pages/contact.html"],
+      modules: ["story", "reports", "support", "social"],
+    },
+    curious: {
+      label: "Just curious",
+      kicker: "A quick introduction",
+      title: "Start with the people, then see the work.",
+      copy: "Meet Love 21, explore the programmes, and see how public reporting turns a simple mission into accountable action.",
+      primary: ["Meet Love 21", "pages/about.html#story"],
+      secondary: ["Explore all ways to join", "pages/join.html"],
+      modules: ["story", "programmes", "reports", "social"],
     },
   };
 
@@ -67,6 +62,114 @@
   const L = window.Love21;
   const onProfile = !!qs("[data-profile-root]");
 
+  function renderSiteShell() {
+    const inPages = /\/pages\//.test(location.pathname);
+    const pagePrefix = inPages ? "" : "pages/";
+    const homeHref = inPages ? "../index.html" : "index.html";
+    const assetPrefix = inPages ? "../" : "";
+    const role =
+      roleExperiences[localStorage.getItem(ROLE_KEY)] || roleExperiences.curious;
+    const nav = qs(".site-nav");
+    if (nav) {
+      nav.innerHTML =
+        '<div class="inner">' +
+        '<a class="brand" href="' +
+        homeHref +
+        '" aria-label="Love 21 home">' +
+        '<img src="' +
+        assetPrefix +
+        'assets/media/love21-logo.png" alt="" />' +
+        '<span>Love 21</span></a>' +
+        '<button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>' +
+        '<ul class="nav-links" id="nav-menu">' +
+        '<li class="nav-item nav-dropdown"><a class="nav-main" href="' +
+        pagePrefix +
+        'about.html">About us</a>' +
+        '<div class="nav-menu" aria-label="About us sections">' +
+        '<a href="' +
+        pagePrefix +
+        'about.html#story">Our story</a>' +
+        '<a href="' +
+        pagePrefix +
+        'about.html#reports">Our financial reports</a>' +
+        '<a href="' +
+        pagePrefix +
+        'about.html#programmes">Our programmes</a>' +
+        '<a href="' +
+        pagePrefix +
+        'about.html#staff">Our staff</a></div></li>' +
+        '<li class="nav-item nav-dropdown"><a class="nav-main" href="' +
+        pagePrefix +
+        'join.html">Join us</a>' +
+        '<div class="nav-menu" aria-label="Join us sections">' +
+        '<a href="' +
+        pagePrefix +
+        'join.html#activities">Find an activity</a>' +
+        '<a href="' +
+        pagePrefix +
+        'join.html#volunteer">Be a volunteer</a>' +
+        '<a href="' +
+        pagePrefix +
+        'join.html#find-volunteer">Find a volunteer</a>' +
+        '<a href="' +
+        pagePrefix +
+        'join.html#donate">Donate</a>' +
+        '<a href="' +
+        pagePrefix +
+        'join.html#support">Support us</a>' +
+        '<a href="' +
+        pagePrefix +
+        'join.html#contact">Contact us</a></div></li>' +
+        '<li class="nav-item nav-dropdown"><a class="nav-main" href="' +
+        pagePrefix +
+        'profile.html">Profile</a>' +
+        '<div class="nav-menu" aria-label="Profile sections">' +
+        '<a href="' +
+        pagePrefix +
+        'profile.html#ability">Ability passport</a>' +
+        '<a href="' +
+        pagePrefix +
+        'profile.html#contribution">Contribution passport</a>' +
+        '<a href="' +
+        pagePrefix +
+        'profile.html#impact">Impact passport</a></div></li></ul>' +
+        '<div class="nav-tools"><a class="nav-role" href="' +
+        homeHref +
+        '?chooseRole=1#role-question">For: <span class="nav-role-name">' +
+        role.label +
+        '</span></a><span class="nav-session" data-session>Ready</span></div>' +
+        "</div>";
+    }
+
+    const footer = qs(".site-footer");
+    if (footer) {
+      footer.innerHTML =
+        '<div class="footer-grid">' +
+        '<div><a class="footer-brand" href="' +
+        homeHref +
+        '">Love 21 Foundation</a>' +
+        "<p>Sport, nutrition, family support, and community in San Po Kong, Hong Kong.</p></div>" +
+        '<div><h4>Explore</h4><ul class="footer-links">' +
+        '<li><a href="' +
+        pagePrefix +
+        'about.html">About us</a></li>' +
+        '<li><a href="' +
+        pagePrefix +
+        'join.html">Join us</a></li>' +
+        '<li><a href="' +
+        pagePrefix +
+        'profile.html">Profile</a></li></ul></div>' +
+        '<div><h4>Visit</h4><p>Love 21 Space · 2/F, Trium Lab<br />21 Luk Hop Street, San Po Kong<br />' +
+        '<a href="tel:+85223222121">+852 2322 2121</a><br />' +
+        '<a href="mailto:info@love21foundation.com">info@love21foundation.com</a></p></div></div>' +
+        '<div class="footer-bottom"><span>© Love 21 Foundation · Code to Give 2026</span>' +
+        '<span><a href="https://love21foundation.com/" target="_blank" rel="noopener">Official website</a> · ' +
+        '<a href="https://www.instagram.com/love21foundation/" target="_blank" rel="noopener">Instagram</a></span></div>';
+    }
+  }
+
+  renderSiteShell();
+
   const toggle = qs(".nav-toggle");
   const links = qs(".nav-links");
   if (toggle && links) {
@@ -80,68 +183,135 @@
   }
 
   const roleGrid = qs("[data-role-grid]");
-  const preview = qs("[data-journey-preview]");
-  if (roleGrid && preview) {
-    const saved = localStorage.getItem(ROLE_KEY);
-    roleGrid.addEventListener("click", async function (e) {
+  const roleGate = qs("[data-role-gate]");
+  const roleHome = qs("[data-role-home]");
+  const roleContent = qs("[data-role-content]");
+  if (roleGrid && roleGate && roleHome && roleContent) {
+    roleGrid.addEventListener("click", function (e) {
       const btn = e.target.closest("[data-role]");
       if (!btn) return;
       const role = btn.getAttribute("data-role");
-      localStorage.setItem(ROLE_KEY, role);
-      qsa("[data-role]", roleGrid).forEach(function (el) {
-        el.classList.toggle("selected", el === btn);
-      });
-      showJourney(role);
-      const email = journeys[role] && journeys[role].loginEmail;
-      if (L && email) {
-        try {
-          await L.demoLogin(email);
-        } catch (err) {}
-      }
-      preview.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      showRoleHome(role, true);
     });
-    if (saved && journeys[saved]) {
-      const match = qs('[data-role="' + saved + '"]', roleGrid);
-      if (match) {
-        match.classList.add("selected");
-        showJourney(saved);
-      }
+
+    const skip = qs("[data-role-skip]");
+    if (skip) {
+      skip.addEventListener("click", function () {
+        showRoleHome("curious", true);
+      });
+    }
+    qsa("[data-role-change]").forEach(function (button) {
+      button.addEventListener("click", openRoleGate);
+    });
+
+    const params = new URLSearchParams(location.search);
+    const saved = localStorage.getItem(ROLE_KEY);
+    if (params.get("chooseRole") === "1" || !roleExperiences[saved]) {
+      openRoleGate();
+    } else {
+      showRoleHome(saved, false);
     }
   }
 
-  function showJourney(role) {
-    const data = journeys[role];
-    if (!data || !preview) return;
-    const base = preview.getAttribute("data-base") || "";
-    preview.hidden = false;
-    preview.classList.add("visible");
+  function openRoleGate() {
+    if (!roleGate || !roleHome) return;
+    roleGate.hidden = false;
+    roleHome.hidden = true;
+    const heading = qs("#role-question");
+    if (heading) heading.focus({ preventScroll: true });
+    roleGate.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
-    let html =
-      "<h2>" + data.title + '</h2><p class="muted">' + data.note + "</p>";
+  function showRoleHome(role, shouldScroll) {
+    const data = roleExperiences[role] || roleExperiences.curious;
+    localStorage.setItem(ROLE_KEY, role);
+    if (roleGate) roleGate.hidden = true;
+    if (roleHome) roleHome.hidden = false;
 
-    html += '<div class="action-bar arrival-actions">';
-    (data.actions || []).forEach(function (a) {
-      html +=
-        '<a class="btn' +
-        (a.primary ? " btn-primary" : "") +
-        '" href="' +
-        base +
-        a.href +
-        '">' +
-        a.label +
-        "</a>";
+    qsa("[data-role]", roleGrid).forEach(function (button) {
+      button.classList.toggle(
+        "selected",
+        button.getAttribute("data-role") === role
+      );
     });
-    html += "</div>";
+    qsa(".nav-role-name").forEach(function (slot) {
+      slot.textContent = data.label;
+    });
 
-    if (data.showTasks) {
-      html +=
-        '<div class="task-list arrival-tasks" data-home-tasks><p class="muted">Loading tasks…</p></div>';
+    const current = qs("[data-role-current]");
+    const kicker = qs("[data-hero-kicker]");
+    const title = qs("[data-hero-title]");
+    const copy = qs("[data-hero-copy]");
+    const primary = qs("[data-hero-primary]");
+    const secondary = qs("[data-hero-secondary]");
+    if (current) current.textContent = data.label;
+    if (kicker) kicker.textContent = data.kicker;
+    if (title) title.textContent = data.title;
+    if (copy) copy.textContent = data.copy;
+    if (primary) {
+      primary.textContent = data.primary[0];
+      primary.href = data.primary[1];
+    }
+    if (secondary) {
+      secondary.textContent = data.secondary[0];
+      secondary.href = data.secondary[1];
     }
 
-    preview.innerHTML = html;
+    const modules = qsa("[data-home-module]", roleContent);
+    modules.forEach(function (module) {
+      module.hidden = true;
+    });
+    data.modules.forEach(function (name, index) {
+      const module = qs('[data-home-module="' + name + '"]', roleContent);
+      if (!module) return;
+      module.hidden = false;
+      module.style.setProperty("--module-order", String(index + 1));
+      roleContent.appendChild(module);
+    });
 
-    if (data.showTasks && typeof window.loadHomeTasks === "function") {
+    loadFeaturedActivities();
+    if (
+      data.modules.includes("volunteer") &&
+      typeof window.loadHomeTasks === "function"
+    ) {
       window.loadHomeTasks();
+    }
+    if (shouldScroll) {
+      qs("#top").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  async function loadFeaturedActivities() {
+    const grid = qs("[data-featured-activities]");
+    if (!grid || !L || grid.getAttribute("data-loaded") === "true") return;
+    try {
+      const list = await L.api("/api/activities");
+      grid.innerHTML = list
+        .slice(0, 3)
+        .map(function (activity) {
+          const full = activity.spots_left <= 0;
+          return (
+            '<article class="activity">' +
+            '<div class="activity-meta"><span class="tag">' +
+            escapeHtml(activity.goal) +
+            '</span><span class="tag">' +
+            escapeHtml(activity.day) +
+            "</span></div>" +
+            "<h3>" +
+            escapeHtml(activity.title) +
+            "</h3><p>" +
+            escapeHtml(activity.description) +
+            "</p>" +
+            '<a class="text-link" href="pages/activity-finder.html">' +
+            (full ? "Join the waitlist" : activity.spots_left + " places left") +
+            "</a></article>"
+          );
+        })
+        .join("");
+      grid.setAttribute("data-loaded", "true");
+    } catch (error) {
+      grid.innerHTML =
+        '<p class="empty-hint">Current activities are available in the Activity Finder.</p>';
     }
   }
 
@@ -383,15 +553,19 @@
   }
 
   async function paintSession() {
-    const slot = qs("[data-session]");
-    if (!slot || !L) return;
+    const slots = qsa("[data-session]");
+    if (!slots.length || !L) return;
     try {
       await L.api("/api/health");
       const person = L.getPerson();
-      slot.textContent = person ? person.name : "Ready";
-      if (person) slot.title = person.email;
+      slots.forEach(function (slot) {
+        slot.textContent = person ? person.name : "Ready";
+        if (person) slot.title = person.email;
+      });
     } catch (e) {
-      slot.textContent = "Offline";
+      slots.forEach(function (slot) {
+        slot.textContent = "Offline";
+      });
     }
   }
   paintSession();
