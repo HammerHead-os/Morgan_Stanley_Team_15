@@ -99,7 +99,10 @@
         'about.html#programmes">Our programmes</a>' +
         '<a href="' +
         pagePrefix +
-        'about.html#staff">Our staff</a></div></li>' +
+        'about.html#staff">Our staff</a>' +
+        '<a href="' +
+        pagePrefix +
+        'about.html#board">Board & organisation</a></div></li>' +
         '<li class="nav-item nav-dropdown"><a class="nav-main" href="' +
         pagePrefix +
         'join.html">Join us</a>' +
