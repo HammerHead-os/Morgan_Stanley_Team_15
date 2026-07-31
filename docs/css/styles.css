@@ -385,17 +385,23 @@ p {
 /* google map code*/
 .location-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 45%) minmax(280px, 1fr);
+  grid-template-columns: minmax(320px, 45%) minmax(280px, 1fr);
   gap: 2rem;
   align-items: start;
 }
 
 .location-map iframe {
   width: 100%;
-  min-height: 340px;
+  min-height: 360px;
   border: 0;
   border-radius: var(--radius);
   box-shadow: var(--lift);
+}
+
+.location-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 @media (max-width: 900px) {
