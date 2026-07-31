@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Give | Love 21</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+        <nav class="site-nav" aria-label="Primary">
+      <div class="inner">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark" aria-hidden="true">21</span>
+          Love 21
+        </a>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="nav-menu"
+        >
+          Menu
+        </button>
+        <ul class="nav-links" id="nav-menu">
+          <li><a href="my-love21.html">Passport</a></li>
+          <li><a href="../index.html#marketplace">Marketplace</a></li>
+          <li><a href="volunteer.html">Volunteer</a></li>
+          <li><a href="impact.html" aria-current="page">Give</a></li>
+          <li><a href="activity-finder.html">Classes</a></li>
+          <li>
+            <a class="nav-cta" href="my-love21.html">Open Passport</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <header class="page-banner">
+      <div class="container">
+        <h1>Give monthly</h1>
+        <p>
+          Check the approximate net cost after HK charity tax relief, then start
+          a monthly gift with PayMe, Apple Pay, or Google Pay (demo).
+        </p>
+      </div>
+    </header>
+
+    <main class="section section-tight">
+      <div class="container">
+        <div class="tax-tool" id="tax">
+          <div class="card card-sky">
+            <h2>Tax calculator</h2>
+            <p class="muted">
+              Rough guide only — not IRD advice. Pick your marginal salaries-tax
+              rate.
+            </p>
+            <div class="field">
+              <label for="gift">Monthly gift (HKD)</label>
+              <input id="gift" type="number" min="50" step="50" value="300" />
+            </div>
+            <div class="field">
+              <label for="rate">Marginal tax rate</label>
+              <select id="rate">
+                <option value="0.02">2%</option>
+                <option value="0.06">6%</option>
+                <option value="0.10">10%</option>
+                <option value="0.14">14%</option>
+                <option value="0.17" selected>17% (standard)</option>
+              </select>
+            </div>
+            <div class="tax-result" data-tax-out></div>
+          </div>
+
+          <div class="card card-yellow">
+            <h2>What it funds</h2>
+            <p class="muted">
+              About 2 coach-led programme sessions per HKD 300.
+            </p>
+            <div class="meter" style="--pct: 74.6%">
+              <div class="meter-fill"></div>
+            </div>
+            <p class="muted" style="font-size: 0.85rem">
+              ~74.6% goes to programmes (prototype figure).
+            </p>
+            <div class="pay-row">
+              <button
+                type="button"
+                class="btn btn-sm btn-primary pay-btn"
+                data-pay="PayMe"
+              >
+                PayMe
+              </button>
+              <button type="button" class="btn btn-sm pay-btn" data-pay="Apple Pay">
+                Apple Pay
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm pay-btn"
+                data-pay="Google Pay"
+              >
+                Google Pay
+              </button>
+            </div>
+            <button
+              type="button"
+              class="btn btn-ink btn-block mt-1"
+              data-start-commitment
+            >
+              Start HKD <span data-gift-label>300</span> monthly
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="inner">
+        <div>Love 21 Foundation · giving</div>
+        <div><a href="../index.html">← Home</a></div>
+      </div>
+    </footer>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/tax.js"></script>
+  </body>
+</html>

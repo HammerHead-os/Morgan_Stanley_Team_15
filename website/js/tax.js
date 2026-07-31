@@ -1,0 +1,56 @@
+/* HK tax saver + one-tap pay demo */
+
+(function () {
+  const gift = document.getElementById("gift");
+  const rate = document.getElementById("rate");
+  const out = document.querySelector("[data-tax-out]");
+  const label = document.querySelector("[data-gift-label]");
+  const L = window.Love21;
+
+  function recalc() {
+    if (!gift || !rate || !out) return;
+    const amount = Math.max(0, Number(gift.value) || 0);
+    const r = Number(rate.value) || 0;
+    const save = Math.round(amount * r);
+    const net = Math.round(amount - save);
+    out.innerHTML =
+      '<div class="muted">Net cost after deduction</div>' +
+      '<div class="big">HKD ' +
+      net.toLocaleString() +
+      "</div>" +
+      '<p class="muted" style="margin:0">You give <strong>HKD ' +
+      amount.toLocaleString() +
+      "</strong> · tax relief about <strong>HKD " +
+      save.toLocaleString() +
+      "</strong> at " +
+      Math.round(r * 100) +
+      "%.</p>";
+    if (label) label.textContent = String(amount);
+  }
+
+  if (gift) gift.addEventListener("input", recalc);
+  if (rate) rate.addEventListener("change", recalc);
+  recalc();
+
+  document.addEventListener("click", async function (e) {
+    const pay = e.target.closest("[data-pay]");
+    if (!pay || !L) return;
+    e.preventDefault();
+    const amount = gift ? Number(gift.value) || 300 : 300;
+    const method = pay.getAttribute("data-pay");
+    try {
+      await L.ensureLogin("donor@demo.love21");
+      await L.api("/api/impact/commitments", {
+        method: "POST",
+        body: {
+          amount_hkd: amount,
+          fund_category: "Sports programmes",
+          cadence: "monthly",
+        },
+      });
+      L.showToast(method + " · HKD " + amount + "/mo started · badge unlocked");
+    } catch (err) {
+      L.showToast(method + " demo: HKD " + amount + " (API: " + (err.message || "offline") + ")");
+    }
+  });
+})();

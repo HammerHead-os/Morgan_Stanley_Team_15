@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Love 21 Passport</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <nav class="site-nav" aria-label="Primary">
+      <div class="inner">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark" aria-hidden="true">21</span>
+          Love 21
+        </a>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="nav-menu"
+        >
+          Menu
+        </button>
+        <ul class="nav-links" id="nav-menu">
+          <li>
+            <a href="my-love21.html" aria-current="page">Passport</a>
+          </li>
+          <li><a href="../index.html#marketplace">Marketplace</a></li>
+          <li><a href="volunteer.html">Volunteer</a></li>
+          <li><a href="impact.html">Give</a></li>
+          <li><a href="activity-finder.html">Classes</a></li>
+          <li>
+            <a class="nav-cta" href="my-love21.html">Open Passport</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <header class="passport-hero">
+      <div class="container">
+        <p class="eyebrow">Your relationship with Love 21</p>
+        <h1>Love 21 Passport</h1>
+        <p class="muted" style="max-width: 34rem">
+          Family bookings, milestones, giving, and volunteer hours — in one
+          place. Use the demo account switcher to explore each role.
+        </p>
+        <p class="muted" style="font-size: 0.9rem" data-passport-status>
+          Connecting…
+        </p>
+        <label
+          class="muted"
+          style="font-size: 0.85rem; display: block; margin-top: 0.75rem"
+        >
+          Demo account
+          <select
+            data-account-select
+            style="
+              margin-left: 0.5rem;
+              padding: 0.35rem 0.5rem;
+              border-radius: 8px;
+              border: 1px solid var(--line);
+            "
+          >
+            <option value="carer@chen.demo">Jamie Chen · family</option>
+            <option value="alex@chen.demo">Alex Chen · member</option>
+            <option value="donor@demo.love21">Sam Wong · supporter</option>
+            <option value="volunteer@demo.love21">Taylor Ng · volunteer</option>
+          </select>
+        </label>
+
+        <div class="passport-tabs" role="tablist" aria-label="Passport sections">
+          <button
+            type="button"
+            class="passport-tab active"
+            role="tab"
+            data-passport-tab="family"
+            aria-selected="true"
+          >
+            Family
+          </button>
+          <button
+            type="button"
+            class="passport-tab"
+            role="tab"
+            data-passport-tab="achievement"
+          >
+            Milestones
+          </button>
+          <button
+            type="button"
+            class="passport-tab"
+            role="tab"
+            data-passport-tab="impact"
+          >
+            Giving
+          </button>
+          <button
+            type="button"
+            class="passport-tab"
+            role="tab"
+            data-passport-tab="volunteer"
+          >
+            Volunteer
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="section section-tight" data-passport-root>
+      <div class="container">
+        <section
+          class="passport-panel active"
+          data-passport-panel="family"
+          role="tabpanel"
+        >
+          <div class="split">
+            <div>
+              <h2>Family</h2>
+              <p class="muted">
+                Household members, class bookings, waitlist place, and feedback
+                after a session.
+              </p>
+              <div class="action-bar">
+                <a class="btn btn-primary" href="activity-finder.html"
+                  >Browse classes</a
+                >
+              </div>
+            </div>
+            <div class="panel-soft" data-family-panel>
+              <p class="muted">Loading household…</p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="passport-panel"
+          data-passport-panel="achievement"
+          role="tabpanel"
+        >
+          <div class="split">
+            <div>
+              <h2>Milestones</h2>
+              <p class="muted">
+                Goals and coach-confirmed progress. Nothing is shared publicly
+                unless you say yes.
+              </p>
+              <p class="consent-note">
+                Sharing stays off until a member or carer consents.
+              </p>
+              <div class="action-bar">
+                <button type="button" class="btn btn-primary" data-set-goal>
+                  Set a goal
+                </button>
+              </div>
+            </div>
+            <div class="panel-soft" data-achievement-panel>
+              <p class="muted">Loading milestones…</p>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="passport-panel"
+          data-passport-panel="impact"
+          role="tabpanel"
+        >
+          <div class="split">
+            <div>
+              <h2>Giving</h2>
+              <p class="muted">
+                Receipts, which fund you support, and controls to pause, change,
+                or renew. Switch to the supporter demo account to manage.
+              </p>
+              <div class="mt-2" data-impact-panel>
+                <p class="muted">Loading…</p>
+              </div>
+              <div class="action-bar">
+                <a class="btn btn-primary" href="impact.html"
+                  >What HKD 300 covers</a
+                >
+              </div>
+            </div>
+            <div class="panel-soft stack">
+              <h3>Manage gift</h3>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                data-commitment-action="pause"
+              >
+                Pause
+              </button>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                data-commitment-action="change"
+              >
+                Change fund
+              </button>
+              <button
+                type="button"
+                class="btn btn-sm btn-primary"
+                data-commitment-action="renew"
+              >
+                Renew
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="passport-panel"
+          data-passport-panel="volunteer"
+          role="tabpanel"
+        >
+          <div class="split">
+            <div>
+              <h2>Volunteer</h2>
+              <p class="muted">
+                Shifts you’ve claimed, hours logged, and a suggested next task.
+              </p>
+              <div class="action-bar">
+                <a class="btn btn-primary" href="volunteer.html"
+                  >See open shifts</a
+                >
+              </div>
+            </div>
+            <div class="panel-soft">
+              <h3>Hours logged</h3>
+              <p>
+                <span
+                  class="stat-value"
+                  style="font-size: 2.4rem"
+                  data-volunteer-hours
+                  >0</span
+                >
+                <span class="muted"> hrs</span>
+              </p>
+              <div data-volunteer-panel>
+                <p class="muted">Loading…</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <section class="section section-sea">
+      <div class="container">
+        <h2 style="max-width: 22ch">How we contact you</h2>
+        <p style="max-width: 36rem; opacity: 0.9">
+          Email is on by default. Turn on SMS or WhatsApp only if you want
+          last-minute class changes that way.
+        </p>
+        <div class="channel-list mt-2" style="max-width: 420px">
+          <div class="channel">
+            <div>
+              <strong>Email</strong>
+              <div style="font-size: 0.85rem; opacity: 0.8">Default</div>
+            </div>
+            <button
+              type="button"
+              class="toggle on"
+              data-toggle="email_on"
+              aria-pressed="true"
+              aria-label="Email on"
+            ></button>
+          </div>
+          <div class="channel">
+            <div>
+              <strong>SMS</strong>
+              <div style="font-size: 0.85rem; opacity: 0.8">Optional</div>
+            </div>
+            <button
+              type="button"
+              class="toggle"
+              data-toggle="sms_on"
+              aria-pressed="false"
+              aria-label="SMS off"
+            ></button>
+          </div>
+          <div class="channel">
+            <div>
+              <strong>WhatsApp</strong>
+              <div style="font-size: 0.85rem; opacity: 0.8">Optional</div>
+            </div>
+            <button
+              type="button"
+              class="toggle"
+              data-toggle="whatsapp_on"
+              aria-pressed="false"
+              aria-label="WhatsApp off"
+            ></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="inner">
+        <div>Love 21 Passport</div>
+        <div><a href="../index.html">← Home</a></div>
+      </div>
+    </footer>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/app.js"></script>
+    <script src="../js/passport.js"></script>
+  </body>
+</html>

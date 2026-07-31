@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Activity Finder | Love 21</title>    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+                    <nav class="site-nav" aria-label="Primary">
+      <div class="inner">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark" aria-hidden="true">21</span>
+          Love 21
+        </a>
+        <button
+          class="nav-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="nav-menu"
+        >
+          Menu
+        </button>
+        <ul class="nav-links" id="nav-menu">
+          <li><a href="my-love21.html">Passport</a></li>
+          <li><a href="../index.html#marketplace">Marketplace</a></li>
+          <li><a href="volunteer.html">Volunteer</a></li>
+          <li><a href="impact.html">Give</a></li>
+          <li><a href="activity-finder.html" aria-current="page">Classes</a></li>
+          <li>
+            <a class="nav-cta" href="my-love21.html">Open Passport</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <header class="page-banner">
+      <div class="container">
+        <h1>Classes</h1>
+        <p>
+          Filter by type, age, day, support need, and language. Full classes
+          can go on a waitlist.
+        </p>
+      </div>
+    </header>
+
+    <main class="section section-tight">
+      <div class="container">
+        <form class="filters" data-activity-filters aria-label="Filters">
+          <div class="field">
+            <label for="goal">Goal</label>
+            <select id="goal" name="goal">
+              <option value="">Any</option>
+              <option value="sport">Sport</option>
+              <option value="nutrition">Nutrition</option>
+              <option value="family">Family support</option>
+              <option value="arts">Arts &amp; movement</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="age">Age</label>
+            <select id="age" name="age">
+              <option value="">Any</option>
+              <option value="child">Child (6–12)</option>
+              <option value="teen">Teen (13–17)</option>
+              <option value="adult">Adult (18+)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="day">Day</label>
+            <select id="day" name="day">
+              <option value="">Any</option>
+              <option value="weekday">Weekday</option>
+              <option value="saturday">Saturday</option>
+              <option value="sunday">Sunday</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="support">Support need</label>
+            <select id="support" name="support">
+              <option value="">Any</option>
+              <option value="low">Low sensory</option>
+              <option value="1to1">1:1 available</option>
+              <option value="group">Group OK</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="lang">Language</label>
+            <select id="lang" name="lang">
+              <option value="">Any</option>
+              <option value="yue">Cantonese</option>
+              <option value="en">English</option>
+              <option value="both">Bilingual</option>
+            </select>
+          </div>
+        </form>
+
+        <div class="activity-grid" data-activity-grid>
+          <p class="empty-hint">Loading activities…</p>
+        </div>
+
+        <p class="empty-hint" data-empty hidden>
+          No activities match these filters. Clear a filter or try another day.
+        </p>
+
+        <div class="action-bar">
+          <a class="btn btn-ghost" href="my-love21.html#family"
+            >Open family passport</a
+          >
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="inner">
+        <div>Love 21 · classes</div>
+        <div><a href="../index.html">← Home</a></div>
+      </div>
+    </footer>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/app.js"></script>
+  </body>
+</html>
