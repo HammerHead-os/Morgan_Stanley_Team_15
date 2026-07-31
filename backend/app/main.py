@@ -51,7 +51,7 @@ def health():
     return {"ok": True, "service": "love21-part2"}
 
 
-# Serve the static website from the same origin in production/demo
-WEBSITE_DIR = Path(__file__).resolve().parent.parent.parent / "website"
+# Serve the static site (docs/ for GitHub Pages) in production/demo
+WEBSITE_DIR = Path(__file__).resolve().parent.parent.parent / "docs"
 if WEBSITE_DIR.is_dir():
     app.mount("/", StaticFiles(directory=str(WEBSITE_DIR), html=True), name="site")
