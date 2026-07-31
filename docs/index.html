@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Love 21 Foundation</title>
     <link rel="stylesheet" href="css/styles.css?v=gate2" />
+    <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
     <style>
       /* Critical gate layout — keeps video full-bleed even if CSS cache is stale */
       html,
@@ -203,5 +204,11 @@
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
     <script src="js/gate.js"></script>
+    <script type="module">
+	    import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
+	  createChat({
+		webhookUrl: 'https://cllaiaj.app.n8n.cloud/webhook/78545d1e-8801-449c-a75e-5f8e0fb68ed9/chat'
+	});
+</script>
   </body>
 </html>
