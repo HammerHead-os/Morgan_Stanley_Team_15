@@ -5,8 +5,8 @@
 
   const journeys = {
     family: {
-      title: "Classes for your household",
-      note: "Browse by age, day, and language. Full classes go on a waitlist with email reminders.",
+      title: "Find a class",
+      note: "Filter by age, day, or language. If a class is full, join the waitlist and we email you.",
       loginEmail: "carer@chen.demo",
       actions: [
         {
@@ -19,7 +19,7 @@
     },
     donor: {
       title: "Give monthly",
-      note: "HKD 300 / month funds about two coach-led sessions. Pause or change fund anytime from your Impact profile.",
+      note: "HKD 300 a month covers about two coach-led sessions. You can pause or change the fund later in Impact.",
       loginEmail: "donor@demo.love21",
       actions: [
         { label: "Start giving", href: "pages/impact.html", primary: true },
@@ -28,8 +28,8 @@
       ],
     },
     volunteer: {
-      title: "Short volunteer tasks",
-      note: "Most shifts are 30–90 minutes. Claim one, then log hours in your Contribution profile.",
+      title: "Pick a task",
+      note: "Most tasks take under 90 minutes. Claim one and log the hours under Contribution.",
       loginEmail: "volunteer@demo.love21",
       actions: [
         { label: "See all tasks", href: "pages/volunteer.html", primary: true },
@@ -41,8 +41,8 @@
       showTasks: true,
     },
     company: {
-      title: "Partner with Love 21",
-      note: "Hire member creators for your office, bring a CSR team day, or cover an in-kind need.",
+      title: "Work with us",
+      note: "Book a member for an office session, or help with something we need right now.",
       loginEmail: "donor@demo.love21",
       actions: [
         {
@@ -51,9 +51,8 @@
           primary: true,
         },
         { label: "Current needs", href: "pages/opportunity.html" },
-        { label: "Contact partnerships", href: "pages/contact.html" },
+        { label: "Contact us", href: "pages/contact.html" },
       ],
-      showHire: true,
     },
   };
 
@@ -120,21 +119,7 @@
     let html =
       "<h2>" + data.title + '</h2><p class="muted">' + data.note + "</p>";
 
-    if (data.showHire) {
-      html +=
-        '<div class="arrival-hire">' +
-        '<button type="button" class="btn btn-sm btn-primary" data-hire="Mei · swimming coach">Hire Mei · swim</button>' +
-        '<button type="button" class="btn btn-sm" data-hire="Jordan · kitchen demo">Hire Jordan · kitchen</button>' +
-        '<button type="button" class="btn btn-sm" data-need-help="CSR kitchen session">Book CSR kitchen</button>' +
-        "</div>";
-    }
-
-    if (data.showTasks) {
-      html +=
-        '<div class="task-list mt-1" data-home-tasks><p class="muted">Loading tasks…</p></div>';
-    }
-
-    html += '<div class="action-bar">';
+    html += '<div class="action-bar arrival-actions">';
     (data.actions || []).forEach(function (a) {
       html +=
         '<a class="btn' +
@@ -147,6 +132,11 @@
         "</a>";
     });
     html += "</div>";
+
+    if (data.showTasks) {
+      html +=
+        '<div class="task-list arrival-tasks" data-home-tasks><p class="muted">Loading tasks…</p></div>';
+    }
 
     preview.innerHTML = html;
 
@@ -199,7 +189,7 @@
       renderActivities(list);
     } catch (err) {
       activityGrid.innerHTML =
-        '<p class="empty-hint">Can\'t load classes — start the Love 21 server, then refresh.</p>';
+        '<p class="empty-hint">Classes will not load. Run the local server, then refresh.</p>';
     }
   }
 

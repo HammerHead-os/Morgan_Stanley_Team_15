@@ -52,7 +52,7 @@
       });
       L.goToProfile(
         "impact",
-        method + " · HKD " + amount + "/mo started · badge unlocked"
+        method + " · HKD " + amount + "/mo started"
       );
     } catch (err) {
       L.showToast(L.friendlyError(err));

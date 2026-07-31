@@ -83,7 +83,7 @@
     const need = e.target.closest("[data-need-help]");
     if (need) {
       e.preventDefault();
-      toast("Thanks — noted: " + need.getAttribute("data-need-help"));
+      toast("Got it. Noted: " + need.getAttribute("data-need-help"));
     }
   });
 

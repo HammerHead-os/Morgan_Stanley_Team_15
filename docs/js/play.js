@@ -1,4 +1,4 @@
-﻿/* 90-second mini-game â€” local barriers â†’ Love 21 path */
+﻿/* Short walkthrough */
 
 (function () {
   const root = document.querySelector("[data-game]");
@@ -11,28 +11,28 @@
         {
           t: "They wait months with no status",
           next: 1,
-          note: "Thatâ€™s the old way â€” word-of-mouth only.",
+          note: "That is the old WhatsApp loop.",
         },
         {
           t: "They filter classes online and join a waitlist with reminders",
           next: 1,
-          note: "Love 21 path: Activity Finder + email reminders.",
+          note: "Use Activity Finder and get waitlist emails.",
           good: true,
         },
       ],
     },
     {
-      q: "An office wants to â€œdo CSRâ€ this quarter. Whatâ€™s the useful move?",
+      q: "An office wants to "do CSR" this quarter. What's the useful move?",
       choices: [
         {
           t: "Share a sad post and a donate link",
           next: 2,
-          note: "That doesnâ€™t create ongoing work for members.",
+          note: "That does not create real work for members.",
         },
         {
           t: "Book a member-led kitchen or yoga session for the team",
           next: 2,
-          note: "Companies hire creators from the marketplace.",
+          note: "Book a member through the marketplace.",
           good: true,
         },
       ],
@@ -41,30 +41,30 @@
       q: "Someone has 20 free minutes on the MTR. How do they help?",
       choices: [
         {
-          t: "Promise an all-day Saturday shift they canâ€™t keep",
+          t: "Promise an all-day Saturday shift they can't keep",
           next: 3,
-          note: "Long shifts scare busy Hongkongers off.",
+          note: "Big Saturday shifts are hard to keep.",
         },
         {
           t: "Claim a 15-min micro-task (flyer check / photo sort)",
           next: 3,
-          note: "Micro-tasks + badge. Done before the next stop.",
+          note: "Short task. Done before your next stop.",
           good: true,
         },
       ],
     },
     {
-      q: "A donor is about to bounce at a long form. Fix it?",
+      q: "A donor hits a long donation form. What helps?",
       choices: [
         {
           t: "Ask them to fill a long donation form",
           next: "end",
-          note: "Many people drop off there.",
+          note: "Long forms lose people.",
         },
         {
           t: "Show the tax-adjusted cost and pay with PayMe",
           next: "end",
-          note: "Tax calculator + one-tap pay on the Give page.",
+          note: "Tax estimate and PayMe on the Give page.",
           good: true,
         },
       ],
@@ -77,17 +77,17 @@
   function render() {
     if (i === "end" || i >= steps.length) {
       root.innerHTML =
-        '<p class="game-progress">Done Â· ' +
+        '<p class="game-progress">Done · ' +
         score +
         "/" +
         steps.length +
-        " capability moves</p>" +
-        "<h3>Youâ€™re through the barriers</h3>" +
-        "<p class=\"muted\">Pick a real next step â€” hire talent, claim a task, or give with tax math.</p>" +
+        " right picks</p>" +
+        "<h3>Nice. Next step?</h3>" +
+        "<p class=\"muted\">Hire talent, claim a task, or start a monthly gift.</p>" +
         '<div class="game-choices">' +
         '<a class="btn btn-primary" href="explore.html#marketplace">Hire a creator</a>' +
         '<a class="btn btn-mint" href="volunteer.html">15-min task</a>' +
-        '<a class="btn btn-yellow" href="impact.html">Give Â· tax saver</a>' +
+        '<a class="btn btn-yellow" href="impact.html">Give monthly</a>' +
         "</div>";
       return;
     }

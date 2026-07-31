@@ -42,7 +42,7 @@
         .join("");
     } catch (err) {
       grid.innerHTML =
-        '<p class="empty-hint">Can\'t load shifts — start the Love 21 server, then refresh.</p>';
+        '<p class="empty-hint">Shifts will not load. Run the local server, then refresh.</p>';
     }
   }
 

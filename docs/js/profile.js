@@ -1,4 +1,4 @@
-/* Love 21 Profile — three chapters; preferences off to the side */
+/* Love 21 Profile */
 
 (function () {
   const L = window.Love21;
@@ -28,7 +28,7 @@
   }
 
   function fmtDate(iso) {
-    if (!iso) return "—";
+    if (!iso) return "-";
     try {
       return new Date(iso).toLocaleDateString(undefined, {
         year: "numeric",
@@ -36,7 +36,7 @@
         day: "numeric",
       });
     } catch (e) {
-      return "—";
+      return "-";
     }
   }
 
@@ -163,8 +163,8 @@
     const role = data.person.role_primary;
     if (!ownsChapter(role, "ability") || !data.family) {
       el.innerHTML = emptyChapter(
-        "Ability chapter",
-        "Classes, waitlists, and session notes live here. Open a family demo account to see a filled Ability Profile — or browse classes to start one.",
+        "Ability",
+        "Class bookings and notes show up here. Switch to a family demo account, or browse classes to start.",
         "activity-finder.html",
         "Browse classes"
       );
@@ -257,7 +257,7 @@
           x.id +
           '"' +
           (x.share_consent ? " checked" : "") +
-          " /> Share this stamp</label>" +
+          " /> Share this milestone</label>" +
           "</div></div>"
         );
       })
@@ -280,9 +280,9 @@
     el.innerHTML =
       "<h3>" +
       escapeHtml(a.member.name) +
-      " · ability stamps</h3>" +
+      " · milestones</h3>" +
       '<div class="stamp-grid">' +
-      (stamps || '<p class="muted">No stamps yet — set a goal.</p>') +
+      (stamps || '<p class="muted">No milestones yet. Set a goal.</p>') +
       "</div>" +
       (goals
         ? '<h3 class="mt-2">Goals</h3><div class="timeline">' + goals + "</div>"
@@ -301,8 +301,8 @@
 
     if (!ownsChapter(role, "impact") && !c) {
       el.innerHTML = emptyChapter(
-        "Impact chapter",
-        "Monthly gifts, receipts, and badges stamp here. Open the supporter demo — or start a gift from Give.",
+        "Impact",
+        "Gifts and receipts show up here. Switch to the supporter demo, or start a gift from Give.",
         "impact.html",
         "See what HKD 300 covers"
       );
@@ -332,7 +332,7 @@
         '<div class="meter" style="--pct:74.6%"><div class="meter-fill"></div></div>' +
         '<p class="muted" style="font-size:0.8rem;margin:0">74.6% of gifts go to programmes</p>' +
         (c.office_perk_unlocked
-          ? '<p class="badge-stamp mt-1">Office workshop perk unlocked</p>'
+          ? '<p class="badge-stamp mt-1">Office workshop perk available</p>'
           : "") +
         (receipt && receipt.story_back
           ? '<p class="mt-1" style="font-size:0.9rem">' +
@@ -401,8 +401,8 @@
     if (!ownsChapter(role, "contribution") && !claims.length) {
       if (hoursEl) hoursEl.textContent = "0";
       el.innerHTML = emptyChapter(
-        "Contribution chapter",
-        "Shifts and hours stamp here. Open the volunteer demo — or claim a short task.",
+        "Contribution",
+        "Shifts and hours show up here. Switch to the volunteer demo, or claim a short task.",
         "volunteer.html",
         "See open shifts"
       );
@@ -464,7 +464,7 @@
       '<div class="timeline">' +
       (claimHtml || next
         ? claimHtml + next
-        : '<p class="muted">No shifts yet — claim one from Volunteer.</p>') +
+        : '<p class="muted">No shifts yet. Claim one from Volunteer.</p>') +
       "</div>";
   }
 
@@ -489,11 +489,11 @@
     const events = data.journey_events || [];
     if (!events.length) {
       el.innerHTML =
-        "<h3>Recent stamps</h3><p class=\"muted\">Actions across Ability, Contribution, and Impact land here.</p>";
+        "<h3>Recent activity</h3><p class=\"muted\">Your recent activity shows up here.</p>";
       return;
     }
     el.innerHTML =
-      "<h3>Recent stamps</h3>" +
+      "<h3>Recent activity</h3>" +
       '<div class="timeline">' +
       events
         .map(function (ev) {
@@ -615,7 +615,7 @@
           body: { title: title.trim(), member_person_id: memberId },
         });
         goalForm.reset();
-        L.showToast("Goal saved — coach review next");
+        L.showToast("Goal saved. A coach will review it next.");
         await reloadProfile();
         activateTab("ability");
       } catch (err) {
@@ -635,7 +635,7 @@
           method: "POST",
           body: { feedback: text.trim() },
         });
-        L.showToast("Feedback saved — stamped on your journey");
+        L.showToast("Feedback saved");
         await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
@@ -654,7 +654,7 @@
           method: "POST",
           body: { reflection: reflection.trim() },
         });
-        L.showToast("Shift complete — hours logged");
+        L.showToast("Shift complete. Hours logged.");
         await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
@@ -716,7 +716,7 @@
       try {
         const list = await L.api("/api/impact/commitments");
         if (!list.length) {
-          L.showToast("No commitment yet — start one from Give");
+          L.showToast("No gift yet. Start one from Give");
           return;
         }
         const body =

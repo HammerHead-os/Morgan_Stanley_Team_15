@@ -1,4 +1,4 @@
-/* Love 21 API client — Profile backend */
+/* Love 21 API client - Profile backend */
 
 (function (global) {
   const TOKEN_KEY = "love21_token";
