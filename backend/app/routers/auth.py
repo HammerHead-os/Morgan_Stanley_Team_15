@@ -1,44 +1,47 @@
 from datetime import datetime, timezone, timedelta
 from typing import Optional
-import os
-
-from fastapi import APIRouter, Depends, HTTPException, Request, Security, status, Header
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
-from jwt import PyJWKClient
+from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..database import get_db
 from ..posthog_client import get_posthog_client
+from ..security import hash_password, verify_password
+
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import os
+import jwt
+from jwt import PyJWKClient
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-# Initialize Security Schemes
+
+# Initialize Security Scheme
 security = HTTPBearer(auto_error=True)
 optional_security = HTTPBearer(auto_error=False)
 
-# Environment configuration
+# Fetch Secret from environment
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
+
+
+# Define Supabase URL
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://obnbgnmdrpxoutfuenoi.supabase.co")
 JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
 
-# Dynamic JWKS Key Client (caches public keys automatically)
+# PyJWKClient automatically fetches and caches the public keys using the Key ID (kid)
 jwks_client = PyJWKClient(JWKS_URL)
 
 
 def verify_supabase_token(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ) -> dict:
-    """Verifies incoming Supabase JWT against Supabase JWKS / Secret."""
     token = credentials.credentials
 
-    # Legacy numeric token handler for demo testing
+    # Allow simple numeric tokens for legacy demo testing
     if token.isdigit():
         return {"sub": f"demo-{token}", "email": f"demo{token}@app.com"}
 
-    # 1. Primary verification using Supabase JWKS (RS256 / ES256)
     try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
         payload = jwt.decode(
@@ -49,64 +52,30 @@ def verify_supabase_token(
             options={"verify_aud": True},
         )
         return payload
-    except Exception as primary_error:
-        # 2. Fallback verification using static SUPABASE_JWT_SECRET (HS256)
-        if SUPABASE_JWT_SECRET:
-            try:
-                payload = jwt.decode(
-                    token,
-                    SUPABASE_JWT_SECRET,
-                    algorithms=["HS256"],
-                    audience="authenticated",
-                    options={"verify_aud": True},
-                )
-                return payload
-            except Exception:
-                pass
-
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid authentication token: {str(primary_error)}",
+            detail=f"Invalid authentication token: {str(e)}",
         )
 
 
 def get_current_user(
-    request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security),
+    credentials: HTTPAuthorizationCredentials = Security(security),
     db: Session = Depends(get_db),
 ) -> models.Person:
     """
-    FastAPI dependency: Authenticates via Supabase JWT (Bearer) OR X-Demo-Token header,
-    then resolves the local SQLite Person record.
+    Handles both Demo Tokens (numeric IDs) and Supabase JWTs seamlessly.
     """
-    # 1. Extract token from Header or Bearer Credentials
-    demo_header = request.headers.get("X-Demo-Token")
-    token = None
+    token = credentials.credentials
 
-    if demo_header:
-        token = demo_header
-    elif credentials and credentials.credentials:
-        token = credentials.credentials
-
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing authorization credentials.",
-        )
-
-    # 2. Handle numeric demo tokens (e.g. X-Demo-Token: 1 or Bearer 1)
+    # 1. Fallback for Demo Account Logins (e.g., token="1", "2")
     if token.isdigit():
         person = db.query(models.Person).filter(models.Person.id == int(token)).first()
-        if not person:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Demo user not found in local database.",
-            )
-        return person
+        if person:
+            return person
 
-    # 3. Verify Supabase JWT Payload
-    auth_credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
-    payload = verify_supabase_token(auth_credentials)
+    # 2. Decode Supabase JWT Token
+    payload = verify_supabase_token(credentials)
     supabase_user_id = payload.get("sub")
     email = payload.get("email")
 
@@ -115,7 +84,7 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Malformed token payload."
         )
 
-    # 4. Look up user profile in SQLite DB
+    # Look up user in database
     person = (
         db.query(models.Person)
         .filter(
@@ -130,13 +99,13 @@ def get_current_user(
     if not person:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User authenticated with Supabase, but profile missing in SQLite database.",
+            detail="User authenticated with Supabase, but profile missing in database.",
         )
 
     return person
 
 
-# --- Login Tracking & Analytics Helpers ---
+# --- Helper Functions for Login Tracking ---
 
 
 def get_client_ip(request: Request) -> Optional[str]:
@@ -217,59 +186,160 @@ def demo_login(
         token=str(person.id),
     )
 
-
-@router.get("/api/auth/login")
+@router.get("/login", response_model=schemas.PersonOut)
 def sync_supabase_user(
-    authorization: str = Header(None), 
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Security(security),
     db: Session = Depends(get_db)
 ):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing Authorization Bearer header")
-    
-    token = authorization.split(" ")[1]
-    
-    try:
-        # Decode Supabase JWT payload without signature verification for local sync
-        # (or verify using SUPABASE_JWT_SECRET if configured)
-        payload = jwt.decode(token, options={"verify_signature": False})
-        email = payload.get("email")
-        name = payload.get("user_metadata", {}).get("name", "New User")
-        
-        if not email:
-            raise HTTPException(status_code=400, detail="Invalid token payload: missing email")
-            
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Invalid Supabase JWT: {str(e)}")
+    """
+    Called by the frontend after Supabase Login.
+    Verifies the JWT, creates the local SQLite record if it doesn't exist,
+    tracks analytics, and returns the Person profile.
+    """
+    payload = verify_supabase_token(credentials)
+    supabase_user_id = payload.get("sub")
+    email = payload.get("email")
 
-    # Look up existing Person in SQLite DB by email
-    person = db.query(models.Person).filter(models.Person.email == email).first()
+    if not supabase_user_id:
+        raise HTTPException(status_code=401, detail="Malformed token")
 
-    # If not found, provision a new Person record in SQLite (gets auto-increment ID!)
-    if not person:
-        # Generate next profile code
-        count = db.query(models.Person).count()
-        profile_code = f"L21-HK-{3000 + count}"
+    # 1. Look up existing user
+    person = db.query(models.Person).filter(
+        or_(
+            models.Person.supabase_user_id == supabase_user_id,
+            models.Person.email == email
+        )
+    ).first()
 
+    now = datetime.now(timezone.utc)
+    client_ip = get_client_ip(request)
+
+    # 2. If user exists, link ID if missing & update login metrics
+    if person:
+        if not person.supabase_user_id:
+            person.supabase_user_id = supabase_user_id
+        handle_successful_login(person, db, client_ip)
+        client = get_posthog_client()
+        if client:
+            client.capture("login_completed", properties={"login_method": "supabase"})
+
+    # 3. If first-time Supabase user, auto-create in SQLite DB!
+    else:
         person = models.Person(
+            supabase_user_id=supabase_user_id,
             email=email,
-            name=name,
+            name=email.split("@")[0] if email else "User",
             role_primary="family",
             roles="family",
-            language="en",
-            profile_code=profile_code,
+            profile_code="PENDING",
+            login_count=1,
+            failed_login_count=0,
+            current_login_at=now,
+            last_login_at=now,
+            last_login_ip=client_ip,
         )
         db.add(person)
+        db.flush()
+        person.profile_code = f"L21-{person.id:05d}"
         db.commit()
         db.refresh(person)
 
-        # Add default communication preferences
-        comm_pref = models.CommPreferences(
-            person_id=person.id,
-            email_on=True,
-            sms_on=False,
-            whatsapp_on=False,
-        )
-        db.add(comm_pref)
-        db.commit()
+        client = get_posthog_client()
+        if client:
+            client.capture("account_created", properties={"signup_method": "supabase"})
 
-    return person
+    identify_person(person)
+    return schemas.PersonOut.model_validate(person)
+
+
+# @router.post("/signup", response_model=schemas.DemoLoginOut)
+# def signup(body: schemas.SignupIn, request: Request, db: Session = Depends(get_db)):
+#     email = (body.email or "").strip().lower() or None
+#     phone = (body.phone or "").strip() or None
+
+#     existing = None
+#     if email:
+#         existing = db.query(models.Person).filter(models.Person.email == email).first()
+#     if not existing and phone:
+#         existing = db.query(models.Person).filter(models.Person.phone == phone).first()
+#     if existing:
+#         raise HTTPException(
+#             status_code=409, detail="An account with that email or phone already exists"
+#         )
+
+#     now = datetime.now(timezone.utc)
+#     client_ip = get_client_ip(request)
+
+#     person = models.Person(
+#         email=email,
+#         phone=phone,
+#         name=body.name.strip(),
+#         role_primary="family",
+#         roles="family",
+#         password_hash=hash_password(body.password),
+#         profile_code="PENDING",
+#         # Initialize login tracking metrics on account creation
+#         login_count=1,
+#         failed_login_count=0,
+#         current_login_at=now,
+#         last_login_at=now,
+#         last_login_ip=client_ip,
+#     )
+#     db.add(person)
+#     db.flush()
+#     person.profile_code = f"L21-{person.id:05d}"
+#     db.commit()
+#     db.refresh(person)
+
+#     identify_person(person)
+#     client = get_posthog_client()
+#     if client:
+#         client.capture("account_created", properties={"signup_method": "password"})
+
+#     return schemas.DemoLoginOut(
+#         person=schemas.PersonOut.model_validate(person),
+#         token=str(person.id),
+#     )
+
+
+# @router.post("/login", response_model=schemas.DemoLoginOut)
+# def login(body: schemas.LoginIn, request: Request, db: Session = Depends(get_db)):
+#     identifier = body.identifier.strip().lower()
+#     person = (
+#         db.query(models.Person)
+#         .filter(
+#             or_(
+#                 models.Person.email == identifier,
+#                 models.Person.phone == body.identifier.strip(),
+#             )
+#         )
+#         .first()
+#     )
+
+#     # 1. Check if account is currently locked out
+#     now = datetime.now(timezone.utc)
+#     if person and person.locked_until and person.locked_until > now:
+#         raise HTTPException(
+#             status_code=403,
+#             detail="Account temporarily locked due to multiple failed login attempts. Please try again later.",
+#         )
+
+#     # 2. Verify password credentials
+#     if not person or not verify_password(body.password, person.password_hash):
+#         handle_failed_login(person, db)
+#         raise HTTPException(status_code=401, detail="Wrong email/phone or password")
+
+#     # 3. Successful login
+#     client_ip = get_client_ip(request)
+#     handle_successful_login(person, db, client_ip)
+
+#     identify_person(person)
+#     client = get_posthog_client()
+#     if client:
+#         client.capture("login_completed", properties={"login_method": "password"})
+
+#     return schemas.DemoLoginOut(
+#         person=schemas.PersonOut.model_validate(person),
+#         token=str(person.id),
+#     )
