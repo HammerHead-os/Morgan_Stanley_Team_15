@@ -11,6 +11,7 @@
       ?.trim();
     if (configured) return configured.replace(/\/$/, "");
     if (
+      location.port === "5173" ||
       location.port === "4173" ||
       location.port === "8765" ||
       location.protocol === "file:"
