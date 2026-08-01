@@ -27,6 +27,15 @@
     <link rel="stylesheet" href="css/styles.css?v=clean1" />
     <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
     <style>
+      /* Re-theme the n8n chat widget to match the site palette instead of its default pink/navy */
+      :root {
+        --chat--color--primary: #e85d4c;
+        --chat--color--primary-shade-50: #d1503f;
+        --chat--color--primary--shade-100: #b84532;
+        --chat--color-dark: #14231f;
+      }
+    </style>
+    <style>
       /* Critical gate layout — keeps video full-bleed even if CSS cache is stale */
       html,
       body.page-gate {
