@@ -671,6 +671,11 @@
               escapeHtml(c.status_label || "Claimed") +
               (pts ? " · +" + pts + " pts when done" : "") +
               "</p>" +
+              '<label class="complete-note-label">Hours spent' +
+              '<input type="number" class="complete-hours" min="0.25" max="24" step="0.25" value="' +
+              (c.duration_min ? (c.duration_min / 60).toFixed(2) : "") +
+              '" required />' +
+              "</label>" +
               '<label class="complete-note-label">Short note when finished' +
               '<textarea class="complete-note" rows="2" maxlength="2000" placeholder="What did you do?"></textarea>' +
               "</label></div>" +
@@ -848,10 +853,17 @@
       const claimId = Number(completeBtn.getAttribute("data-complete-claim"));
       const card = completeBtn.closest(".my-task-card");
       const noteEl = card ? card.querySelector(".complete-note") : null;
+      const hoursEl = card ? card.querySelector(".complete-hours") : null;
       const reflection = noteEl ? noteEl.value.trim() : "";
       if (!reflection) {
         L.showToast("Add a short note before marking complete");
         if (noteEl) noteEl.focus();
+        return;
+      }
+      const hoursVal = hoursEl && hoursEl.value ? Number(hoursEl.value) : undefined;
+      if (hoursEl && !hoursVal) {
+        L.showToast("Enter the hours you actually spent");
+        hoursEl.focus();
         return;
       }
       try {
@@ -859,7 +871,7 @@
           "/api/volunteers/claims/" + claimId + "/complete",
           {
             method: "POST",
-            body: { reflection: reflection },
+            body: { reflection: reflection, hours: hoursVal },
           }
         );
         L.showToast(

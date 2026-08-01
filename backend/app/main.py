@@ -95,7 +95,10 @@ app.add_middleware(PostHogRequestContextMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    # No cookies are used (auth is a bearer-style X-Demo-Token header), and
+    # allow_origins=["*"] combined with allow_credentials=True is an invalid
+    # combination per the CORS spec anyway.
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

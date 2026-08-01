@@ -124,6 +124,7 @@ class Registration(Base):
     activity_id: Mapped[int] = mapped_column(ForeignKey("activities.id"))
     household_id: Mapped[int] = mapped_column(ForeignKey("households.id"))
     member_person_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
+    party_size: Mapped[int] = mapped_column(Integer, default=1)
     status: Mapped[str] = mapped_column(String(40), default="registered")
     # registered | waitlist | attended | cancelled
     waitlist_position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -136,6 +137,22 @@ class Registration(Base):
     activity: Mapped[Activity] = relationship(back_populates="registrations")
     household: Mapped[Household] = relationship(back_populates="registrations")
     member: Mapped[Person] = relationship(foreign_keys=[member_person_id])
+    attendees: Mapped[list["RegistrationAttendee"]] = relationship(
+        back_populates="registration", cascade="all, delete-orphan"
+    )
+
+
+class RegistrationAttendee(Base):
+    __tablename__ = "registration_attendees"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    registration_id: Mapped[int] = mapped_column(ForeignKey("registrations.id"))
+    full_name: Mapped[str] = mapped_column(String(120))
+    phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    age: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    registration: Mapped[Registration] = relationship(back_populates="attendees")
 
 
 class Achievement(Base):
@@ -174,6 +191,11 @@ class HireEnquiry(Base):
     )
     creator_label: Mapped[str] = mapped_column(String(200))
     preferred_date: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    requester_name: Mapped[str] = mapped_column(String(120), default="")
+    company_name: Mapped[str] = mapped_column(String(160), default="")
+    event_description: Mapped[str] = mapped_column(Text, default="")
+    contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    contact_phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     status: Mapped[str] = mapped_column(String(40), default="received")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -201,6 +223,7 @@ class DonationCommitment(Base):
     status: Mapped[str] = mapped_column(String(40), default="active")
     # active | paused | cancelled
     cadence: Mapped[str] = mapped_column(String(20), default="monthly")
+    payment_method: Mapped[str] = mapped_column(String(40), default="PayMe")
     office_perk_unlocked: Mapped[bool] = mapped_column(Boolean, default=True)
     started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(

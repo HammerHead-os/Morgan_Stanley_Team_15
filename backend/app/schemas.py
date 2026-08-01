@@ -87,10 +87,26 @@ class ActivityOut(OrmModel):
     location: str
 
 
+class AttendeeIn(BaseModel):
+    full_name: str = Field(min_length=1, max_length=120)
+    phone: Optional[str] = Field(default=None, max_length=40)
+    email: Optional[str] = Field(default=None, max_length=255)
+    age: Optional[int] = Field(default=None, ge=0, le=120)
+
+
 class RegisterIn(BaseModel):
     activity_id: int
     member_person_id: int
     reminder_channel: str = "email"
+    attendees: list[AttendeeIn] = Field(default_factory=list)
+
+
+class AttendeeOut(OrmModel):
+    id: int
+    full_name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    age: Optional[int] = None
 
 
 class RegistrationOut(OrmModel):
@@ -98,6 +114,7 @@ class RegistrationOut(OrmModel):
     activity_id: int
     household_id: int
     member_person_id: int
+    party_size: int = 1
     status: str
     status_label: str = ""
     waitlist_position: Optional[int] = None
@@ -109,6 +126,7 @@ class RegistrationOut(OrmModel):
     activity_location: Optional[str] = None
     activity_goal: Optional[str] = None
     member_name: Optional[str] = None
+    attendees: list[AttendeeOut] = []
 
 
 class FeedbackIn(BaseModel):
@@ -149,9 +167,10 @@ class ConsentIn(BaseModel):
 
 
 class CommitmentIn(BaseModel):
-    amount_hkd: float = 300
+    amount_hkd: float = Field(default=300, ge=50, le=1_000_000)
     fund_category: str = "Sports programmes"
     cadence: str = "monthly"
+    payment_method: str = Field(default="PayMe", max_length=40)
 
 
 class CommitmentOut(OrmModel):
@@ -162,6 +181,7 @@ class CommitmentOut(OrmModel):
     status: str
     status_label: str = ""
     cadence: str
+    payment_method: str = "PayMe"
     office_perk_unlocked: bool = True
     started_at: datetime
     updated_at: datetime
@@ -286,12 +306,22 @@ class OnboardIn(BaseModel):
 class HireIn(BaseModel):
     creator_label: str = Field(min_length=2, max_length=200)
     preferred_date: Optional[str] = Field(default=None, max_length=40)
+    requester_name: str = Field(min_length=1, max_length=120)
+    company_name: str = Field(default="", max_length=160)
+    event_description: str = Field(default="", max_length=2000)
+    contact_email: Optional[str] = Field(default=None, max_length=255)
+    contact_phone: Optional[str] = Field(default=None, max_length=40)
 
 
 class HireOut(OrmModel):
     id: int
     creator_label: str
     preferred_date: Optional[str] = None
+    requester_name: str = ""
+    company_name: str = ""
+    event_description: str = ""
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
     status: str
     created_at: datetime
 

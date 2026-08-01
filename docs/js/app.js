@@ -64,58 +64,6 @@
     ensureLink("Contact", pagePrefix + "contact.html");
   }
 
-  function paintSharedSubpageFooter() {
-    if (!window.location.pathname.includes("/pages/")) return;
-    const footer = qs(".site-footer");
-    if (!footer) return;
-
-    footer.innerHTML =
-      '<div class="footer-grid">' +
-      '<div class="footer-belief-block">' +
-      '<div class="footer-brand">Love 21 Foundation</div>' +
-      '<p class="footer-belief">We believe that every neurodiverse individual deserves an opportunity to reach their highest potential.</p>' +
-      "</div>" +
-      "<div>" +
-      "<h4>Explore</h4>" +
-      '<ul class="footer-links">' +
-      '<li><a href="../index.html">Home</a></li>' +
-      '<li><a href="about.html">About</a></li>' +
-      '<li><a href="contact.html">Contact</a></li>' +
-      '<li><a href="impact.html">Donations</a></li>' +
-      '<li><a href="profile.html">Profile</a></li>' +
-      "</ul>" +
-      "</div>" +
-      "<div>" +
-      "<h4>Visit</h4>" +
-      '<p class="footer-contact">Love 21 Space · 2/F, Trium Lab<br />' +
-      "21 Luk Hop Street, San Po Kong<br />" +
-      '<a href="tel:+85223222121">+852 2322 2121</a><br />' +
-      '<a href="mailto:info@love21foundation.com">info@love21foundation.com</a></p>' +
-      '<div class="footer-social-links" aria-label="Love 21 social media">' +
-      '<a class="footer-social-link" href="https://www.instagram.com/love21foundation/" target="_blank" rel="noopener" aria-label="Love 21 on Instagram">' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle class="social-icon-fill" cx="17.5" cy="6.5" r="1"></circle></svg>' +
-      "</a>" +
-      '<a class="footer-social-link" href="https://www.facebook.com/love21foundation/" target="_blank" rel="noopener" aria-label="Love 21 on Facebook">' +
-      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="social-icon-fill" d="M13.7 21v-8h2.8l.4-3h-3.2V8.1c0-.9.3-1.5 1.6-1.5H17V4a22 22 0 0 0-2.4-.1c-2.4 0-4.1 1.5-4.1 4.2V10H8v3h2.5v8h3.2Z"></path></svg>' +
-      "</a>" +
-      "</div>" +
-      "</div>" +
-      "</div>" +
-      '<div class="footer-bottom">' +
-      "<span>© Love 21 Foundation · Hackathon demo for Code to Give 2026</span>" +
-      '<a href="../index.html">← Home</a>' +
-      "</div>";
-
-    const currentPage = window.location.pathname.split("/").pop();
-    footer.querySelectorAll(".footer-links a").forEach(function (link) {
-      if (link.getAttribute("href") === currentPage) {
-        link.setAttribute("aria-current", "page");
-      }
-    });
-  }
-
-  paintSharedSubpageFooter();
-
   const brandLogo = qs(".site-nav .brand-logo");
   if (brandLogo) {
     const inPagesDirectory = window.location.pathname.includes("/pages/");
@@ -238,6 +186,8 @@
           btnClass +
           '" data-register="' +
           a.id +
+          '" data-activity-title="' +
+          escapeHtml(a.title) +
           '">' +
           action +
           "</button></article>"
@@ -251,6 +201,8 @@
     if (regBtn && L) {
       e.preventDefault();
       const activityId = Number(regBtn.getAttribute("data-register"));
+      const activityTitle = regBtn.getAttribute("data-activity-title") || "this class";
+      const actionLabel = regBtn.textContent.trim();
       try {
         await L.requireLogin(async function (person) {
           const profile = await L.api("/api/profile");
@@ -264,14 +216,14 @@
             profile.family.members.find(function (m) {
               return m.role_primary === "member";
             }) || person;
-          const result = await L.api("/api/family/register", {
-            method: "POST",
-            body: {
-              activity_id: activityId,
-              member_person_id: member.id,
-              reminder_channel: "email",
-            },
-          });
+          if (!window.Love21Registration) return;
+          const result = await window.Love21Registration.open(
+            activityId,
+            activityTitle,
+            member,
+            actionLabel
+          );
+          if (!result) return; // cancelled
           const msg =
             result.status === "waitlist"
               ? "Waitlist #" + result.waitlist_position + " — saved to profile"
@@ -330,21 +282,20 @@
     }
 
     const commitBtn = e.target.closest("[data-start-commitment]");
-    if (commitBtn && L) {
+    if (commitBtn && L && window.Love21PaymentModal) {
       e.preventDefault();
       try {
         await L.requireLogin(async function () {
           const amountEl = document.getElementById("gift");
           const amount = amountEl ? Number(amountEl.value) || 300 : 300;
-          const c = await L.api("/api/impact/commitments", {
-            method: "POST",
-            body: {
-              amount_hkd: amount,
-              fund_category: "Sports programmes",
-              cadence: "monthly",
-            },
+          const result = await window.Love21PaymentModal.open({
+            amountHkd: amount,
+            cadence: "monthly",
+            fundCategory: "Sports programmes",
+            method: "payme",
           });
-          L.goToProfile("impact", "Monthly HKD " + c.amount_hkd + " started");
+          if (!result) return; // cancelled
+          L.goToProfile("impact", "Monthly HKD " + result.amount_hkd + " started");
         });
       } catch (err) {
         if (!err.cancelled) L.showToast(L.friendlyError(err));
@@ -405,24 +356,30 @@
 
   function paintAdminLink(person) {
     const isAdmin = !!person && Array.isArray(person.roles) && person.roles.indexOf("admin") !== -1;
-    let link = qs("[data-admin-link]");
-    if (isAdmin) {
-      if (link) return;
-      const slot = qs("[data-session]");
-      const li = document.createElement("li");
-      const a = document.createElement("a");
-      a.href = "admin-dashboard.html";
-      a.textContent = "Admin dashboard";
-      a.setAttribute("data-admin-link", "");
-      li.appendChild(a);
-      const sessionLi = slot && slot.closest("li");
-      if (sessionLi && sessionLi.parentNode) {
-        sessionLi.parentNode.insertBefore(li, sessionLi);
+    const slot = qs("[data-session]");
+    const sessionLi = slot && slot.closest("li");
+
+    function ensureLink(attr, href, text) {
+      let link = qs("[" + attr + "]");
+      if (isAdmin) {
+        if (link) return;
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = href;
+        a.textContent = text;
+        a.setAttribute(attr, "");
+        li.appendChild(a);
+        if (sessionLi && sessionLi.parentNode) {
+          sessionLi.parentNode.insertBefore(li, sessionLi);
+        }
+      } else if (link) {
+        const li = link.closest("li");
+        (li || link).remove();
       }
-    } else if (link) {
-      const li = link.closest("li");
-      (li || link).remove();
     }
+
+    ensureLink("data-admin-link", "admin-dashboard.html", "Admin dashboard");
+    ensureLink("data-admin-hire-link", "admin-hire.html", "Hire enquiries");
   }
 
   async function paintSession() {

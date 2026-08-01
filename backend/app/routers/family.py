@@ -23,6 +23,7 @@ def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
         activity_id=reg.activity_id,
         household_id=reg.household_id,
         member_person_id=reg.member_person_id,
+        party_size=reg.party_size,
         status=reg.status,
         status_label=label,
         waitlist_position=reg.waitlist_position,
@@ -34,6 +35,7 @@ def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
         activity_location=reg.activity.location if reg.activity else None,
         activity_goal=reg.activity.goal if reg.activity else None,
         member_name=reg.member.name if reg.member else None,
+        attendees=[schemas.AttendeeOut.model_validate(a) for a in reg.attendees],
     )
 
 
@@ -82,11 +84,13 @@ def register_for_activity(
             detail="This family member is already registered or on the waitlist for this activity.",
         )
 
-    # 2. Assign registration or waitlist status
-    if activity.spots_left > 0:
+    # 2. Assign registration or waitlist status — a party only fits if every
+    # seat it needs is available; otherwise the whole party waits together.
+    party_size = 1 + len(body.attendees)
+    if activity.spots_left >= party_size:
         reg_status = "registered"
         waitlist_position = None
-        activity.spots_left -= 1
+        activity.spots_left -= party_size
         event = "registration_confirmed"
     else:
         reg_status = "waitlist"
@@ -116,18 +120,30 @@ def register_for_activity(
         activity_id=activity.id,
         household_id=person.household_id,
         member_person_id=member.id,
+        party_size=party_size,
         status=reg_status,
         waitlist_position=waitlist_position,
         reminder_channel=channel,
         created_at=datetime.utcnow(),
     )
     db.add(reg)
+    db.flush()
+    for a in body.attendees:
+        db.add(
+            models.RegistrationAttendee(
+                registration_id=reg.id,
+                full_name=a.full_name,
+                phone=a.phone,
+                email=a.email,
+                age=a.age,
+            )
+        )
     _log_journey(
         db,
         person.id,
         event,
         channel,
-        f"activity={activity.id};member={member.id};status={reg_status}",
+        f"activity={activity.id};member={member.id};party={party_size};status={reg_status}",
     )
 
     # 3. Safely commit with exception handling for database integrity constraints

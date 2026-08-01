@@ -302,16 +302,14 @@
         toast("Pick a date and time first");
         return;
       }
-      if (!L) {
+      if (!L || !window.Love21Hire) {
         toast("Request noted for " + label + (preferred ? " · " + preferred : ""));
         return;
       }
       try {
         await L.requireLogin(async function () {
-          await L.api("/api/hire", {
-            method: "POST",
-            body: { creator_label: label, preferred_date: preferred || null },
-          });
+          const result = await window.Love21Hire.open(label, preferred || "");
+          if (!result) return; // cancelled
           if (typeof L.goToProfile === "function") {
             L.goToProfile(
               null,

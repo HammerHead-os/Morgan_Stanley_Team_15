@@ -68,6 +68,7 @@ def _commitment_out(c: models.DonationCommitment) -> schemas.CommitmentOut:
         status=c.status,
         status_label=status_label(c.status),
         cadence=c.cadence,
+        payment_method=c.payment_method,
         office_perk_unlocked=bool(c.office_perk_unlocked),
         started_at=c.started_at,
         updated_at=c.updated_at,
