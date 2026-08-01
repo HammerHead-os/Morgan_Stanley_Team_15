@@ -146,3 +146,57 @@
     window.addEventListener("resize", drawAll);
   }
 })();
+
+/* Instagram-style cards for the About page's pinned and recent posts. */
+(function () {
+  const iconBase =
+    "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/";
+
+  function icon(name, alt) {
+    return (
+      '<img class="instagram-ui-icon" src="' +
+      iconBase +
+      name +
+      '.svg" alt="' +
+      alt +
+      '" />'
+    );
+  }
+
+  document.querySelectorAll(".social-wall-about > a").forEach(function (card) {
+    const media = card.querySelector("img");
+    const captionElement = card.querySelector("span");
+    if (!media || !captionElement) return;
+
+    const caption = captionElement.textContent.trim();
+    const mediaMarkup =
+      '<img class="instagram-post-media" src="' +
+      media.getAttribute("src") +
+      '" alt="' +
+      media.getAttribute("alt") +
+      '" />';
+
+    card.classList.add("instagram-post-card");
+    card.setAttribute(
+      "aria-label",
+      caption + ". Open this post on Instagram."
+    );
+    card.innerHTML =
+      '<div class="instagram-post-header">' +
+      '<img class="instagram-avatar" src="../assets/media/love21-logo.png" alt="" />' +
+      '<div class="instagram-account"><strong>love21foundation</strong><span>Hong Kong</span></div>' +
+      icon("three-dots-vertical", "More") +
+      "</div>" +
+      mediaMarkup +
+      '<div class="instagram-post-actions"><div>' +
+      icon("heart", "Like") +
+      icon("chat", "Comment") +
+      icon("send", "Share") +
+      "</div>" +
+      icon("bookmark", "Save") +
+      "</div>" +
+      '<div class="instagram-post-copy"><p><strong>love21foundation</strong> ' +
+      caption +
+      '</p><span class="instagram-post-meta">View post on Instagram</span></div>';
+  });
+})();

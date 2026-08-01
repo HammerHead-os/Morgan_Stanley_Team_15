@@ -3256,6 +3256,140 @@ body.iam-open {
   padding: 0.75rem 0.8rem;
 }
 
+/* Instagram post anatomy, adapted to the Love 21 card system. */
+.page-about-v2 .social-wall .instagram-post-card {
+  display: block;
+  border-color: rgba(20, 35, 31, 0.14);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(20, 35, 31, 0.08);
+  transition: transform var(--ease), box-shadow var(--ease);
+}
+
+.page-about-v2 .social-wall .instagram-post-card:hover,
+.page-about-v2 .social-wall .instagram-post-card:focus-visible {
+  color: var(--ink);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(20, 35, 31, 0.13);
+}
+
+.page-about-v2 .instagram-post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 3.8rem;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.page-about-v2 .social-wall .instagram-avatar {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  padding: 0.16rem;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border: 2px solid #e85d4c;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.page-about-v2 .instagram-account {
+  min-width: 0;
+  margin-right: auto;
+  line-height: 1.15;
+}
+
+.page-about-v2 .instagram-account strong,
+.page-about-v2 .instagram-account span {
+  display: block;
+  padding: 0;
+}
+
+.page-about-v2 .instagram-account strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+}
+
+.page-about-v2 .instagram-account span {
+  margin-top: 0.2rem;
+  color: var(--ink-soft);
+  font-size: 0.64rem;
+  font-weight: 500;
+}
+
+.page-about-v2 .social-wall .instagram-post-media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  margin: 0;
+  object-fit: cover;
+  border: 0;
+  border-radius: 0;
+}
+
+.page-about-v2 .instagram-post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.75rem 0.3rem;
+}
+
+.page-about-v2 .instagram-post-actions > div {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.page-about-v2 .social-wall .instagram-ui-icon {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  padding: 0;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.page-about-v2 .instagram-post-header > .instagram-ui-icon {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.58;
+}
+
+.page-about-v2 .instagram-post-copy {
+  padding: 0.2rem 0.75rem 0.85rem;
+}
+
+.page-about-v2 .instagram-post-copy .instagram-post-meta {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.page-about-v2 .instagram-post-copy p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.page-about-v2 .instagram-post-copy strong {
+  color: var(--ink);
+}
+
 @media (max-width: 760px) {
   .page-about-v2 .stat-row > div + div {
     border-left: 1px solid var(--line);
@@ -3270,5 +3404,11 @@ body.iam-open {
   }
   .page-about-v2 .team-staff-layout > :first-child {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-about-v2 .social-wall {
+    grid-template-columns: 1fr;
   }
 }
