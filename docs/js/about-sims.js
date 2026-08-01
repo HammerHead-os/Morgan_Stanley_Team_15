@@ -343,13 +343,24 @@
       room.hidden = true;
       room.style.display = "none";
     }
-    if (resultEl) resultEl.textContent = result;
-    if (reflectEl) reflectEl.textContent = reflect;
+    if (resultEl) {
+      resultEl.textContent = result;
+      if (/good job/i.test(result || "")) {
+        resultEl.setAttribute("data-win", "1");
+        resultEl.style.color = "#ffe566";
+      } else {
+        resultEl.removeAttribute("data-win");
+        resultEl.style.color = "";
+      }
+    }
+    if (reflectEl) reflectEl.textContent = reflect || "";
     if (debrief) {
       debrief.hidden = false;
       debrief.removeAttribute("hidden");
       debrief.style.display = "grid";
     }
+    const bagLayer = shell.querySelector("[data-auti-bag-layer]");
+    if (bagLayer) bagLayer.innerHTML = "";
   }
 
   function startClock() {
@@ -452,7 +463,7 @@
     }
     if (!bag) return;
     // Must be fairly close to interact
-    if (dist2(player.x, player.z, bag.x, bag.z) > 4.2) {
+    if (dist2(player.x, player.z, bag.x, bag.z) > 5.5) {
       wrongBagFlash = 0.35;
       return;
     }
@@ -500,65 +511,62 @@
   function drawBag(ctx, bag, cos, sin, W, H, horizon, focal) {
     const p = project(bag.x, bag.z, cos, sin, W, H, horizon, focal);
     if (!p) return null;
-    const bw = p.scale * (bag.correct ? 0.72 : 0.6);
-    const bh = p.scale * (bag.correct ? 0.58 : 0.5);
+    const bw = p.scale * (bag.correct ? 1.05 : 0.9);
+    const bh = p.scale * (bag.correct ? 0.82 : 0.72);
     const left = p.sx - bw * 0.5;
     const top = p.sy - bh - p.scale * 0.14;
     const right = p.sx + bw * 0.5;
     const bottom = p.sy + p.scale * 0.12;
     bagHits.push({
       bag: bag,
-      left: left - 14,
-      right: right + 14,
-      top: top - 14,
-      bottom: bottom + 14,
+      left: left - 22,
+      right: right + 22,
+      top: top - 22,
+      bottom: bottom + 22,
+      cx: p.sx,
+      cy: (top + bottom) * 0.5,
+      w: Math.max(72, right - left + 28),
+      h: Math.max(52, bottom - top + 28),
       rz: p.rz,
     });
     const selected = bag === aimBag || bag === hoverBag;
-    const inReach = dist2(player.x, player.z, bag.x, bag.z) <= 4.2;
     return {
       rz: p.rz,
       bag: bag,
       draw: function () {
         if (selected) {
           ctx.strokeStyle = "rgba(255, 240, 120, 0.95)";
-          ctx.lineWidth = Math.max(3, p.scale * 0.07);
-          ctx.strokeRect(left - 5, top - 5, bw + 10, bh + p.scale * 0.3);
-          ctx.fillStyle = "rgba(255, 220, 80, 0.2)";
-          ctx.fillRect(left - 5, top - 5, bw + 10, bh + p.scale * 0.3);
+          ctx.lineWidth = Math.max(4, p.scale * 0.08);
+          ctx.strokeRect(left - 6, top - 6, bw + 12, bh + p.scale * 0.32);
+          ctx.fillStyle = "rgba(255, 220, 80, 0.22)";
+          ctx.fillRect(left - 6, top - 6, bw + 12, bh + p.scale * 0.32);
         }
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
+        ctx.fillStyle = "rgba(0,0,0,0.22)";
         ctx.beginPath();
-        ctx.ellipse(p.sx, p.sy + 2, p.scale * 0.5, p.scale * 0.16, 0, 0, Math.PI * 2);
+        ctx.ellipse(p.sx, p.sy + 2, p.scale * 0.62, p.scale * 0.2, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = bag.color;
         ctx.fillRect(left, p.sy - bh, bw, bh);
         ctx.fillStyle = "rgba(0,0,0,0.18)";
         ctx.fillRect(
           p.sx - bw * 0.42,
-          p.sy - bh - p.scale * 0.14,
+          p.sy - bh - p.scale * 0.16,
           bw * 0.84,
-          p.scale * 0.14
+          p.scale * 0.16
         );
         if (bag.mark) {
           ctx.fillStyle = bag.correct ? "#e85d4c" : "#222";
           ctx.font =
             "bold " +
-            Math.max(14, p.scale * (bag.correct ? 0.38 : 0.3)) +
+            Math.max(18, p.scale * (bag.correct ? 0.48 : 0.4)) +
             "px sans-serif";
           ctx.textAlign = "center";
           ctx.fillText(bag.mark, p.sx, p.sy - bh * 0.35);
         }
         if (!selected) {
-          ctx.strokeStyle = "rgba(255,255,255,0.55)";
-          ctx.lineWidth = 2;
+          ctx.strokeStyle = "rgba(255,255,255,0.7)";
+          ctx.lineWidth = 3;
           ctx.strokeRect(left, p.sy - bh, bw, bh);
-        }
-        if (selected && inReach) {
-          ctx.fillStyle = "#fff";
-          ctx.font = "bold " + Math.max(12, p.scale * 0.2) + "px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("E / click", p.sx, top - 8);
         }
       },
     };
@@ -649,6 +657,58 @@
     canvas.focus({ preventScroll: true });
 
     if (clueEl) clueEl.textContent = BAG_CLUE;
+
+    const bagLayer = shell.querySelector("[data-auti-bag-layer]");
+    const bagButtons = [];
+    if (bagLayer) {
+      bagLayer.innerHTML = "";
+      bags.forEach(function (bag, index) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "sim-auti-bag-btn" + (bag.correct ? " is-correct" : "");
+        btn.style.background = bag.color;
+        btn.textContent = bag.mark ? String(bag.mark) : "Pick";
+        btn.setAttribute(
+          "aria-label",
+          (bag.label || "Bag") + (bag.mark ? " " + bag.mark : "")
+        );
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!playing || !canPickBags()) return;
+          resolvePick(bag);
+        });
+        bagLayer.appendChild(btn);
+        bagButtons.push({ bag: bag, btn: btn });
+      });
+    }
+
+    function syncBagButtons() {
+      if (!bagButtons.length) return;
+      const show = canPickBags();
+      const byBag = {};
+      bagHits.forEach(function (h) {
+        byBag[bags.indexOf(h.bag)] = h;
+      });
+      bagButtons.forEach(function (item, index) {
+        const hit = byBag[index];
+        const btn = item.btn;
+        if (!show || !hit) {
+          btn.classList.remove("is-visible");
+          return;
+        }
+        const size = Math.max(72, Math.min(140, hit.w * 0.95));
+        const h = Math.max(52, Math.min(96, hit.h * 0.9));
+        btn.style.left = hit.cx + "px";
+        btn.style.top = hit.cy + "px";
+        btn.style.width = size + "px";
+        btn.style.height = h + "px";
+        btn.style.fontSize = Math.max(16, Math.min(28, size * 0.28)) + "px";
+        btn.classList.add("is-visible");
+        btn.style.zIndex = String(Math.round(2000 - hit.rz * 40));
+      });
+    }
+
 
     function updateHud(L) {
       level = L.id;
@@ -890,6 +950,7 @@
       drawList.forEach(function (item) {
         item.draw();
       });
+      syncBagButtons();
 
       // Haze overlay (level 2)
       if (haze > 0.05) {
