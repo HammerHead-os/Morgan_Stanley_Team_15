@@ -29,8 +29,20 @@ _cache_expires_at = 0.0
 def _timestamp_value(value: str | None) -> datetime:
     if not value:
         return datetime.min.replace(tzinfo=timezone.utc)
+
+    normalised = value.strip()
+    if normalised.endswith("Z"):
+        normalised = normalised[:-1] + "+00:00"
+    elif (
+        len(normalised) >= 5
+        and normalised[-5] in ("+", "-")
+        and normalised[-2] != ":"
+    ):
+        # Convert +HHMM / -HHMM to +HH:MM for datetime.fromisoformat.
+        normalised = normalised[:-2] + ":" + normalised[-2:]
+
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return datetime.fromisoformat(normalised)
     except ValueError:
         return datetime.min.replace(tzinfo=timezone.utc)
 
