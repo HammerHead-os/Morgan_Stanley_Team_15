@@ -1,0 +1,1789 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Love 21 Foundation — Admin Data Dashboard</title>
+<style>
+/* ============================================================
+   Design tokens
+   Categorical series palette (validated: lightness band, chroma
+   floor, all-pairs CVD ΔE >= 8.4, normal-vision ΔE >= 15.2)
+   Role palette (validated all-pairs, CVD ΔE >= 15.6)
+   ============================================================ */
+:root{
+  --surface:#ffffff;
+  --plane:#fbf8f4;
+  --card:#ffffff;
+  --ink:#1a1613;
+  --ink-2:#57504a;
+  --muted:#8c837a;
+  --grid:#eee8e0;
+  --line:#e2dad0;
+  --ring:rgba(26,22,19,.10);
+
+  /* user-type categorical slots — fixed order, never cycled */
+  --s1:#dd6030;  /* orange  */
+  --s2:#e5a72a;  /* gold    */
+  --s3:#a33a55;  /* wine    */
+  --s4:#12968a;  /* teal    */
+  --s5:#6b4f9e;  /* violet  */
+
+  /* role palette */
+  --r-admin:#a3261c;
+  --r-vol:#5aa02f;
+  --r-part:#2a6fb0;
+  --r-other:#8c837a;
+  --r-admin-bg:#fbeceb;
+  --r-vol-bg:#eef7e8;
+  --r-part-bg:#eaf2fa;
+  --r-other-bg:#f2efec;
+
+  /* ordinal ramp for age bands — one hue, monotone L (validated) */
+  --o1:#e89a58; --o2:#dd7f36; --o3:#c96821; --o4:#ad541b; --o5:#8d4316; --o6:#6b3210;
+
+  --accent:#c25022;
+  --accent-soft:#fdf1e9;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(26,22,19,.05), 0 8px 24px rgba(26,22,19,.06);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--surface);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.01em}
+a{color:var(--accent)}
+
+/* ---------- app chrome (kept plain on purpose) ---------- */
+.appbar{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:var(--surface);z-index:40}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand b{font-size:16px;font-weight:700;white-space:nowrap}
+.brand span{color:var(--muted);font-size:12.5px;white-space:nowrap}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;
+  font-size:13px;font-weight:550;color:var(--ink-2);transition:background .14s,border-color .14s,color .14s,transform .08s}
+.btn:hover{background:var(--plane);border-color:var(--ring);color:var(--ink)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#a94319;border-color:#a94319;color:#fff}
+.btn.sm{padding:5px 9px;font-size:12px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--surface);
+  position:sticky;top:53px;z-index:39;overflow-x:auto}
+.tab{border:0;background:none;padding:11px 14px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--muted);
+  border-bottom:2px solid transparent;white-space:nowrap;transition:color .14s,border-color .14s}
+.tab:hover{color:var(--ink-2)}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding:18px 20px 60px;max-width:1680px;margin:0 auto}
+.panel{display:none;animation:fade .22s ease}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- shared bits ---------- */
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.filterbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 12px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--plane);margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font-size:11px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+input[type=text],input[type=search],input[type=url],select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;
+  background:var(--surface);min-width:150px;outline:none;transition:border-color .14s,box-shadow .14s}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(194,80,34,.14)}
+.search-wide{min-width:320px;flex:1}
+.card{border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow)}
+.card h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);
+  padding:12px 14px;border-bottom:1px solid var(--grid)}
+.cardhead{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--grid)}
+.cardhead h3{border:0;padding:0;flex:1}
+.pad{padding:14px}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.hint{font-size:12px;color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:650;
+  border:1px solid transparent;white-space:nowrap}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.chip.admin{color:var(--r-admin);background:var(--r-admin-bg);border-color:rgba(163,38,28,.18)}
+.chip.volunteer{color:#3f7a1f;background:var(--r-vol-bg);border-color:rgba(90,160,47,.25)}
+.chip.participant{color:var(--r-part);background:var(--r-part-bg);border-color:rgba(42,111,176,.2)}
+.chip.other{color:var(--r-other);background:var(--r-other-bg);border-color:var(--line)}
+.chip.grey{color:var(--muted);background:var(--r-other-bg);border-color:var(--line)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.stat{border:1px solid var(--line);border-radius:var(--radius);padding:11px 13px;background:var(--card)}
+.stat .k{font-size:11px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.stat .v{font-size:23px;font-weight:680;margin-top:2px;letter-spacing:-.02em}
+.stat .s{font-size:11.5px;color:var(--muted)}
+
+/* ---------- tables ---------- */
+.tablewrap{overflow:auto;max-height:62vh;border-radius:0 0 var(--radius) var(--radius)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+thead th{position:sticky;top:0;background:var(--plane);z-index:2;text-align:left;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.045em;color:var(--ink-2);padding:9px 12px;border-bottom:1px solid var(--line);
+  white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--accent)}
+thead th.nosort{cursor:default}
+thead th .arw{opacity:.5;font-size:9px}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--grid);vertical-align:top;white-space:nowrap}
+tbody td.wrap{white-space:normal;min-width:180px}
+tbody tr{transition:background .12s}
+tbody tr:hover{background:var(--accent-soft)}
+tbody tr.sel{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+tbody tr.clickable{cursor:pointer}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.namebtn{border:0;background:none;padding:0;cursor:pointer;font-weight:640;font-size:13px;text-align:left;
+  border-bottom:1px dotted transparent;transition:border-color .12s}
+.namebtn:hover{border-bottom-color:currentColor}
+.namebtn.admin{color:var(--r-admin)} .namebtn.volunteer{color:#3f7a1f}
+.namebtn.participant{color:var(--r-part)} .namebtn.other{color:var(--r-other)}
+.inactive{color:var(--muted);font-size:11.5px;font-weight:600;margin-left:6px}
+.empty{padding:34px;text-align:center;color:var(--muted)}
+
+/* ---------- activities split view ---------- */
+.split{display:grid;grid-template-columns:minmax(420px,1.25fr) minmax(360px,1fr);gap:14px;align-items:start}
+@media(max-width:1080px){.split{grid-template-columns:1fr}}
+.roster{display:grid;grid-template-columns:1fr;gap:10px;padding:12px}
+.rosterbox{border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.rosterbox > .h{display:flex;align-items:center;gap:8px;padding:8px 11px;font-size:12px;font-weight:700;
+  letter-spacing:.03em;text-transform:uppercase}
+.rosterbox > .h .n{margin-left:auto;font-variant-numeric:tabular-nums;font-size:12px;opacity:.85}
+.rosterbox .list{padding:6px;display:flex;flex-wrap:wrap;gap:5px;background:var(--surface)}
+.rosterbox.kids > .h{background:var(--r-part-bg);color:var(--r-part);border-bottom:1px solid rgba(42,111,176,.2)}
+.rosterbox.vols > .h{background:var(--r-vol-bg);color:#3f7a1f;border-bottom:1px solid rgba(90,160,47,.28)}
+.rosterbox.staff > .h{background:var(--r-admin-bg);color:var(--r-admin);border-bottom:1px solid rgba(163,38,28,.2)}
+.person-pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:12.5px;
+  font-weight:600;cursor:pointer;transition:transform .1s,box-shadow .12s,border-color .12s}
+.person-pill:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(26,22,19,.1)}
+.person-pill.kids{color:var(--r-part);border-color:rgba(42,111,176,.35)}
+.person-pill.vols{color:#3f7a1f;border-color:rgba(90,160,47,.4)}
+.person-pill.staff{color:var(--r-admin);border-color:rgba(163,38,28,.32)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;padding:12px 14px;font-size:13px;border-bottom:1px solid var(--grid)}
+.kv dt{color:var(--muted);font-weight:600;font-size:12px}
+.kv dd{margin:0;font-weight:560}
+
+/* ---------- donations ---------- */
+.campaigns{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:12px}
+.camp{border:1px solid var(--line);border-radius:10px;padding:12px 13px;cursor:pointer;background:var(--card);
+  transition:transform .12s,box-shadow .14s,border-color .14s;position:relative;overflow:hidden}
+.camp:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(26,22,19,.1);border-color:rgba(194,80,34,.4)}
+.camp.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(194,80,34,.13)}
+.camp .t{font-weight:660;font-size:14px;margin-bottom:8px}
+.camp .amt{font-size:21px;font-weight:680;letter-spacing:-.02em}
+.camp .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.bar{height:6px;border-radius:999px;background:var(--grid);margin-top:10px;overflow:hidden}
+.bar > i{display:block;height:100%;border-radius:999px;background:var(--s1);transition:width .5s cubic-bezier(.22,1,.36,1)}
+
+/* ---------- charts ---------- */
+.vizgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+@media(max-width:1000px){.vizgrid{grid-template-columns:1fr}}
+.legend{display:flex;flex-direction:column;gap:2px;min-width:210px}
+.lg{display:flex;align-items:center;gap:9px;padding:5px 7px;border-radius:7px;cursor:pointer;border:1px solid transparent;
+  transition:background .12s,opacity .14s}
+.lg:hover{background:var(--plane)}
+.lg.off{opacity:.36}
+.lg .sw{width:11px;height:11px;border-radius:3px;flex:none}
+.lg .nm{font-size:12.5px;font-weight:590;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lg .vl{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink-2);font-weight:640}
+.lg .pc{font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--muted);width:42px;text-align:right}
+.donutwrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:14px}
+svg .slice{cursor:pointer;transition:transform .22s cubic-bezier(.22,1,.36,1),opacity .18s}
+svg .slice.dim{opacity:.22}
+svg .hbar{transition:width .45s cubic-bezier(.22,1,.36,1),opacity .18s}
+svg .vbar{cursor:pointer;transition:opacity .16s}
+svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.axis{font-size:10.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.centerbig{font-size:27px;font-weight:680;fill:var(--ink)}
+.centersm{font-size:11px;fill:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:7px 13px;cursor:pointer;font-size:12.5px;font-weight:620;color:var(--muted);
+  transition:background .13s,color .13s}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent);color:#fff}
+#tip{position:fixed;pointer-events:none;z-index:200;background:#241d18;color:#fff;border-radius:8px;padding:7px 10px;
+  font-size:12.5px;line-height:1.4;box-shadow:0 6px 22px rgba(0,0,0,.26);opacity:0;transform:translateY(4px);
+  transition:opacity .12s,transform .12s;max-width:290px}
+#tip.on{opacity:1;transform:none}
+#tip .tk{color:#e8ddd3;font-size:11px;letter-spacing:.03em;text-transform:uppercase}
+#tip .tv{font-weight:660}
+.crossnote{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2)}
+
+/* ---------- modal ---------- */
+.backdrop{position:fixed;inset:0;background:rgba(26,22,19,.42);backdrop-filter:blur(2px);z-index:100;
+  display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto;opacity:0;pointer-events:none;
+  transition:opacity .18s}
+.backdrop.on{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border-radius:14px;width:min(760px,100%);box-shadow:0 24px 70px rgba(0,0,0,.3);
+  transform:translateY(10px) scale(.985);transition:transform .22s cubic-bezier(.22,1,.36,1)}
+.backdrop.on .modal{transform:none}
+.modal .mh{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;border-bottom:1px solid var(--grid)}
+.modal .mh h2{font-size:20px}
+.modal .mb{padding:4px 0 8px}
+.modal .sec{padding:12px 18px;border-bottom:1px solid var(--grid)}
+.modal .sec h4{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+.modal .mf{display:flex;gap:8px;padding:12px 18px}
+.x{border:0;background:var(--plane);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:17px;color:var(--ink-2);line-height:1}
+.x:hover{background:var(--grid)}
+.minitable{width:100%;font-size:12.5px}
+.minitable th{position:static;background:none;border-bottom:1px solid var(--grid);padding:5px 8px;cursor:default}
+.minitable td{padding:5px 8px;border-bottom:1px solid var(--grid)}
+
+/* ---------- data / upload ---------- */
+.drop{border:2px dashed var(--line);border-radius:12px;padding:30px;text-align:center;background:var(--plane);
+  transition:border-color .16s,background .16s}
+.drop.hot{border-color:var(--accent);background:var(--accent-soft)}
+.schema{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px}
+.schema .card{padding:12px 14px}
+.schema code{background:var(--plane);border:1px solid var(--grid);border-radius:5px;padding:1px 5px;font-size:11.5px}
+.schema ul{margin:8px 0 0;padding-left:17px}
+.schema li{margin:3px 0;font-size:12.5px}
+#toast{position:fixed;right:18px;bottom:18px;z-index:300;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.toast{background:#241d18;color:#fff;padding:10px 14px;border-radius:9px;font-size:13px;box-shadow:0 8px 26px rgba(0,0,0,.28);
+  animation:tin .25s ease}
+.toast.bad{background:#8f2620}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<div class="appbar">
+  <div class="brand"><b>Love 21 Foundation</b><span>Administrative Data Dashboard</span></div>
+  <div class="spacer"></div>
+  <span id="dbstate" class="chip grey"><i class="dot"></i>no data</span>
+  <button class="btn" id="btnGoData">Upload data</button>
+  <button class="btn primary" id="btnExportAll">Export all (.xlsx)</button>
+</div>
+
+<div class="tabs">
+  <button class="tab on" data-p="activities">1 · Activities</button>
+  <button class="tab" data-p="people">2 · People</button>
+  <button class="tab" data-p="donations">3 · Donations</button>
+  <button class="tab" data-p="visitors">4 · Visitors</button>
+  <button class="tab" data-p="data">Data &amp; uploads</button>
+</div>
+
+<main>
+
+<!-- ============ 1. ACTIVITIES ============ -->
+<section class="panel on" id="p-activities">
+  <div class="filterbar">
+    <div class="field"><label>Search</label>
+      <input type="search" id="aSearch" class="search-wide" placeholder="activity name, ID, location…"></div>
+    <div class="field"><label>Group</label><select id="aGroup"><option value="">All groups</option></select></div>
+    <div class="field"><label>Category</label><select id="aCat"><option value="">All categories</option></select></div>
+    <div class="field"><label>From</label><input type="text" id="aFrom" placeholder="YYYY-MM-DD" style="min-width:130px"></div>
+    <div class="field"><label>To</label><input type="text" id="aTo" placeholder="YYYY-MM-DD" style="min-width:130px"></div>
+    <div class="spacer"></div>
+    <button class="btn sm" id="aReset">Reset</button>
+    <button class="btn sm" id="aExport">⬇ Export .xlsx</button>
+  </div>
+  <div class="stats" id="aStats"></div>
+  <div class="split">
+    <div class="card">
+      <div class="cardhead"><h3>Activity sessions</h3><span class="hint" id="aCount"></span></div>
+      <div class="tablewrap"><table id="aTable"><thead></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card" id="aDetail">
+      <div class="cardhead"><h3>Session roster</h3>
+        <button class="btn sm" id="aExportRoster" disabled>⬇ Roster .xlsx</button></div>
+      <div class="empty">Select an activity session on the left to see who is enrolled,
+        who is volunteering, and which Love 21 staff member is monitoring it.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. PEOPLE ============ -->
+<section class="panel" id="p-people">
+  <div class="filterbar">
+    <div class="field"><label>Binary search — name (or surname)</label>
+      <input type="search" id="pSearch" class="search-wide" placeholder="start typing a name… e.g. mar"></div>
+    <div class="field"><label>Role</label><select id="pRole">
+      <option value="">All roles</option><option value="admin">Administrative staff</option>
+      <option value="volunteer">Volunteers</option><option value="participant">Participants</option>
+      <option value="other">Other / unclassified</option></select></div>
+    <div class="field"><label>Status</label><select id="pStatus">
+      <option value="">All</option><option value="active">Active</option><option value="inactive">Inactive (90+ days)</option>
+    </select></div>
+    <div class="spacer"></div>
+    <span class="chip grey" id="pSearchInfo"><i class="dot"></i>index ready</span>
+    <button class="btn sm" id="pReset">Reset</button>
+    <button class="btn sm" id="pExport">⬇ Export .xlsx</button>
+  </div>
+  <div class="stats" id="pStats"></div>
+  <div class="card">
+    <div class="cardhead"><h3>People database</h3><span class="hint" id="pCount"></span>
+      <span class="chip admin"><i class="dot"></i>Admin staff</span>
+      <span class="chip volunteer"><i class="dot"></i>Volunteer</span>
+      <span class="chip participant"><i class="dot"></i>Participant</span></div>
+    <div class="tablewrap"><table id="pTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ 3. DONATIONS ============ -->
+<section class="panel" id="p-donations">
+  <div class="filterbar">
+    <div class="field"><label>Search donation drives</label>
+      <input type="search" id="dSearch" class="search-wide" placeholder="e.g. Donate 10 running shoes!"></div>
+    <div class="field"><label>Sort by</label><select id="dSort">
+      <option value="amount">Total raised</option><option value="donors">Number of donors</option>
+      <option value="recent">Most recent</option><option value="name">Name (A–Z)</option></select></div>
+    <div class="spacer"></div>
+    <button class="btn sm" id="dExport">⬇ Export .xlsx</button>
+  </div>
+  <div class="stats" id="dStats"></div>
+  <div class="split">
+    <div class="card">
+      <div class="cardhead"><h3>Donation drives</h3><span class="hint" id="dCount"></span></div>
+      <div class="campaigns" id="dCampaigns"></div>
+    </div>
+    <div class="card" id="dDetail">
+      <div class="cardhead"><h3>Donors</h3>
+        <button class="btn sm" id="dExportDonors" disabled>⬇ Donors .xlsx</button></div>
+      <div class="empty">Pick a donation drive to see everyone who gave to it. Click any donor to open their full profile.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. VISITORS ============ -->
+<section class="panel" id="p-visitors">
+  <div class="filterbar">
+    <div class="field"><label>Group by</label>
+      <div class="seg" id="vGran">
+        <button data-g="day">Day</button><button data-g="month" class="on">Month</button><button data-g="year">Year</button>
+      </div></div>
+    <div class="field"><label>Period</label><select id="vPeriod"><option value="">All time</option></select></div>
+    <div class="spacer"></div>
+    <div class="crossnote" id="vCross"></div>
+    <button class="btn sm" id="vReset">Reset filters</button>
+    <button class="btn sm" id="vExport">⬇ Export .xlsx</button>
+  </div>
+  <div class="stats" id="vStats"></div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="cardhead"><h3 id="vTrendTitle">Visits over time</h3><span class="hint">click a bar to focus that period</span></div>
+    <div id="vTrend" class="pad"></div>
+  </div>
+  <div class="vizgrid">
+    <div class="card">
+      <div class="cardhead"><h3>Visitor types</h3><span class="hint">click a slice to cross-filter</span></div>
+      <div class="donutwrap"><div id="vDonut"></div><div class="legend" id="vDonutLegend"></div></div>
+    </div>
+    <div class="card">
+      <div class="cardhead"><h3>Age groups</h3><span class="hint">hover a bar for exact counts</span></div>
+      <div class="pad" id="vAges"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="cardhead"><h3>Table view</h3><span class="hint">every value in the charts above, as numbers</span></div>
+    <div class="tablewrap" style="max-height:44vh"><table id="vTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ DATA ============ -->
+<section class="panel" id="p-data">
+  <div class="card" style="margin-bottom:14px">
+    <div class="cardhead"><h3>Upload your data</h3>
+      <button class="btn sm" id="btnTemplate">⬇ Blank template .xlsx</button>
+      <button class="btn sm" id="btnDemo">Load demo data</button>
+      <button class="btn sm" id="btnClear">Clear all data</button></div>
+    <div class="pad">
+      <div class="drop" id="drop">
+        <div style="font-size:15px;font-weight:640;margin-bottom:4px">Drop .xlsx / .csv / .json files here</div>
+        <div class="hint" style="margin-bottom:12px">One workbook with sheets named Activities, People, Donations, Visitors,
+          Enrollments — or separate CSV files. Tables are detected from sheet names and column headers.</div>
+        <input type="file" id="file" multiple accept=".xlsx,.xlsm,.csv,.tsv,.json" hidden>
+        <button class="btn primary" id="btnPick">Choose files…</button>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <div class="field" style="flex:1"><label>…or pull from another website (must allow cross-origin requests)</label>
+          <input type="url" id="url" placeholder="https://example.org/export/people.csv" style="width:100%"></div>
+        <button class="btn" id="btnFetch" style="align-self:flex-end">Fetch &amp; load</button>
+      </div>
+      <div id="loadlog" class="hint" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="cardhead"><h3>What is loaded now</h3>
+      <span class="hint">every panel and export reads from these tables</span></div>
+    <div class="tablewrap" style="max-height:none"><table id="dataTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <h3 style="margin:18px 0 10px">Expected columns (extra columns are kept and shown too)</h3>
+  <div class="schema">
+    <div class="card"><b>Activities</b>
+      <ul>
+        <li><code>Activity ID</code> · <code>Name</code></li>
+        <li><code>Category</code> — e.g. Sports, Wellness, Education</li>
+        <li><code>Group</code> — e.g. Basketball, Yoga, Cooking</li>
+        <li><code>Date</code> <code>Start Time</code> <code>End Time</code></li>
+        <li><code>Location</code></li>
+        <li><code>Participants</code> <code>Volunteers</code> <code>Staff</code> — names separated by <code>;</code></li>
+      </ul>
+      <div class="hint" style="margin-top:8px">A recurring activity is one row per date, so each session keeps its own roster.</div>
+    </div>
+    <div class="card"><b>Enrollments</b> <span class="hint">(optional long format)</span>
+      <ul><li><code>Activity ID</code></li><li><code>Person</code> or <code>Name</code></li>
+        <li><code>Role</code> — participant / volunteer / staff</li>
+        <li><code>Date</code> <span class="hint">(optional, targets one session)</span></li></ul>
+      <div class="hint" style="margin-top:8px">Use this instead of the semicolon lists if your source system exports one row per sign-up.</div>
+    </div>
+    <div class="card"><b>People</b>
+      <ul><li><code>Person ID</code> · <code>Name</code></li>
+        <li><code>Role</code> — admin / volunteer / participant</li>
+        <li><code>Email</code> <code>Phone</code> <code>Address</code></li>
+        <li><code>Date of Birth</code> or <code>Age</code></li>
+        <li><code>Joined</code> · <code>Last Online</code></li>
+        <li><code>Emergency Contact</code> <code>Notes</code></li></ul>
+      <div class="hint" style="margin-top:8px">90+ days since <code>Last Online</code> marks the person Inactive automatically.</div>
+    </div>
+    <div class="card"><b>Donations</b>
+      <ul><li><code>Donation ID</code></li><li><code>Campaign</code> / <code>Drive</code> — e.g. "Donate 10 running shoes!"</li>
+        <li><code>Donor</code> (name) or <code>Person ID</code></li>
+        <li><code>Amount</code> · <code>Date</code> · <code>Time</code></li>
+        <li><code>Method</code> <code>Note</code></li></ul>
+    </div>
+    <div class="card"><b>Visitors</b>
+      <ul><li><code>Date</code></li>
+        <li><code>User Type</code> — parent/carer, individual volunteer, corporate volunteer, corporation/NGO, general visitor</li>
+        <li><code>Age Group</code> or <code>Age</code></li>
+        <li><code>Visits</code> <span class="hint">(optional count; defaults to 1 per row)</span></li>
+        <li><code>Source</code> <code>Region</code></li></ul>
+    </div>
+  </div>
+  <p class="hint" style="margin-top:14px">Dates are read as <code>YYYY-MM-DD</code> when possible; slash dates are read
+    month-first unless the first number is above 12. Everything you load stays in this browser (nothing is uploaded anywhere)
+    and is restored the next time you open the file.</p>
+</section>
+
+</main>
+
+<div id="tip"></div>
+<div id="toast"></div>
+<div class="backdrop" id="backdrop"><div class="modal" id="modal"></div></div>
+
+<script>
+"use strict";
+/* =======================================================================
+   0 — helpers
+   ======================================================================= */
+const $=(s,r)=>(r||document).querySelector(s), $$=(s,r)=>[...(r||document).querySelectorAll(s)];
+const esc=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const norm=s=>String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]/g,"");
+const money=n=>"$"+(Number(n)||0).toLocaleString(undefined,{maximumFractionDigits:2});
+const num=n=>(Number(n)||0).toLocaleString();
+const DAY=864e5;
+function toast(msg,bad){const d=document.createElement("div");d.className="toast"+(bad?" bad":"");d.textContent=msg;
+  $("#toast").appendChild(d);setTimeout(()=>{d.style.opacity="0";d.style.transition="opacity .3s";setTimeout(()=>d.remove(),320)},bad?5200:3000);}
+
+function parseDate(v){
+  if(v==null||v==="")return null;
+  if(v instanceof Date)return isNaN(v)?null:v;
+  if(typeof v==="number")return excelSerialToDate(v);
+  const s=String(v).trim();
+  let m=s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  if(m)return mk(+m[1],+m[2],+m[3]);
+  m=s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
+  if(m){let a=+m[1],b=+m[2],y=+m[3];if(y<100)y+=2000;
+    return a>12?mk(y,b,a):mk(y,a,b);}                     // day-first only when unambiguous
+  const d=new Date(s);return isNaN(d)?null:d;
+  function mk(y,mo,da){const d=new Date(y,mo-1,da);return isNaN(d)?null:d;}
+}
+function excelSerialToDate(n){if(n>60)n-=1;return new Date(Math.round((n-25568)*DAY));}
+const iso=d=>d?d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"):"";
+const pretty=d=>d?d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"}):"—";
+function daysSince(d){return d?Math.floor((Date.now()-d.getTime())/DAY):null;}
+function splitList(v){
+  if(Array.isArray(v))return v.map(x=>String(x).trim()).filter(Boolean);
+  const s=String(v==null?"":v).trim();if(!s)return [];
+  return (s.includes(";")||s.includes("|")?s.split(/[;|]/):s.split(",")).map(x=>x.trim()).filter(Boolean);
+}
+function rowGet(row,...aliases){
+  for(const a of aliases){const k=norm(a);if(row.__n&&row.__n[k]!=null&&row.__n[k]!=="")return row.__n[k];}
+  return "";
+}
+function indexRow(row){const n={};for(const k in row)n[norm(k)]=row[k];row.__n=n;return row;}
+
+/* =======================================================================
+   1 — XLSX read (zip + DecompressionStream, no external libraries)
+   ======================================================================= */
+async function inflateRaw(u8){
+  if(typeof DecompressionStream==="undefined")throw new Error("This browser cannot unzip .xlsx — use CSV instead.");
+  const st=new Blob([u8]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(st).arrayBuffer());
+}
+async function deflateRaw(u8){
+  if(typeof CompressionStream==="undefined")return null;
+  const st=new Blob([u8]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+  return new Uint8Array(await new Response(st).arrayBuffer());
+}
+async function unzip(buf){
+  const dv=new DataView(buf),u8=new Uint8Array(buf);let eo=-1;
+  for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-66000);i--){if(dv.getUint32(i,true)===0x06054b50){eo=i;break;}}
+  if(eo<0)throw new Error("Not a valid .xlsx (zip end record missing)");
+  const count=dv.getUint16(eo+10,true);let off=dv.getUint32(eo+16,true);const out={};
+  for(let i=0;i<count;i++){
+    if(dv.getUint32(off,true)!==0x02014b50)break;
+    const method=dv.getUint16(off+10,true),csize=dv.getUint32(off+20,true),
+      nlen=dv.getUint16(off+28,true),elen=dv.getUint16(off+30,true),clen=dv.getUint16(off+32,true),
+      lho=dv.getUint32(off+42,true),
+      name=new TextDecoder().decode(u8.subarray(off+46,off+46+nlen));
+    const lnl=dv.getUint16(lho+26,true),lel=dv.getUint16(lho+28,true),start=lho+30+lnl+lel;
+    const raw=u8.subarray(start,start+csize);
+    out[name]=method===0?raw:await inflateRaw(raw);
+    off+=46+nlen+elen+clen;
+  }
+  return out;
+}
+const xdoc=u8=>new DOMParser().parseFromString(new TextDecoder().decode(u8),"application/xml");
+function colIdx(ref){let n=0;for(const ch of ref){const c=ch.charCodeAt(0);if(c<65||c>90)break;n=n*26+(c-64);}return n-1;}
+function isDateFmt(code,id){
+  if(id>=14&&id<=22)return true; if(id>=45&&id<=47)return true;
+  if(!code)return false;
+  return /(^|[^\\[])(yy|dd|mmm|hh)/i.test(code.replace(/\[[^\]]*\]/g,"").replace(/"[^"]*"/g,""));
+}
+async function readXlsx(buf){
+  const z=await unzip(buf);
+  const shared=[];
+  if(z["xl/sharedStrings.xml"]){
+    for(const si of xdoc(z["xl/sharedStrings.xml"]).getElementsByTagName("si")){
+      let t="";for(const n of si.getElementsByTagName("t"))t+=n.textContent;shared.push(t);}
+  }
+  const dateXf=[];
+  if(z["xl/styles.xml"]){
+    const sd=xdoc(z["xl/styles.xml"]),fmts={};
+    for(const nf of sd.getElementsByTagName("numFmt"))fmts[nf.getAttribute("numFmtId")]=nf.getAttribute("formatCode");
+    const cx=sd.getElementsByTagName("cellXfs")[0];
+    if(cx)for(const xf of cx.getElementsByTagName("xf")){
+      const id=+(xf.getAttribute("numFmtId")||0);dateXf.push(isDateFmt(fmts[id],id));}
+  }
+  const rels={};
+  if(z["xl/_rels/workbook.xml.rels"])
+    for(const r of xdoc(z["xl/_rels/workbook.xml.rels"]).getElementsByTagName("Relationship"))
+      rels[r.getAttribute("Id")]=r.getAttribute("Target").replace(/^\/?(xl\/)?/,"");
+  const wb=xdoc(z["xl/workbook.xml"]),sheets=[];
+  let idx=0;
+  for(const sh of wb.getElementsByTagName("sheet")){
+    idx++;
+    const rid=sh.getAttribute("r:id")||sh.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id");
+    const path="xl/"+((rels[rid])||("worksheets/sheet"+idx+".xml"));
+    const data=z[path]||z["xl/worksheets/sheet"+idx+".xml"];
+    if(!data)continue;
+    sheets.push({name:sh.getAttribute("name")||("Sheet"+idx),rows:sheetRows(xdoc(data),shared,dateXf)});
+  }
+  return sheets;
+}
+function sheetRows(doc,shared,dateXf){
+  const out=[];
+  for(const r of doc.getElementsByTagName("row")){
+    const arr=[];
+    for(const c of r.getElementsByTagName("c")){
+      const ref=c.getAttribute("r")||"",t=c.getAttribute("t"),s=+(c.getAttribute("s")||0);
+      const ci=ref?colIdx(ref):arr.length;let v="";
+      if(t==="inlineStr"){const is=c.getElementsByTagName("t");for(const n of is)v+=n.textContent;}
+      else{
+        const vn=c.getElementsByTagName("v")[0];const raw=vn?vn.textContent:"";
+        if(t==="s")v=shared[+raw]||"";
+        else if(t==="b")v=raw==="1"?"TRUE":"FALSE";
+        else if(raw===""){v="";}
+        else{const n=Number(raw);
+          if(!isNaN(n)&&dateXf[s])v=iso(excelSerialToDate(n))+(n%1?" "+fracToTime(n%1):"");
+          else v=isNaN(n)?raw:n;}
+      }
+      arr[ci]=v;
+    }
+    out.push(arr);
+  }
+  return out;
+}
+function fracToTime(f){const mins=Math.round(f*1440);return String(Math.floor(mins/60)).padStart(2,"0")+":"+String(mins%60).padStart(2,"0");}
+function rowsToObjects(rows){
+  if(!rows||!rows.length)return [];
+  let h=0;while(h<rows.length&&(!rows[h]||rows[h].filter(x=>x!==""&&x!=null).length<2))h++;
+  const head=(rows[h]||[]).map(x=>String(x==null?"":x).trim());
+  const out=[];
+  for(let i=h+1;i<rows.length;i++){
+    const r=rows[i]||[];if(!r.filter(x=>x!==""&&x!=null).length)continue;
+    const o={};head.forEach((k,j)=>{if(k)o[k]=r[j]==null?"":r[j];});
+    out.push(indexRow(o));
+  }
+  return out;
+}
+
+/* =======================================================================
+   2 — XLSX write
+   ======================================================================= */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;
+  for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function colName(n){let s="";n++;while(n>0){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=(n-m-1)/26;}return s;}
+function wsXml(rows){
+  let x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+  rows.forEach((row,ri)=>{
+    x+='<row r="'+(ri+1)+'">';
+    (row||[]).forEach((v,ci)=>{
+      if(v===null||v===undefined||v==="")return;
+      const ref=colName(ci)+(ri+1),st=ri===0?' s="1"':'';
+      if(typeof v==="number"&&isFinite(v))x+='<c r="'+ref+'"'+st+'><v>'+v+'</v></c>';
+      else x+='<c r="'+ref+'"'+st+' t="inlineStr"><is><t xml:space="preserve">'+esc(v)+'</t></is></c>';
+    });
+    x+='</row>';
+  });
+  return x+'</sheetData></worksheet>';
+}
+async function buildXlsx(sheets){
+  const enc=new TextEncoder();
+  const files=[];
+  files.push({name:"[Content_Types].xml",data:enc.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+    '<Default Extension="xml" ContentType="application/xml"/>'+
+    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+    '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+    sheets.map((s,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("")+
+    '</Types>')});
+  files.push({name:"_rels/.rels",data:enc.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')});
+  files.push({name:"xl/workbook.xml",data:enc.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+
+    sheets.map((s,i)=>'<sheet name="'+esc(String(s.name).slice(0,31).replace(/[\\/?*\[\]:]/g,"-"))+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join("")+
+    '</sheets></workbook>')});
+  files.push({name:"xl/_rels/workbook.xml.rels",data:enc.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    sheets.map((s,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join("")+
+    '<Relationship Id="rIdS" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>')});
+  files.push({name:"xl/styles.xml",data:enc.encode(
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'+
+    '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'+
+    '<borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
+    '<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>')});
+  sheets.forEach((s,i)=>files.push({name:"xl/worksheets/sheet"+(i+1)+".xml",data:enc.encode(wsXml(s.rows))}));
+
+  const chunks=[],central=[];let offset=0;
+  for(const f of files){
+    const nb=enc.encode(f.name),crc=crc32(f.data);
+    let method=0,data=f.data;
+    try{const d=await deflateRaw(f.data);if(d&&d.length<f.data.length){method=8;data=d;}}catch(e){}
+    const lh=new Uint8Array(30+nb.length),lv=new DataView(lh.buffer);
+    lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(8,method,true);
+    lv.setUint16(10,0,true);lv.setUint16(12,0x21,true);
+    lv.setUint32(14,crc,true);lv.setUint32(18,data.length,true);lv.setUint32(22,f.data.length,true);
+    lv.setUint16(26,nb.length,true);lh.set(nb,30);
+    chunks.push(lh,data);
+    const ch=new Uint8Array(46+nb.length),cv=new DataView(ch.buffer);
+    cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(10,method,true);
+    cv.setUint16(12,0,true);cv.setUint16(14,0x21,true);
+    cv.setUint32(16,crc,true);cv.setUint32(20,data.length,true);cv.setUint32(24,f.data.length,true);
+    cv.setUint16(28,nb.length,true);cv.setUint32(42,offset,true);ch.set(nb,46);
+    central.push(ch);
+    offset+=lh.length+data.length;
+  }
+  const cdSize=central.reduce((a,c)=>a+c.length,0);
+  const end=new Uint8Array(22),ev=new DataView(end.buffer);
+  ev.setUint32(0,0x06054b50,true);ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);
+  ev.setUint32(12,cdSize,true);ev.setUint32(16,offset,true);
+  return new Blob([...chunks,...central,end],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+}
+async function downloadXlsx(filename,sheets){
+  try{
+    const blob=await buildXlsx(sheets);
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    toast("Downloaded "+filename);
+  }catch(e){console.error(e);toast("Export failed: "+e.message,true);}
+}
+/* build a sheet from column defs + records */
+const sheetOf=(name,cols,recs)=>({name,rows:[cols.map(c=>c.h)].concat(recs.map(r=>cols.map(c=>{
+  const v=c.f(r);return v==null?"":v;})))});
+
+/* =======================================================================
+   3 — CSV
+   ======================================================================= */
+function parseCSV(text){
+  const d=text.indexOf("\t")>-1&&text.indexOf(",")<0?"\t":",";
+  const rows=[];let row=[],cur="",q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else if(c==='"')q=true;
+    else if(c===d){row.push(cur);cur="";}
+    else if(c==="\n"){row.push(cur);rows.push(row);row=[];cur="";}
+    else if(c!=="\r")cur+=c;
+  }
+  if(cur!==""||row.length){row.push(cur);rows.push(row);}
+  return rows.map(r=>r.map(v=>{const t=v.trim();
+    if(t!==""&&!isNaN(t)&&/^-?\d*\.?\d+$/.test(t))return Number(t);return t;}));
+}
+
+/* =======================================================================
+   4 — data model
+   ======================================================================= */
+const DB={activities:[],people:[],donations:[],visitors:[],raw:{}};
+const ROLES={admin:"Administrative staff",volunteer:"Volunteer",participant:"Participant",other:"Other"};
+const UTYPES=["Parents / Carers","Individual Volunteers","Corporate Volunteers","Corporations / NGOs","General Visitors"];
+const UCOLORS={"Parents / Carers":"var(--s1)","Individual Volunteers":"var(--s2)","Corporate Volunteers":"var(--s3)",
+  "Corporations / NGOs":"var(--s4)","General Visitors":"var(--s5)"};
+const AGE_BANDS=["0–12","13–17","18–24","25–34","35–49","50–64","65+"];
+const AGE_COLORS=["var(--o1)","var(--o2)","var(--o3)","var(--o4)","var(--o5)","var(--o6)","var(--o6)"];
+const INACTIVE_DAYS=90;
+
+function roleOf(v){
+  const s=norm(v);
+  if(!s)return "other";
+  if(/(admin|staff|manager|director|coordinator|employee|love21)/.test(s))return "admin";
+  if(/volunteer|mentor|coach|helper/.test(s))return "volunteer";
+  if(/(participant|kid|child|athlete|member|student|client)/.test(s))return "participant";
+  return "other";
+}
+function userTypeOf(v){
+  const s=norm(v);
+  if(!s)return "General Visitors";
+  if(/(corporatevolunteer|companyvolunteer|corpvolunteer|groupvolunteer)/.test(s))return "Corporate Volunteers";
+  if(/(parent|carer|caregiver|guardian|family)/.test(s))return "Parents / Carers";
+  if(/(corporation|corporate|company|ngo|nonprofit|nonprofits|partner|business|foundation|sponsor)/.test(s))return "Corporations / NGOs";
+  if(/volunteer/.test(s))return "Individual Volunteers";
+  return "General Visitors";
+}
+function ageBand(v){
+  const s=String(v==null?"":v).trim();
+  if(!s)return "Unknown";
+  const n=Number(s);
+  if(!isNaN(n)&&s!==""&&/^\d+(\.\d+)?$/.test(s)){
+    if(n<13)return "0–12"; if(n<18)return "13–17"; if(n<25)return "18–24";
+    if(n<35)return "25–34"; if(n<50)return "35–49"; if(n<65)return "50–64"; return "65+";
+  }
+  const cleaned=s.replace(/[–—]/g,"-");
+  const hit=AGE_BANDS.find(b=>norm(b.replace(/[–—]/g,"-"))===norm(cleaned));
+  if(hit)return hit;
+  const m=cleaned.match(/(\d+)/);
+  if(m)return ageBand(m[1]);
+  return s;
+}
+function ingest(table,rows){
+  if(!rows||!rows.length)return 0;
+  rows=rows.map(r=>r.__n?r:indexRow(r));
+  DB.raw[table]=rows;
+  if(table==="activities")DB.activities=rows.map((r,i)=>({
+    id:String(rowGet(r,"activityid","id","activity id","sessionid")||("ACT-"+(i+1))),
+    name:String(rowGet(r,"activityname","name","activity","title")||"Untitled activity"),
+    category:String(rowGet(r,"category","type","programme","program")||"Uncategorised"),
+    group:String(rowGet(r,"group","activitygroup","sport","class")||"—"),
+    date:parseDate(rowGet(r,"date","sessiondate","startdate","day")),
+    time:String(rowGet(r,"starttime","time","start")||""),
+    end:String(rowGet(r,"endtime","end","finish")||""),
+    location:String(rowGet(r,"location","venue","room","site")||""),
+    participants:splitList(rowGet(r,"participants","kids","children","enrolled","attendees","athletes")),
+    volunteers:splitList(rowGet(r,"volunteers","volunteer","helpers")),
+    staff:splitList(rowGet(r,"staff","love21staff","supervisor","monitor","responsiblestaff","lead")),
+    notes:String(rowGet(r,"notes","note","description")||""),
+    raw:r}));
+  if(table==="people")DB.people=rows.map((r,i)=>{
+    const dob=parseDate(rowGet(r,"dateofbirth","dob","birthday","birthdate"));
+    const ageRaw=rowGet(r,"age");
+    return{
+      id:String(rowGet(r,"personid","id","memberid")||("P-"+(i+1))),
+      name:String(rowGet(r,"name","fullname","person","firstname")||"Unnamed").trim(),
+      role:roleOf(rowGet(r,"role","type","usertype","category")),
+      roleRaw:String(rowGet(r,"role","type","usertype")||""),
+      email:String(rowGet(r,"email","emailaddress","mail")||""),
+      phone:String(rowGet(r,"phone","phonenumber","mobile","tel","contactnumber")||""),
+      address:String(rowGet(r,"address","location","city","suburb")||""),
+      dob,age:ageRaw!==""?Number(ageRaw)||ageRaw:(dob?Math.floor((Date.now()-dob)/(365.25*DAY)):""),
+      joined:parseDate(rowGet(r,"joined","joindate","membersince","startdate","created")),
+      lastOnline:parseDate(rowGet(r,"lastonline","lastlogin","lastactive","lastseen","lastactivity")),
+      emergency:String(rowGet(r,"emergencycontact","emergency","guardian","carer")||""),
+      notes:String(rowGet(r,"notes","note")||""),
+      donatedCol:Number(rowGet(r,"donations","totaldonated","donationtotal","amountdonated"))||0,
+      eventsCol:splitList(rowGet(r,"eventsparticipated","events","activities")),
+      raw:r};
+  });
+  if(table==="donations")DB.donations=rows.map((r,i)=>({
+    id:String(rowGet(r,"donationid","id","transactionid","reference")||("D-"+(i+1))),
+    campaign:String(rowGet(r,"campaign","drive","event","donationevent","appeal","fund","purpose")||"General giving"),
+    donor:String(rowGet(r,"donor","donorname","name","person","from")||"Anonymous").trim(),
+    personId:String(rowGet(r,"personid","donorid","memberid")||""),
+    amount:Number(String(rowGet(r,"amount","money","value","donation","total")).toString().replace(/[^0-9.\-]/g,""))||0,
+    date:parseDate(rowGet(r,"date","donationdate","transactiondate")),
+    time:String(rowGet(r,"time","transactiontime","timestamp")||""),
+    method:String(rowGet(r,"method","paymentmethod","channel")||""),
+    note:String(rowGet(r,"note","notes","message","item")||""),
+    raw:r}));
+  if(table==="visitors")DB.visitors=rows.map(r=>({
+    date:parseDate(rowGet(r,"date","visitdate","day","timestamp")),
+    userType:userTypeOf(rowGet(r,"usertype","visitortype","type","category","segment")),
+    typeRaw:String(rowGet(r,"usertype","visitortype","type","category")||""),
+    ageGroup:ageBand(rowGet(r,"agegroup","agerange","ageband","age")),
+    count:Number(rowGet(r,"visits","count","visitors","number"))||1,
+    source:String(rowGet(r,"source","channel","referrer","region")||""),
+    raw:r}));
+  if(table==="enrollments"){
+    const by={};
+    DB.activities.forEach(a=>{(by[a.id]=by[a.id]||[]).push(a);});
+    rows.forEach(r=>{
+      const aid=String(rowGet(r,"activityid","activity","id","sessionid")||"");
+      const person=String(rowGet(r,"person","name","personname","participant","fullname")||"").trim();
+      const role=roleOf(rowGet(r,"role","type","capacity"));
+      const d=parseDate(rowGet(r,"date","sessiondate"));
+      if(!aid||!person)return;
+      let targets=by[aid]||[];
+      if(d&&targets.length>1){const m=targets.filter(a=>iso(a.date)===iso(d));if(m.length)targets=m;}
+      targets.forEach(a=>{
+        const bucket=role==="admin"?a.staff:role==="volunteer"?a.volunteers:a.participants;
+        if(!bucket.includes(person))bucket.push(person);
+      });
+    });
+  }
+  return rows.length;
+}
+
+/* derived lookups */
+let peopleById={},peopleByName={},nameIndex=[];
+function derive(){
+  peopleById={};peopleByName={};
+  DB.people.forEach(p=>{peopleById[p.id]=p;peopleByName[norm(p.name)]=p;});
+  DB.people.forEach(p=>{p.donations=[];p.events=[];});
+  DB.donations.forEach(d=>{
+    const p=(d.personId&&peopleById[d.personId])||peopleByName[norm(d.donor)];
+    d.person=p||null;
+    if(p)p.donations.push(d);
+  });
+  DB.activities.forEach(a=>{
+    const add=(names,cap)=>names.forEach(n=>{
+      const p=peopleByName[norm(n)]||peopleById[n];
+      if(p&&!p.events.some(e=>e.a===a))p.events.push({a,cap});
+    });
+    add(a.participants,"Participant");add(a.volunteers,"Volunteer");add(a.staff,"Staff");
+  });
+  DB.people.forEach(p=>{
+    p.totalDonated=p.donations.reduce((s,d)=>s+d.amount,0)||p.donatedCol;
+    p.eventCount=p.events.length||p.eventsCol.length;
+    p.inactive=p.lastOnline?daysSince(p.lastOnline)>INACTIVE_DAYS:false;
+  });
+  buildNameIndex();
+}
+/* ---- the binary-search index (sorted keys: "full name" + "surname firstname") ---- */
+function buildNameIndex(){
+  nameIndex=[];
+  DB.people.forEach(p=>{
+    const full=p.name.toLowerCase().trim();
+    if(!full)return;
+    nameIndex.push({k:full,p});
+    const t=full.split(/\s+/).filter(Boolean);
+    for(let i=1;i<t.length;i++)nameIndex.push({k:t[i]+" "+t.slice(0,i).join(" "),p});
+  });
+  nameIndex.sort((a,b)=>a.k<b.k?-1:a.k>b.k?1:0);
+}
+let lastSearchInfo="";
+function binaryLookup(query){
+  const q=query.toLowerCase().trim();
+  if(!q)return{people:DB.people.slice(),info:num(DB.people.length)+" records · index of "+num(nameIndex.length)+" keys"};
+  let lo=0,hi=nameIndex.length,steps=0;
+  while(lo<hi){const mid=(lo+hi)>>1;steps++;if(nameIndex[mid].k<q)lo=mid+1;else hi=mid;}
+  const seen=new Set(),out=[];
+  for(let i=lo;i<nameIndex.length&&nameIndex[i].k.startsWith(q);i++){
+    const p=nameIndex[i].p;if(!seen.has(p.id)){seen.add(p.id);out.push(p);}
+  }
+  if(out.length)return{people:out,info:"binary search · "+steps+" comparisons over "+num(nameIndex.length)+" keys · "+out.length+" match"+(out.length===1?"":"es")};
+  const fb=DB.people.filter(p=>[p.email,p.phone,p.id,p.address,p.name].some(v=>String(v).toLowerCase().includes(q)));
+  return{people:fb,info:"no name prefix — scanned other fields · "+fb.length+" match"+(fb.length===1?"":"es")};
+}
+
+/* =======================================================================
+   5 — shared tooltip
+   ======================================================================= */
+const tipEl=$("#tip");
+function showTip(html,ev){tipEl.innerHTML=html;tipEl.classList.add("on");moveTip(ev);}
+function moveTip(ev){
+  const r=tipEl.getBoundingClientRect();
+  let x=ev.clientX+14,y=ev.clientY+16;
+  if(x+r.width>innerWidth-8)x=ev.clientX-r.width-14;
+  if(y+r.height>innerHeight-8)y=ev.clientY-r.height-14;
+  tipEl.style.left=x+"px";tipEl.style.top=y+"px";
+}
+function hideTip(){tipEl.classList.remove("on");}
+function bindTip(el,htmlFn){
+  el.addEventListener("mouseenter",e=>showTip(htmlFn(),e));
+  el.addEventListener("mousemove",moveTip);
+  el.addEventListener("mouseleave",hideTip);
+  el.addEventListener("focus",e=>{const r=el.getBoundingClientRect();
+    showTip(htmlFn(),{clientX:r.left+r.width/2,clientY:r.top});});
+  el.addEventListener("blur",hideTip);
+}
+
+/* =======================================================================
+   6 — person modal (shared by panels 1, 2, 3)
+   ======================================================================= */
+const backdrop=$("#backdrop");
+backdrop.addEventListener("click",e=>{if(e.target===backdrop)closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+function closeModal(){backdrop.classList.remove("on");}
+function findPerson(key){
+  if(!key)return null;
+  return peopleById[key]||peopleByName[norm(key)]||null;
+}
+function openPerson(key){
+  const p=findPerson(key);
+  if(!p){toast("No profile record found for “"+key+"”",true);return;}
+  const days=daysSince(p.lastOnline);
+  const extra=Object.keys(p.raw||{}).filter(k=>k!=="__n"&&!/^(name|role|email|phone|address|age|dob|dateofbirth|joined|lastonline|notes|personid|id)$/i.test(k.replace(/\s+/g,"")));
+  const donRows=p.donations.slice().sort((a,b)=>(b.date||0)-(a.date||0));
+  const evRows=p.events.slice().sort((a,b)=>(b.a.date||0)-(a.a.date||0));
+  $("#modal").innerHTML=
+    '<div class="mh"><div style="flex:1">'+
+      '<h2>'+esc(p.name)+(p.inactive?'<span class="inactive">(Inactive)</span>':'')+'</h2>'+
+      '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+
+        '<span class="chip '+p.role+'"><i class="dot"></i>'+esc(p.roleRaw||ROLES[p.role])+'</span>'+
+        '<span class="chip grey"><i class="dot"></i>ID '+esc(p.id)+'</span>'+
+        (p.inactive?'<span class="chip grey"><i class="dot"></i>'+days+' days since last login</span>':
+          (days!=null?'<span class="chip grey"><i class="dot"></i>active '+days+'d ago</span>':''))+
+      '</div></div><button class="x" id="mx">✕</button></div>'+
+    '<div class="mb">'+
+      '<div class="sec"><h4>Contact</h4><dl class="kv" style="padding:0;border:0">'+
+        kv("Email",p.email?'<a href="mailto:'+esc(p.email)+'">'+esc(p.email)+'</a>':"—")+
+        kv("Phone",p.phone||"—")+kv("Address",p.address||"—")+
+        kv("Emergency contact",p.emergency||"—")+
+        kv("Age",p.age===""||p.age==null?"—":p.age+(p.dob?" (b. "+pretty(p.dob)+")":""))+
+        kv("Member since",pretty(p.joined))+
+        kv("Last online",p.lastOnline?pretty(p.lastOnline)+" · "+days+" days ago":"never recorded")+
+      '</dl></div>'+
+      '<div class="sec"><h4>Giving</h4>'+
+        '<div class="stats" style="margin:0 0 8px">'+
+          stat("Total donated",money(p.totalDonated))+stat("Donations",num(p.donations.length))+
+          stat("Events participated",num(p.eventCount))+'</div>'+
+        (donRows.length?'<table class="minitable"><thead><tr><th>Drive</th><th>Amount</th><th>Date</th><th>Time</th></tr></thead><tbody>'+
+          donRows.map(d=>'<tr><td>'+esc(d.campaign)+'</td><td class="num">'+money(d.amount)+'</td><td>'+pretty(d.date)+
+            '</td><td>'+esc(d.time||"—")+'</td></tr>').join("")+'</tbody></table>'
+          :'<div class="hint">'+(p.donatedCol?'Total from the People sheet: '+money(p.donatedCol)+' (no itemised transactions loaded).':'No donations recorded.')+'</div>')+
+      '</div>'+
+      '<div class="sec"><h4>Events participated</h4>'+
+        (evRows.length?'<table class="minitable"><thead><tr><th>Activity</th><th>Group</th><th>Date</th><th>Taking part as</th></tr></thead><tbody>'+
+          evRows.map(e=>'<tr><td>'+esc(e.a.name)+'</td><td>'+esc(e.a.group)+'</td><td>'+pretty(e.a.date)+
+            '</td><td>'+esc(e.cap)+'</td></tr>').join("")+'</tbody></table>'
+          :(p.eventsCol.length?'<div class="hint">From the People sheet: '+esc(p.eventsCol.join(", "))+'</div>'
+            :'<div class="hint">Not enrolled in any loaded activity.</div>'))+
+      '</div>'+
+      (extra.length?'<div class="sec"><h4>Other fields from your file</h4><dl class="kv" style="padding:0;border:0">'+
+        extra.map(k=>kv(k,String(p.raw[k]||"—"))).join("")+'</dl></div>':'')+
+      (p.notes?'<div class="sec"><h4>Notes</h4><div>'+esc(p.notes)+'</div></div>':'')+
+    '</div>'+
+    '<div class="mf"><button class="btn" id="mDl">⬇ Export this profile (.xlsx)</button>'+
+      '<div class="spacer"></div><button class="btn" id="mClose">Close</button></div>';
+  $("#mx").onclick=$("#mClose").onclick=closeModal;
+  $("#mDl").onclick=()=>downloadXlsx("love21-profile-"+p.name.replace(/[^a-z0-9]+/gi,"-").toLowerCase()+".xlsx",[
+    {name:"Profile",rows:[["Field","Value"],["Person ID",p.id],["Name",p.name],["Role",p.roleRaw||ROLES[p.role]],
+      ["Email",p.email],["Phone",p.phone],["Address",p.address],["Age",p.age],["Member since",iso(p.joined)],
+      ["Last online",iso(p.lastOnline)],["Status",p.inactive?"Inactive":"Active"],
+      ["Total donated",p.totalDonated],["Events participated",p.eventCount],["Notes",p.notes]]},
+    sheetOf("Donations",[{h:"Drive",f:d=>d.campaign},{h:"Amount",f:d=>d.amount},{h:"Date",f:d=>iso(d.date)},
+      {h:"Time",f:d=>d.time},{h:"Method",f:d=>d.method}],donRows),
+    sheetOf("Events",[{h:"Activity",f:e=>e.a.name},{h:"Group",f:e=>e.a.group},{h:"Category",f:e=>e.a.category},
+      {h:"Date",f:e=>iso(e.a.date)},{h:"Role",f:e=>e.cap}],evRows)
+  ]);
+  backdrop.classList.add("on");
+}
+const kv=(k,v)=>'<dt>'+esc(k)+'</dt><dd>'+v+'</dd>';
+const stat=(k,v,s)=>'<div class="stat"><div class="k">'+esc(k)+'</div><div class="v">'+v+'</div>'+(s?'<div class="s">'+esc(s)+'</div>':'')+'</div>';
+const personBtn=(name,extraClass)=>{
+  const p=findPerson(name);
+  const cls=p?p.role:"other";
+  return '<button class="namebtn '+cls+(extraClass?" "+extraClass:"")+'" data-person="'+esc(p?p.id:name)+'">'+
+    esc(name)+(p&&p.inactive?'<span class="inactive">(Inactive)</span>':'')+'</button>';
+};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-person]");
+  if(b){e.stopPropagation();openPerson(b.getAttribute("data-person"));}
+});
+
+/* =======================================================================
+   7 — PANEL 1 · activities
+   ======================================================================= */
+let aSel=null,aSort={k:"date",dir:-1};
+const A_COLS=[
+  {k:"id",h:"Activity ID",v:a=>esc(a.id)},
+  {k:"name",h:"Activity",v:a=>'<span style="font-weight:620">'+esc(a.name)+'</span>'},
+  {k:"group",h:"Group",v:a=>'<span class="chip grey"><i class="dot"></i>'+esc(a.group)+'</span>'},
+  {k:"category",h:"Category",v:a=>esc(a.category)},
+  {k:"date",h:"Date",v:a=>pretty(a.date)},
+  {k:"time",h:"Time",v:a=>esc(a.time+(a.end?" – "+a.end:""))||"—"},
+  {k:"location",h:"Location",v:a=>esc(a.location||"—")},
+  {k:"n",h:"Kids",v:a=>'<span style="color:var(--r-part);font-weight:650">'+a.participants.length+'</span>',cls:"num"},
+  {k:"nv",h:"Vols",v:a=>'<span style="color:#3f7a1f;font-weight:650">'+a.volunteers.length+'</span>',cls:"num"},
+  {k:"ns",h:"Staff",v:a=>'<span style="color:var(--r-admin);font-weight:650">'+a.staff.length+'</span>',cls:"num"}
+];
+function activityFilter(){
+  const q=norm($("#aSearch").value),g=$("#aGroup").value,c=$("#aCat").value;
+  const from=parseDate($("#aFrom").value),to=parseDate($("#aTo").value);
+  return DB.activities.filter(a=>{
+    if(g&&a.group!==g)return false;
+    if(c&&a.category!==c)return false;
+    if(from&&(!a.date||a.date<from))return false;
+    if(to&&(!a.date||a.date>new Date(to.getTime()+DAY-1)))return false;
+    if(q&&!norm(a.id+a.name+a.group+a.category+a.location+iso(a.date)).includes(q))return false;
+    return true;});
+}
+function sortRows(rows,sort,get){
+  return rows.slice().sort((x,y)=>{
+    let a=get(x,sort.k),b=get(y,sort.k);
+    if(a instanceof Date||b instanceof Date){a=a?a.getTime():0;b=b?b.getTime():0;}
+    if(typeof a==="number"||typeof b==="number"){a=Number(a)||0;b=Number(b)||0;}
+    else{a=String(a==null?"":a).toLowerCase();b=String(b==null?"":b).toLowerCase();}
+    return a<b?-sort.dir:a>b?sort.dir:0;});
+}
+function renderActivities(){
+  const list=$("#aGroup"),cat=$("#aCat");
+  const groups=[...new Set(DB.activities.map(a=>a.group))].sort();
+  const cats=[...new Set(DB.activities.map(a=>a.category))].sort();
+  if(list.options.length-1!==groups.length)
+    list.innerHTML='<option value="">All groups</option>'+groups.map(g=>'<option>'+esc(g)+'</option>').join("");
+  if(cat.options.length-1!==cats.length)
+    cat.innerHTML='<option value="">All categories</option>'+cats.map(g=>'<option>'+esc(g)+'</option>').join("");
+
+  const rows=sortRows(activityFilter(),aSort,(a,k)=>
+    k==="n"?a.participants.length:k==="nv"?a.volunteers.length:k==="ns"?a.staff.length:a[k]);
+  $("#aCount").textContent=rows.length+" of "+DB.activities.length+" sessions";
+  $("#aStats").innerHTML=
+    stat("Sessions",num(rows.length))+
+    stat("Groups",num(new Set(rows.map(a=>a.group)).size))+
+    stat("Enrolled kids (seats)",num(rows.reduce((s,a)=>s+a.participants.length,0)))+
+    stat("Volunteer assignments",num(rows.reduce((s,a)=>s+a.volunteers.length,0)))+
+    stat("Sessions without staff",num(rows.filter(a=>!a.staff.length).length),"needs a monitor assigned");
+
+  $("#aTable thead").innerHTML="<tr>"+A_COLS.map(c=>'<th data-k="'+c.k+'">'+c.h+
+    (aSort.k===c.k?' <span class="arw">'+(aSort.dir>0?"▲":"▼")+'</span>':'')+'</th>').join("")+"</tr>";
+  $$("#aTable thead th").forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;aSort=k===aSort.k?{k,dir:-aSort.dir}:{k,dir:1};renderActivities();});
+  $("#aTable tbody").innerHTML=rows.length?rows.map(a=>
+    '<tr class="clickable'+(aSel&&aSel.__key===a.__key?" sel":"")+'" data-key="'+esc(a.__key)+'">'+
+    A_COLS.map(c=>'<td'+(c.cls?' class="'+c.cls+'"':'')+'>'+c.v(a)+'</td>').join("")+'</tr>').join("")
+    :'<tr><td colspan="'+A_COLS.length+'"><div class="empty">No sessions match these filters.</div></td></tr>';
+  $$("#aTable tbody tr[data-key]").forEach(tr=>tr.onclick=()=>{
+    aSel=DB.activities.find(a=>a.__key===tr.dataset.key);renderActivities();renderRoster();});
+  if(aSel)renderRoster();
+}
+function renderRoster(){
+  const a=aSel;const box=$("#aDetail");
+  const oldBtn=$("#aExportRoster");if(oldBtn)oldBtn.disabled=!a;
+  if(!a)return;
+  const grp=(cls,title,names)=>
+    '<div class="rosterbox '+cls+'"><div class="h">'+title+'<span class="n">'+names.length+'</span></div>'+
+    '<div class="list">'+(names.length?names.map(n=>{
+      const p=findPerson(n);
+      return '<button class="person-pill '+cls+'" data-person="'+esc(p?p.id:n)+'">'+esc(n)+
+        (p&&p.inactive?'<span class="inactive">(Inactive)</span>':'')+'</button>';}).join("")
+      :'<span class="hint" style="padding:4px 6px">Nobody assigned yet.</span>')+'</div></div>';
+  box.innerHTML=
+    '<div class="cardhead"><h3>Session roster</h3><button class="btn sm" id="aExportRoster">⬇ Roster .xlsx</button></div>'+
+    '<dl class="kv">'+kv("Activity",'<b>'+esc(a.name)+'</b>')+kv("ID",esc(a.id))+
+      kv("Group",esc(a.group))+kv("Category",esc(a.category))+
+      kv("Date",pretty(a.date))+kv("Time",esc(a.time+(a.end?" – "+a.end:""))||"—")+
+      kv("Location",esc(a.location||"—"))+(a.notes?kv("Notes",esc(a.notes)):"")+'</dl>'+
+    '<div class="roster">'+
+      grp("kids","Kids enrolled",a.participants)+
+      grp("vols","Volunteers responsible",a.volunteers)+
+      grp("staff","Love 21 staff monitoring",a.staff)+
+    '</div>';
+  $("#aExportRoster").onclick=()=>downloadXlsx("love21-roster-"+a.id+"-"+iso(a.date)+".xlsx",[
+    {name:"Session",rows:[["Field","Value"],["Activity ID",a.id],["Activity",a.name],["Group",a.group],
+      ["Category",a.category],["Date",iso(a.date)],["Start",a.time],["End",a.end],["Location",a.location]]},
+    {name:"Roster",rows:[["Capacity","Name","Role in database","Email","Phone","Last online","Status"]].concat(
+      [["Participant",a.participants],["Volunteer",a.volunteers],["Love 21 staff",a.staff]].flatMap(([cap,list])=>
+        list.map(n=>{const p=findPerson(n);
+          return [cap,n,p?(p.roleRaw||ROLES[p.role]):"not in People table",p?p.email:"",p?p.phone:"",
+            p?iso(p.lastOnline):"",p?(p.inactive?"Inactive":"Active"):""];})))}
+  ]);
+}
+function exportActivities(){
+  const rows=activityFilter();
+  downloadXlsx("love21-activities.xlsx",[
+    sheetOf("Activities",[{h:"Activity ID",f:a=>a.id},{h:"Activity",f:a=>a.name},{h:"Category",f:a=>a.category},
+      {h:"Group",f:a=>a.group},{h:"Date",f:a=>iso(a.date)},{h:"Start Time",f:a=>a.time},{h:"End Time",f:a=>a.end},
+      {h:"Location",f:a=>a.location},{h:"Kids enrolled",f:a=>a.participants.length},
+      {h:"Volunteers",f:a=>a.volunteers.length},{h:"Staff",f:a=>a.staff.length},
+      {h:"Participants",f:a=>a.participants.join("; ")},{h:"Volunteer names",f:a=>a.volunteers.join("; ")},
+      {h:"Staff names",f:a=>a.staff.join("; ")}],rows),
+    {name:"Rosters",rows:[["Activity ID","Activity","Date","Capacity","Name"]].concat(
+      rows.flatMap(a=>[["Participant",a.participants],["Volunteer",a.volunteers],["Love 21 staff",a.staff]]
+        .flatMap(([cap,l])=>l.map(n=>[a.id,a.name,iso(a.date),cap,n]))))}
+  ]);
+}
+
+/* =======================================================================
+   8 — PANEL 2 · people
+   ======================================================================= */
+let pSort={k:"name",dir:1},pExtraCols=[];
+function peopleBase(){
+  const res=binaryLookup($("#pSearch").value);
+  lastSearchInfo=res.info;
+  const role=$("#pRole").value,st=$("#pStatus").value;
+  return res.people.filter(p=>{
+    if(role&&p.role!==role)return false;
+    if(st==="active"&&p.inactive)return false;
+    if(st==="inactive"&&!p.inactive)return false;
+    return true;});
+}
+function renderPeople(){
+  const rows0=peopleBase();
+  $("#pSearchInfo").innerHTML='<i class="dot"></i>'+esc(lastSearchInfo);
+  const searching=!!$("#pSearch").value.trim();
+  const rows=searching?rows0:sortRows(rows0,pSort,(p,k)=>p[k]);
+  $("#pCount").textContent=rows.length+" of "+DB.people.length+" people";
+  const inact=DB.people.filter(p=>p.inactive).length;
+  $("#pStats").innerHTML=
+    stat("People",num(DB.people.length))+
+    stat("Admin staff",num(DB.people.filter(p=>p.role==="admin").length))+
+    stat("Volunteers",num(DB.people.filter(p=>p.role==="volunteer").length))+
+    stat("Participants",num(DB.people.filter(p=>p.role==="participant").length))+
+    stat("Inactive 90+ days",num(inact),inact?"grey tag on their name":"everyone has logged in recently")+
+    stat("Donated (all people)",money(DB.people.reduce((s,p)=>s+p.totalDonated,0)));
+
+  const skip=new Set(["name","fullname","role","email","phone","address","age","dob","dateofbirth","joined","joindate",
+    "lastonline","lastlogin","notes","personid","id","donations","totaldonated","eventsparticipated","events"]);
+  pExtraCols=[...new Set(DB.people.flatMap(p=>Object.keys(p.raw||{})))].filter(k=>k!=="__n"&&!skip.has(norm(k)));
+
+  const cols=[
+    {k:"name",h:"Name",v:p=>'<button class="namebtn '+p.role+'" data-person="'+esc(p.id)+'">'+esc(p.name)+'</button>'+
+      (p.inactive?'<span class="inactive">(Inactive)</span>':'')},
+    {k:"role",h:"Role",v:p=>'<span class="chip '+p.role+'"><i class="dot"></i>'+esc(p.roleRaw||ROLES[p.role])+'</span>'},
+    {k:"id",h:"ID",v:p=>esc(p.id)},
+    {k:"email",h:"Email",v:p=>p.email?'<a href="mailto:'+esc(p.email)+'">'+esc(p.email)+'</a>':"—"},
+    {k:"phone",h:"Phone",v:p=>esc(p.phone||"—")},
+    {k:"age",h:"Age",v:p=>esc(p.age===""||p.age==null?"—":p.age),cls:"num"},
+    {k:"address",h:"Address",v:p=>esc(p.address||"—")},
+    {k:"joined",h:"Member since",v:p=>pretty(p.joined)},
+    {k:"lastOnline",h:"Last online",v:p=>p.lastOnline?pretty(p.lastOnline)+' <span class="muted small">('+daysSince(p.lastOnline)+'d)</span>':"—"},
+    {k:"totalDonated",h:"Donated",v:p=>money(p.totalDonated),cls:"num"},
+    {k:"eventCount",h:"Events",v:p=>num(p.eventCount),cls:"num"},
+    {k:"emergency",h:"Emergency contact",v:p=>esc(p.emergency||"—")}
+  ].concat(pExtraCols.map(k=>({k:"x:"+k,h:k,v:p=>esc(p.raw[k]==null?"—":p.raw[k]),nosort:true})));
+
+  $("#pTable thead").innerHTML="<tr>"+cols.map(c=>'<th'+(c.nosort?' class="nosort"':' data-k="'+c.k+'"')+'>'+esc(c.h)+
+    (pSort.k===c.k&&!searching?' <span class="arw">'+(pSort.dir>0?"▲":"▼")+'</span>':'')+'</th>').join("")+"</tr>";
+  $$("#pTable thead th[data-k]").forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k;pSort=k===pSort.k?{k,dir:-pSort.dir}:{k,dir:1};renderPeople();});
+  $("#pTable tbody").innerHTML=rows.length?rows.map(p=>"<tr>"+cols.map(c=>
+    '<td'+(c.cls?' class="'+c.cls+'"':'')+'>'+c.v(p)+'</td>').join("")+"</tr>").join("")
+    :'<tr><td colspan="'+cols.length+'"><div class="empty">Nobody matches. Binary search matches from the start of a first name or surname.</div></td></tr>';
+}
+function exportPeople(){
+  const rows=peopleBase();
+  downloadXlsx("love21-people.xlsx",[
+    sheetOf("People",[{h:"Person ID",f:p=>p.id},{h:"Name",f:p=>p.name},{h:"Role",f:p=>p.roleRaw||ROLES[p.role]},
+      {h:"Email",f:p=>p.email},{h:"Phone",f:p=>p.phone},{h:"Address",f:p=>p.address},{h:"Age",f:p=>p.age},
+      {h:"Member since",f:p=>iso(p.joined)},{h:"Last online",f:p=>iso(p.lastOnline)},
+      {h:"Days since online",f:p=>daysSince(p.lastOnline)},{h:"Status",f:p=>p.inactive?"Inactive":"Active"},
+      {h:"Total donated",f:p=>p.totalDonated},{h:"Donations",f:p=>p.donations.length},
+      {h:"Events participated",f:p=>p.eventCount},{h:"Emergency contact",f:p=>p.emergency},
+      {h:"Notes",f:p=>p.notes}].concat(pExtraCols.map(k=>({h:k,f:p=>p.raw[k]}))),rows),
+    {name:"Event participation",rows:[["Person ID","Name","Activity","Group","Date","Taking part as"]].concat(
+      rows.flatMap(p=>p.events.map(e=>[p.id,p.name,e.a.name,e.a.group,iso(e.a.date),e.cap])))}
+  ]);
+}
+
+/* =======================================================================
+   9 — PANEL 3 · donations
+   ======================================================================= */
+let dSel=null;
+function campaigns(){
+  const m=new Map();
+  DB.donations.forEach(d=>{
+    if(!m.has(d.campaign))m.set(d.campaign,{name:d.campaign,items:[],total:0,donors:new Set(),last:null});
+    const c=m.get(d.campaign);
+    c.items.push(d);c.total+=d.amount;c.donors.add(norm(d.donor)||d.id);
+    if(d.date&&(!c.last||d.date>c.last))c.last=d.date;
+  });
+  let list=[...m.values()];
+  const q=norm($("#dSearch").value);
+  if(q)list=list.filter(c=>norm(c.name).includes(q)||c.items.some(d=>norm(d.donor).includes(q)));
+  const s=$("#dSort").value;
+  list.sort((a,b)=>s==="donors"?b.donors.size-a.donors.size:s==="recent"?(b.last||0)-(a.last||0)
+    :s==="name"?(a.name.toLowerCase()<b.name.toLowerCase()?-1:1):b.total-a.total);
+  return list;
+}
+function renderDonations(){
+  const list=campaigns();
+  const max=Math.max(1,...list.map(c=>c.total));
+  const all=DB.donations;
+  $("#dStats").innerHTML=
+    stat("Total raised",money(all.reduce((s,d)=>s+d.amount,0)))+
+    stat("Donation drives",num(new Set(all.map(d=>d.campaign)).size))+
+    stat("Transactions",num(all.length))+
+    stat("Distinct donors",num(new Set(all.map(d=>norm(d.donor))).size))+
+    stat("Average gift",money(all.length?all.reduce((s,d)=>s+d.amount,0)/all.length:0));
+  $("#dCount").textContent=list.length+" drive"+(list.length===1?"":"s");
+  $("#dCampaigns").innerHTML=list.length?list.map(c=>
+    '<div class="camp'+(dSel===c.name?" on":"")+'" data-c="'+esc(c.name)+'" tabindex="0">'+
+      '<div class="t">'+esc(c.name)+'</div>'+
+      '<div class="amt">'+money(c.total)+'</div>'+
+      '<div class="sub">'+c.donors.size+' donor'+(c.donors.size===1?"":"s")+' · '+c.items.length+
+        ' gift'+(c.items.length===1?"":"s")+' · last '+pretty(c.last)+'</div>'+
+      '<div class="bar"><i style="width:'+(c.total/max*100).toFixed(1)+'%"></i></div>'+
+    '</div>').join(""):'<div class="empty">No donation drives match that search.</div>';
+  $$("#dCampaigns .camp").forEach(el=>{
+    const c=list.find(x=>x.name===el.dataset.c);
+    el.onclick=()=>{dSel=c.name;renderDonations();};
+    el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();el.click();}};
+    bindTip(el,()=>'<div class="tk">Donation drive</div><div class="tv">'+esc(c.name)+'</div>'+
+      '<div>'+money(c.total)+' from '+c.donors.size+' donors</div>'+
+      '<div class="tk" style="margin-top:4px">Top gift</div><div>'+
+      esc(c.items.slice().sort((a,b)=>b.amount-a.amount)[0].donor)+' · '+
+      money(Math.max(...c.items.map(d=>d.amount)))+'</div>');
+  });
+  renderDonorList(list.find(c=>c.name===dSel));
+}
+function renderDonorList(c){
+  const box=$("#dDetail");
+  if(!c){box.innerHTML='<div class="cardhead"><h3>Donors</h3></div>'+
+    '<div class="empty">Pick a donation drive to see everyone who gave to it. Click any donor to open their full profile.</div>';return;}
+  const items=c.items.slice().sort((a,b)=>b.amount-a.amount);
+  box.innerHTML='<div class="cardhead"><h3>'+esc(c.name)+'</h3><button class="btn sm" id="dExportDonors">⬇ Donors .xlsx</button></div>'+
+    '<dl class="kv">'+kv("Total raised","<b>"+money(c.total)+"</b>")+kv("Donors",num(c.donors.size))+
+      kv("Gifts",num(c.items.length))+kv("Average gift",money(c.total/c.items.length))+
+      kv("Most recent",pretty(c.last))+'</dl>'+
+    '<div class="tablewrap" style="max-height:48vh"><table><thead><tr><th class="nosort">Donor</th>'+
+      '<th class="nosort">Role</th><th class="nosort">Amount</th><th class="nosort">Date</th>'+
+      '<th class="nosort">Time</th><th class="nosort">Note</th></tr></thead><tbody>'+
+      items.map(d=>{const p=d.person;
+        return '<tr><td>'+personBtn(d.donor)+'</td>'+
+          '<td>'+(p?'<span class="chip '+p.role+'"><i class="dot"></i>'+esc(p.roleRaw||ROLES[p.role])+'</span>'
+            :'<span class="chip grey"><i class="dot"></i>not in People</span>')+'</td>'+
+          '<td class="num">'+money(d.amount)+'</td><td>'+pretty(d.date)+'</td><td>'+esc(d.time||"—")+'</td>'+
+          '<td class="wrap">'+esc(d.note||"—")+'</td></tr>';}).join("")+
+      '</tbody></table></div>';
+  $("#dExportDonors").onclick=()=>downloadXlsx("love21-drive-"+c.name.replace(/[^a-z0-9]+/gi,"-").toLowerCase()+".xlsx",[
+    sheetOf("Donors",[{h:"Donor",f:d=>d.donor},{h:"Role",f:d=>d.person?(d.person.roleRaw||ROLES[d.person.role]):""},
+      {h:"Email",f:d=>d.person?d.person.email:""},{h:"Phone",f:d=>d.person?d.person.phone:""},
+      {h:"Amount",f:d=>d.amount},{h:"Date",f:d=>iso(d.date)},{h:"Time",f:d=>d.time},
+      {h:"Method",f:d=>d.method},{h:"Note",f:d=>d.note}],items)]);
+}
+function exportDonations(){
+  const list=campaigns();
+  downloadXlsx("love21-donations.xlsx",[
+    sheetOf("Drives",[{h:"Drive",f:c=>c.name},{h:"Total raised",f:c=>c.total},{h:"Donors",f:c=>c.donors.size},
+      {h:"Gifts",f:c=>c.items.length},{h:"Average gift",f:c=>+(c.total/c.items.length).toFixed(2)},
+      {h:"Most recent",f:c=>iso(c.last)}],list),
+    sheetOf("Donations",[{h:"Donation ID",f:d=>d.id},{h:"Drive",f:d=>d.campaign},{h:"Donor",f:d=>d.donor},
+      {h:"Role",f:d=>d.person?(d.person.roleRaw||ROLES[d.person.role]):""},{h:"Email",f:d=>d.person?d.person.email:""},
+      {h:"Amount",f:d=>d.amount},{h:"Date",f:d=>iso(d.date)},{h:"Time",f:d=>d.time},{h:"Method",f:d=>d.method},
+      {h:"Note",f:d=>d.note}],list.flatMap(c=>c.items))
+  ]);
+}
+
+/* =======================================================================
+   10 — PANEL 4 · visitors (donut + ordinal bars + trend)
+   ======================================================================= */
+let vGran="month",vPeriod="",vType=null,vAge=null;
+const periodKey=(d,g)=>!d?"":g==="day"?iso(d):g==="year"?String(d.getFullYear())
+  :d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+const periodLabel=(k,g)=>g==="year"?k:g==="month"?
+  new Date(k+"-01").toLocaleDateString(undefined,{month:"short",year:"numeric"})
+  :new Date(k).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+function visitorsFiltered(ignore){
+  return DB.visitors.filter(v=>{
+    if(vPeriod&&periodKey(v.date,vGran)!==vPeriod)return false;
+    if(ignore!=="type"&&vType&&v.userType!==vType)return false;
+    if(ignore!=="age"&&vAge&&v.ageGroup!==vAge)return false;
+    return true;});
+}
+function tally(rows,key){
+  const m=new Map();rows.forEach(v=>m.set(v[key],(m.get(v[key])||0)+v.count));return m;
+}
+function renderVisitors(){
+  $$("#vGran button").forEach(b=>b.classList.toggle("on",b.dataset.g===vGran));
+  const keys=[...new Set(DB.visitors.map(v=>periodKey(v.date,vGran)).filter(Boolean))].sort();
+  const sel=$("#vPeriod");
+  sel.innerHTML='<option value="">All time</option>'+keys.map(k=>'<option value="'+k+'"'+(k===vPeriod?" selected":"")+'>'+
+    esc(periodLabel(k,vGran))+'</option>').join("");
+  if(vPeriod&&!keys.includes(vPeriod)){vPeriod="";sel.value="";}
+
+  const rows=visitorsFiltered();
+  const total=rows.reduce((s,v)=>s+v.count,0);
+  const allTotal=DB.visitors.reduce((s,v)=>s+v.count,0);
+  const uniqDays=new Set(rows.map(v=>iso(v.date))).size;
+  $("#vStats").innerHTML=
+    stat("Visits in view",num(total),vPeriod?periodLabel(vPeriod,vGran):"all time")+
+    stat("Share of all visits",(allTotal?(total/allTotal*100).toFixed(1):0)+"%")+
+    stat("Days with visits",num(uniqDays))+
+    stat("Busiest day",busiest(rows))+
+    stat("Largest visitor type",largest(tally(rows,"userType")));
+  $("#vCross").innerHTML=[
+    vType?'<span class="chip grey"><i class="dot" style="background:'+UCOLORS[vType]+'"></i>'+esc(vType)+' ✕</span>':"",
+    vAge?'<span class="chip grey"><i class="dot"></i>Age '+esc(vAge)+' ✕</span>':""
+  ].join("");
+  $$("#vCross .chip").forEach((c,i)=>c.onclick=()=>{
+    if(vType&&i===0)vType=null;else vAge=null;renderVisitors();});
+
+  renderTrend();
+  renderDonut();
+  renderAges();
+  renderVisitorTable();
+}
+function busiest(rows){
+  const m=new Map();rows.forEach(v=>{const k=iso(v.date);if(k)m.set(k,(m.get(k)||0)+v.count);});
+  if(!m.size)return "—";
+  const top=[...m.entries()].sort((a,b)=>b[1]-a[1])[0];
+  return pretty(new Date(top[0]))+' <span class="s">'+top[1]+' visits</span>';
+}
+function largest(m){
+  if(!m.size)return "—";
+  const t=[...m.entries()].sort((a,b)=>b[1]-a[1])[0];
+  return '<span style="font-size:16px">'+esc(t[0])+'</span>';
+}
+const SVGNS="http://www.w3.org/2000/svg";
+const svgEl=(n,a)=>{const e=document.createElementNS(SVGNS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+function renderTrend(){
+  const host=$("#vTrend");host.innerHTML="";
+  const rows=DB.visitors.filter(v=>{
+    if(vType&&v.userType!==vType)return false;
+    if(vAge&&v.ageGroup!==vAge)return false;return true;});
+  const m=new Map();
+  rows.forEach(v=>{const k=periodKey(v.date,vGran);if(k)m.set(k,(m.get(k)||0)+v.count);});
+  const keys=[...m.keys()].sort();
+  $("#vTrendTitle").textContent="Visits by "+vGran;
+  if(!keys.length){host.innerHTML='<div class="empty">No visitor rows loaded.</div>';return;}
+  const W=Math.max(560,host.clientWidth||900),H=180,pad={l:44,r:12,t:12,b:34};
+  const iw=W-pad.l-pad.r,ih=H-pad.t-pad.b;
+  const max=Math.max(...m.values());
+  const step=iw/keys.length,bw=Math.max(3,Math.min(46,step-6));
+  const svg=svgEl("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",height:H,role:"img"});
+  for(let i=0;i<=4;i++){
+    const y=pad.t+ih-ih*i/4;
+    svg.appendChild(svgEl("line",{x1:pad.l,x2:W-pad.r,y1:y,y2:y,stroke:"var(--grid)","stroke-width":1}));
+    const t=svgEl("text",{x:pad.l-8,y:y+3.5,"text-anchor":"end",class:"axis"});
+    t.textContent=Math.round(max*i/4);svg.appendChild(t);
+  }
+  keys.forEach((k,i)=>{
+    const v=m.get(k),h=Math.max(2,ih*v/max),x=pad.l+i*step+(step-bw)/2,y=pad.t+ih-h;
+    const on=!vPeriod||vPeriod===k;
+    const r=svgEl("rect",{x,y,width:bw,height:h,rx:4,fill:"var(--s1)",class:"vbar",
+      opacity:on?.95:.25,tabindex:0,role:"button"});
+    r.addEventListener("click",()=>{vPeriod=vPeriod===k?"":k;renderVisitors();});
+    r.addEventListener("keydown",e=>{if(e.key==="Enter"){vPeriod=vPeriod===k?"":k;renderVisitors();}});
+    bindTip(r,()=>'<div class="tk">'+esc(periodLabel(k,vGran))+'</div><div class="tv">'+num(v)+' visits</div>'+
+      '<div class="tk" style="margin-top:3px">'+(vPeriod===k?"click to clear":"click to focus")+'</div>');
+    svg.appendChild(r);
+    if(keys.length<=26||i%Math.ceil(keys.length/16)===0){
+      const t=svgEl("text",{x:pad.l+i*step+step/2,y:H-12,"text-anchor":"middle",class:"axis"});
+      t.textContent=vGran==="year"?k:vGran==="month"?periodLabel(k,vGran).replace(" "," "):k.slice(5);
+      svg.appendChild(t);
+    }
+  });
+  svg.appendChild(svgEl("line",{x1:pad.l,x2:W-pad.r,y1:pad.t+ih,y2:pad.t+ih,stroke:"var(--line)","stroke-width":1}));
+  host.appendChild(svg);
+}
+function arcPath(cx,cy,r0,r1,a0,a1){
+  const p=(r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+  const big=a1-a0>Math.PI?1:0;
+  const [x0,y0]=p(r1,a0),[x1,y1]=p(r1,a1),[x2,y2]=p(r0,a1),[x3,y3]=p(r0,a0);
+  return "M"+x0+" "+y0+"A"+r1+" "+r1+" 0 "+big+" 1 "+x1+" "+y1+"L"+x2+" "+y2+
+    "A"+r0+" "+r0+" 0 "+big+" 0 "+x3+" "+y3+"Z";
+}
+function renderDonut(){
+  const host=$("#vDonut");host.innerHTML="";
+  const rows=visitorsFiltered("type");
+  const m=tally(rows,"userType");
+  const data=UTYPES.filter(t=>m.get(t)).map(t=>({label:t,value:m.get(t),color:UCOLORS[t]}));
+  [...m.keys()].filter(k=>!UTYPES.includes(k)).forEach(k=>data.push({label:k,value:m.get(k),color:"var(--r-other)"}));
+  const total=data.reduce((s,d)=>s+d.value,0);
+  if(!total){host.innerHTML='<div class="empty">No visitor data.</div>';$("#vDonutLegend").innerHTML="";return;}
+  const S=252,cx=S/2,cy=S/2,r1=112,r0=68;
+  const svg=svgEl("svg",{viewBox:"0 0 "+S+" "+S,width:S,height:S,role:"img"});
+  const gap=2/r1;
+  let a=-Math.PI/2;
+  data.forEach(d=>{
+    const sweep=d.value/total*Math.PI*2;
+    const a0=a+gap/2,a1=a+sweep-gap/2;
+    const mid=(a0+a1)/2;
+    const path=svgEl("path",{d:arcPath(cx,cy,r0,r1,a0,Math.max(a1,a0+.001)),fill:d.color,class:"slice",
+      tabindex:0,role:"button","aria-label":d.label+" "+d.value+" visits"});
+    const isOn=vType===d.label;
+    if(vType&&!isOn)path.classList.add("dim");
+    if(isOn)path.setAttribute("transform","translate("+(Math.cos(mid)*7).toFixed(2)+","+(Math.sin(mid)*7).toFixed(2)+")");
+    const tipHtml=()=>'<div class="tk">Visitor type</div><div class="tv">'+esc(d.label)+'</div>'+
+      '<div>'+num(d.value)+' visits · '+(d.value/total*100).toFixed(1)+'% of '+num(total)+'</div>'+
+      '<div class="tk" style="margin-top:3px">'+(vType===d.label?"click to clear filter":"click to filter the dashboard")+'</div>';
+    path.addEventListener("mouseenter",e=>{if(!vType)path.setAttribute("transform",
+      "translate("+(Math.cos(mid)*6).toFixed(2)+","+(Math.sin(mid)*6).toFixed(2)+")");showTip(tipHtml(),e);});
+    path.addEventListener("mousemove",moveTip);
+    path.addEventListener("mouseleave",()=>{if(!isOn)path.removeAttribute("transform");hideTip();});
+    path.addEventListener("click",()=>{vType=vType===d.label?null:d.label;renderVisitors();});
+    path.addEventListener("keydown",e=>{if(e.key==="Enter"){vType=vType===d.label?null:d.label;renderVisitors();}});
+    svg.appendChild(path);
+    a+=sweep;
+  });
+  const big=svgEl("text",{x:cx,y:cy-2,"text-anchor":"middle",class:"centerbig"});
+  big.textContent=num(vType?(m.get(vType)||0):total);
+  const sm=svgEl("text",{x:cx,y:cy+18,"text-anchor":"middle",class:"centersm"});
+  sm.textContent=vType?"selected":"visits";
+  svg.appendChild(big);svg.appendChild(sm);
+  host.appendChild(svg);
+
+  $("#vDonutLegend").innerHTML=data.map(d=>
+    '<div class="lg'+(vType&&vType!==d.label?" off":"")+'" data-l="'+esc(d.label)+'" tabindex="0">'+
+      '<i class="sw" style="background:'+d.color+'"></i>'+
+      '<span class="nm">'+esc(d.label)+'</span>'+
+      '<span class="vl">'+num(d.value)+'</span>'+
+      '<span class="pc">'+(d.value/total*100).toFixed(1)+'%</span></div>').join("");
+  $$("#vDonutLegend .lg").forEach(el=>{
+    const d=data.find(x=>x.label===el.dataset.l);
+    el.onclick=()=>{vType=vType===d.label?null:d.label;renderVisitors();};
+    el.onkeydown=e=>{if(e.key==="Enter"){el.click();}};
+    bindTip(el,()=>'<div class="tk">Visitor type</div><div class="tv">'+esc(d.label)+'</div><div>'+
+      num(d.value)+' visits · '+(d.value/total*100).toFixed(1)+'%</div>');
+  });
+}
+function renderAges(){
+  const host=$("#vAges");host.innerHTML="";
+  const rows=visitorsFiltered("age");
+  const m=tally(rows,"ageGroup");
+  const known=AGE_BANDS.filter(b=>m.get(b));
+  const other=[...m.keys()].filter(k=>!AGE_BANDS.includes(k)).sort();
+  const labels=known.concat(other);
+  const total=[...m.values()].reduce((a,b)=>a+b,0);
+  if(!labels.length){host.innerHTML='<div class="empty">No age data.</div>';return;}
+  const rowH=34,W=Math.max(420,host.clientWidth||520),padL=64,padR=64,H=labels.length*rowH+14;
+  const max=Math.max(...m.values());
+  const svg=svgEl("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",height:H,role:"img"});
+  labels.forEach((lab,i)=>{
+    const v=m.get(lab),y=i*rowH+8,bh=18;
+    const iw=(W-padL-padR)*v/max;
+    const color=AGE_BANDS.includes(lab)?AGE_COLORS[AGE_BANDS.indexOf(lab)]:"var(--r-other)";
+    const t=svgEl("text",{x:padL-10,y:y+bh-4,"text-anchor":"end",class:"axis"});
+    t.textContent=lab;svg.appendChild(t);
+    const hit=svgEl("rect",{x:padL,y:y-3,width:W-padL-6,height:bh+6,fill:"transparent",tabindex:0,role:"button",
+      "aria-label":lab+" "+v+" visits"});
+    const r=svgEl("rect",{x:padL,y,width:Math.max(2,iw),height:bh,rx:4,fill:color,class:"hbar",
+      opacity:vAge&&vAge!==lab?.28:1});
+    const val=svgEl("text",{x:padL+Math.max(2,iw)+8,y:y+bh-4,class:"axis","font-weight":"650"});
+    val.textContent=num(v)+"  ("+(total?(v/total*100).toFixed(1):0)+"%)";
+    svg.appendChild(r);svg.appendChild(val);svg.appendChild(hit);
+    const tipHtml=()=>'<div class="tk">Age group</div><div class="tv">'+esc(lab)+'</div><div>'+
+      num(v)+' visits · '+(total?(v/total*100).toFixed(1):0)+'% of '+num(total)+'</div>'+
+      '<div class="tk" style="margin-top:3px">'+(vAge===lab?"click to clear filter":"click to filter")+'</div>';
+    hit.addEventListener("mouseenter",e=>{r.setAttribute("opacity",.82);showTip(tipHtml(),e);});
+    hit.addEventListener("mousemove",moveTip);
+    hit.addEventListener("mouseleave",()=>{r.setAttribute("opacity",vAge&&vAge!==lab?.28:1);hideTip();});
+    hit.style.cursor="pointer";
+    hit.addEventListener("click",()=>{vAge=vAge===lab?null:lab;renderVisitors();});
+    hit.addEventListener("keydown",e=>{if(e.key==="Enter"){vAge=vAge===lab?null:lab;renderVisitors();}});
+  });
+  host.appendChild(svg);
+}
+function renderVisitorTable(){
+  const rows=visitorsFiltered();
+  const types=[...new Set(DB.visitors.map(v=>v.userType))].sort((a,b)=>UTYPES.indexOf(a)-UTYPES.indexOf(b));
+  const ages=AGE_BANDS.concat([...new Set(DB.visitors.map(v=>v.ageGroup))].filter(a=>!AGE_BANDS.includes(a)).sort());
+  const grid={};let colT={},rowT={},gTotal=0;
+  rows.forEach(v=>{
+    grid[v.ageGroup]=grid[v.ageGroup]||{};
+    grid[v.ageGroup][v.userType]=(grid[v.ageGroup][v.userType]||0)+v.count;
+    colT[v.userType]=(colT[v.userType]||0)+v.count;rowT[v.ageGroup]=(rowT[v.ageGroup]||0)+v.count;gTotal+=v.count;});
+  const useAges=ages.filter(a=>rowT[a]);
+  $("#vTable thead").innerHTML='<tr><th class="nosort">Age group</th>'+
+    types.map(t=>'<th class="nosort">'+esc(t)+'</th>').join("")+'<th class="nosort">Total</th></tr>';
+  $("#vTable tbody").innerHTML=(useAges.length?useAges.map(a=>
+    '<tr><td><b>'+esc(a)+'</b></td>'+types.map(t=>'<td class="num">'+num((grid[a]||{})[t]||0)+'</td>').join("")+
+    '<td class="num"><b>'+num(rowT[a])+'</b></td></tr>').join("")
+    :'<tr><td colspan="'+(types.length+2)+'"><div class="empty">Nothing in this slice.</div></td></tr>')+
+    (useAges.length?'<tr><td><b>Total</b></td>'+types.map(t=>'<td class="num"><b>'+num(colT[t]||0)+'</b></td>').join("")+
+      '<td class="num"><b>'+num(gTotal)+'</b></td></tr>':'');
+}
+function exportVisitors(){
+  const rows=visitorsFiltered();
+  const byType=tally(rows,"userType"),byAge=tally(rows,"ageGroup");
+  const m=new Map();rows.forEach(v=>{const k=periodKey(v.date,vGran);m.set(k,(m.get(k)||0)+v.count);});
+  downloadXlsx("love21-visitors.xlsx",[
+    {name:"By visitor type",rows:[["Visitor type","Visits","Share %"]].concat(
+      [...byType.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,v,+(v/rows.reduce((s,x)=>s+x.count,0)*100).toFixed(2)]))},
+    {name:"By age group",rows:[["Age group","Visits"]].concat([...byAge.entries()].map(([k,v])=>[k,v]))},
+    {name:"By "+vGran,rows:[[vGran==="day"?"Date":vGran==="month"?"Month":"Year","Visits"]].concat(
+      [...m.entries()].sort().map(([k,v])=>[k,v]))},
+    sheetOf("Rows",[{h:"Date",f:v=>iso(v.date)},{h:"User type",f:v=>v.userType},{h:"Original type",f:v=>v.typeRaw},
+      {h:"Age group",f:v=>v.ageGroup},{h:"Visits",f:v=>v.count},{h:"Source",f:v=>v.source}],rows)
+  ]);
+}
+
+/* =======================================================================
+   11 — loading files
+   ======================================================================= */
+const TABLES=["activities","people","donations","visitors","enrollments"];
+function detectTable(name,rows){
+  const n=norm(name);
+  for(const t of TABLES)if(n.includes(t.slice(0,6)))return t;
+  if(/roster|signup|signups|attendance/.test(n))return "enrollments";
+  if(/kid|child|member|profile|contact/.test(n))return "people";
+  if(/gift|giving|donor|campaign|drive/.test(n))return "donations";
+  if(/visit|traffic|audience|footfall/.test(n))return "visitors";
+  const h=new Set(Object.keys(rows[0]||{}).map(norm));
+  const has=(...k)=>k.some(x=>h.has(x));
+  if(has("activityid")&&has("role","capacity")&&has("person","name")&&!has("category"))return "enrollments";
+  if(has("usertype","visitortype")||has("agegroup","ageband"))return "visitors";
+  if(has("amount","donation","gift")&&has("campaign","drive","donor","fund","appeal"))return "donations";
+  if(has("group")&&has("category","starttime","time")&&has("date"))return "activities";
+  if(has("email")||has("role")&&has("name"))return "people";
+  if(has("amount"))return "donations";
+  if(has("name"))return "people";
+  return null;
+}
+async function loadFile(file){
+  const name=file.name||"data";
+  const log=[];
+  if(/\.(xlsx|xlsm)$/i.test(name)){
+    const sheets=await readXlsx(await file.arrayBuffer());
+    for(const sh of sheets){
+      const objs=rowsToObjects(sh.rows);
+      if(!objs.length)continue;
+      const t=detectTable(sh.name,objs);
+      if(t){ingest(t,objs);log.push(sh.name+" → "+t+" ("+objs.length+" rows)");}
+      else log.push(sh.name+" → skipped (couldn't tell which table)");
+    }
+  }else if(/\.json$/i.test(name)){
+    const j=JSON.parse(await file.text());
+    if(Array.isArray(j)){const t=detectTable(name,j.map(indexRow));if(t){ingest(t,j);log.push(name+" → "+t+" ("+j.length+")");}}
+    else for(const k in j)if(Array.isArray(j[k])){
+      const t=detectTable(k,j[k].map(indexRow))||(TABLES.includes(norm(k))?norm(k):null);
+      if(t){ingest(t,j[k]);log.push(k+" → "+t+" ("+j[k].length+")");}}
+  }else{
+    const objs=rowsToObjects(parseCSV(await file.text()));
+    const t=detectTable(name,objs);
+    if(t){ingest(t,objs);log.push(name+" → "+t+" ("+objs.length+" rows)");}
+    else log.push(name+" → skipped (couldn't tell which table)");
+  }
+  return log;
+}
+async function handleFiles(files){
+  const all=[];
+  for(const f of files){
+    try{all.push(...await loadFile(f));}
+    catch(e){console.error(e);all.push(f.name+" → FAILED: "+e.message);toast(f.name+": "+e.message,true);}
+  }
+  $("#loadlog").innerHTML=all.map(l=>"• "+esc(l)).join("<br>");
+  refreshAll();
+  toast("Loaded "+files.length+" file"+(files.length===1?"":"s"));
+}
+
+/* =======================================================================
+   12 — persistence + wiring
+   ======================================================================= */
+const LSKEY="love21.dashboard.v1";
+function save(){
+  try{
+    const payload={};for(const t in DB.raw)payload[t]=DB.raw[t].map(r=>{const o={};for(const k in r)if(k!=="__n")o[k]=r[k];return o;});
+    localStorage.setItem(LSKEY,JSON.stringify(payload));
+  }catch(e){/* over quota — data stays in memory only */}
+}
+function restore(){
+  try{
+    const j=JSON.parse(localStorage.getItem(LSKEY)||"null");
+    if(!j)return false;
+    let any=false;
+    for(const t in j)if(Array.isArray(j[t])&&j[t].length){ingest(t,j[t].map(indexRow));any=true;}
+    return any;
+  }catch(e){return false;}
+}
+function refreshAll(){
+  DB.activities.forEach((a,i)=>a.__key=a.id+"|"+iso(a.date)+"|"+i);
+  derive();save();
+  const n=DB.activities.length+DB.people.length+DB.donations.length+DB.visitors.length;
+  $("#dbstate").innerHTML='<i class="dot"></i>'+(n?num(n)+" records loaded":"no data");
+  renderActivities();renderPeople();renderDonations();renderVisitors();renderDataTable();
+}
+function renderDataTable(){
+  const info=[
+    ["Activities",DB.activities.length,"sessions across "+new Set(DB.activities.map(a=>a.group)).size+" groups"],
+    ["People",DB.people.length,DB.people.filter(p=>p.role==="admin").length+" admin · "+
+      DB.people.filter(p=>p.role==="volunteer").length+" volunteers · "+
+      DB.people.filter(p=>p.role==="participant").length+" participants"],
+    ["Donations",DB.donations.length,money(DB.donations.reduce((s,d)=>s+d.amount,0))+" across "+
+      new Set(DB.donations.map(d=>d.campaign)).size+" drives"],
+    ["Visitors",DB.visitors.length,num(DB.visitors.reduce((s,v)=>s+v.count,0))+" visits recorded"]
+  ];
+  $("#dataTable thead").innerHTML='<tr><th class="nosort">Table</th><th class="nosort">Rows</th>'+
+    '<th class="nosort">Summary</th><th class="nosort">Columns seen in your file</th></tr>';
+  const keys=t=>[...new Set((DB.raw[t.toLowerCase()]||[]).flatMap(r=>Object.keys(r)))].filter(k=>k!=="__n");
+  $("#dataTable tbody").innerHTML=info.map(([t,n,s])=>
+    '<tr><td><b>'+t+'</b></td><td class="num">'+num(n)+'</td><td>'+s+'</td>'+
+    '<td class="wrap">'+(keys(t).length?esc(keys(t).join(", ")):'<span class="muted">—</span>')+'</td></tr>').join("");
+}
+
+/* tabs */
+$$(".tab").forEach(t=>t.onclick=()=>{
+  $$(".tab").forEach(x=>x.classList.toggle("on",x===t));
+  $$(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+t.dataset.p));
+  if(t.dataset.p==="visitors")renderVisitors();
+});
+$("#btnGoData").onclick=()=>$$(".tab").find(t=>t.dataset.p==="data").click();
+
+/* panel 1 */
+["aSearch","aGroup","aCat","aFrom","aTo"].forEach(id=>{
+  const el=$("#"+id);el.addEventListener("input",renderActivities);el.addEventListener("change",renderActivities);});
+$("#aReset").onclick=()=>{["aSearch","aGroup","aCat","aFrom","aTo"].forEach(id=>$("#"+id).value="");aSel=null;
+  $("#aDetail").innerHTML='<div class="cardhead"><h3>Session roster</h3></div><div class="empty">Select an activity session on the left.</div>';
+  renderActivities();};
+$("#aExport").onclick=exportActivities;
+
+/* panel 2 */
+["pSearch","pRole","pStatus"].forEach(id=>{
+  const el=$("#"+id);el.addEventListener("input",renderPeople);el.addEventListener("change",renderPeople);});
+$("#pReset").onclick=()=>{["pSearch","pRole","pStatus"].forEach(id=>$("#"+id).value="");renderPeople();};
+$("#pExport").onclick=exportPeople;
+
+/* panel 3 */
+["dSearch","dSort"].forEach(id=>{
+  const el=$("#"+id);el.addEventListener("input",renderDonations);el.addEventListener("change",renderDonations);});
+$("#dExport").onclick=exportDonations;
+
+/* panel 4 */
+$$("#vGran button").forEach(b=>b.onclick=()=>{vGran=b.dataset.g;vPeriod="";renderVisitors();});
+$("#vPeriod").onchange=e=>{vPeriod=e.target.value;renderVisitors();};
+$("#vReset").onclick=()=>{vPeriod="";vType=null;vAge=null;renderVisitors();};
+$("#vExport").onclick=exportVisitors;
+addEventListener("resize",()=>{if($("#p-visitors").classList.contains("on")){renderTrend();renderAges();}});
+
+/* data panel */
+$("#btnPick").onclick=()=>$("#file").click();
+$("#file").onchange=e=>{handleFiles([...e.target.files]);e.target.value="";};
+const drop=$("#drop");
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("hot");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("hot");}));
+drop.addEventListener("drop",e=>{if(e.dataTransfer.files.length)handleFiles([...e.dataTransfer.files]);});
+$("#btnFetch").onclick=async()=>{
+  const u=$("#url").value.trim();if(!u)return;
+  try{
+    const r=await fetch(u);if(!r.ok)throw new Error("HTTP "+r.status);
+    const blob=await r.blob();
+    const name=u.split("?")[0].split("/").pop()||"remote.csv";
+    await handleFiles([new File([blob],name)]);
+  }catch(e){toast("Fetch failed: "+e.message+" — the other site must allow cross-origin requests, otherwise download the file and drop it here.",true);}
+};
+$("#btnClear").onclick=()=>{
+  if(!confirm("Remove all loaded data from this browser?"))return;
+  DB.activities=[];DB.people=[];DB.donations=[];DB.visitors=[];DB.raw={};
+  aSel=null;dSel=null;localStorage.removeItem(LSKEY);$("#loadlog").innerHTML="";refreshAll();toast("Cleared.");
+};
+$("#btnTemplate").onclick=()=>downloadXlsx("love21-data-template.xlsx",[
+  {name:"Activities",rows:[["Activity ID","Name","Category","Group","Date","Start Time","End Time","Location",
+    "Participants","Volunteers","Staff","Notes"],
+    ["ACT-001","Tuesday Basketball","Sports","Basketball","2026-07-07","17:00","18:30","Main Gym",
+     "Ava Nguyen; Ben Carter","Priya Shah","Dana Whitfield",""]]},
+  {name:"Enrollments",rows:[["Activity ID","Person","Role","Date"],["ACT-001","Ava Nguyen","participant","2026-07-07"]]},
+  {name:"People",rows:[["Person ID","Name","Role","Email","Phone","Address","Date of Birth","Age","Joined",
+    "Last Online","Emergency Contact","Notes"],
+    ["P-001","Ava Nguyen","participant","ava@example.org","555-0100","Denver, CO","2008-04-11","",
+     "2024-02-01","2026-07-20","Linh Nguyen 555-0111",""]]},
+  {name:"Donations",rows:[["Donation ID","Campaign","Donor","Person ID","Amount","Date","Time","Method","Note"],
+    ["D-001","Donate 10 running shoes!","Priya Shah","P-014",250,"2026-06-14","10:32","Card","2 pairs"]]},
+  {name:"Visitors",rows:[["Date","User Type","Age Group","Visits","Source"],
+    ["2026-07-07","Parents / Carers","35–49",1,"Website"]]}
+]);
+$("#btnExportAll").onclick=()=>downloadXlsx("love21-all-data.xlsx",[
+  sheetOf("Activities",[{h:"Activity ID",f:a=>a.id},{h:"Name",f:a=>a.name},{h:"Category",f:a=>a.category},
+    {h:"Group",f:a=>a.group},{h:"Date",f:a=>iso(a.date)},{h:"Start Time",f:a=>a.time},{h:"End Time",f:a=>a.end},
+    {h:"Location",f:a=>a.location},{h:"Participants",f:a=>a.participants.join("; ")},
+    {h:"Volunteers",f:a=>a.volunteers.join("; ")},{h:"Staff",f:a=>a.staff.join("; ")}],DB.activities),
+  sheetOf("People",[{h:"Person ID",f:p=>p.id},{h:"Name",f:p=>p.name},{h:"Role",f:p=>p.roleRaw||ROLES[p.role]},
+    {h:"Email",f:p=>p.email},{h:"Phone",f:p=>p.phone},{h:"Address",f:p=>p.address},{h:"Age",f:p=>p.age},
+    {h:"Joined",f:p=>iso(p.joined)},{h:"Last Online",f:p=>iso(p.lastOnline)},
+    {h:"Status",f:p=>p.inactive?"Inactive":"Active"},{h:"Total donated",f:p=>p.totalDonated},
+    {h:"Events participated",f:p=>p.eventCount}],DB.people),
+  sheetOf("Donations",[{h:"Donation ID",f:d=>d.id},{h:"Campaign",f:d=>d.campaign},{h:"Donor",f:d=>d.donor},
+    {h:"Amount",f:d=>d.amount},{h:"Date",f:d=>iso(d.date)},{h:"Time",f:d=>d.time},{h:"Method",f:d=>d.method},
+    {h:"Note",f:d=>d.note}],DB.donations),
+  sheetOf("Visitors",[{h:"Date",f:v=>iso(v.date)},{h:"User Type",f:v=>v.userType},{h:"Age Group",f:v=>v.ageGroup},
+    {h:"Visits",f:v=>v.count},{h:"Source",f:v=>v.source}],DB.visitors)
+]);
+
+/* =======================================================================
+   13 — demo data (deterministic, so the tool is usable before any upload)
+   ======================================================================= */
+function demo(){
+  let s=20260801;const rnd=()=>((s=(s*1103515245+12345)&0x7fffffff)/0x7fffffff);
+  const pick=a=>a[Math.floor(rnd()*a.length)];
+  const first=["Ava","Ben","Chloe","Diego","Ella","Finn","Grace","Hugo","Isla","Jonah","Kira","Liam","Maya","Noah",
+    "Olive","Pedro","Quinn","Rosa","Sam","Tessa","Uma","Victor","Willa","Xander","Yara","Zane","Nina","Owen","Priya","Rafael"];
+  const last=["Nguyen","Carter","Diaz","Whitfield","Okafor","Shah","Bennett","Lindqvist","Moreno","Kaur","Fischer",
+    "Alvarez","Novak","Reyes","Tanaka","Brooks","Costa","Iversen","Mensah","Park"];
+  const groups=[["Basketball","Sports"],["Swimming","Sports"],["Yoga","Wellness"],["Dance","Arts"],
+    ["Cooking Club","Life Skills"],["Art Studio","Arts"],["Reading Circle","Education"],["Track & Field","Sports"],
+    ["Music Jam","Arts"],["Nutrition Workshop","Wellness"]];
+  const people=[],used=new Set();
+  const mk=(role,n)=>{for(let i=0;i<n;i++){
+    let nm;do{nm=pick(first)+" "+pick(last);}while(used.has(nm));used.add(nm);
+    const lastOn=new Date(Date.now()-Math.floor(rnd()*(rnd()<.22?300:60))*DAY);
+    const age=role==="participant"?14+Math.floor(rnd()*16):22+Math.floor(rnd()*38);
+    people.push({"Person ID":"P-"+String(people.length+1).padStart(3,"0"),"Name":nm,
+      "Role":role==="admin"?"Administrative staff":role==="volunteer"?(rnd()<.3?"Corporate volunteer":"Volunteer"):"Participant",
+      "Email":nm.toLowerCase().replace(/[^a-z]+/g,".")+"@example.org",
+      "Phone":"(303) 55"+Math.floor(rnd()*9)+"-0"+String(100+Math.floor(rnd()*899)),
+      "Address":pick(["Denver, CO","Aurora, CO","Boulder, CO","Lakewood, CO","Littleton, CO"]),
+      "Age":age,"Joined":iso(new Date(Date.now()-Math.floor(200+rnd()*900)*DAY)),
+      "Last Online":iso(lastOn),
+      "Emergency Contact":pick(first)+" "+pick(last)+" · (303) 555-0"+String(100+Math.floor(rnd()*899)),
+      "Notes":""});
+  }};
+  mk("admin",6);mk("volunteer",22);mk("participant",38);
+  const admins=people.filter(p=>/Administrative/.test(p.Role)).map(p=>p.Name);
+  const vols=people.filter(p=>/olunteer/.test(p.Role)).map(p=>p.Name);
+  const kids=people.filter(p=>p.Role==="Participant").map(p=>p.Name);
+
+  const activities=[];let aid=0;
+  groups.forEach(([g,cat])=>{
+    const sessions=3+Math.floor(rnd()*4);
+    aid++;
+    for(let k=0;k<sessions;k++){
+      const d=new Date(Date.now()-Math.floor(rnd()*120+k*7)*DAY);
+      const nk=4+Math.floor(rnd()*8),nv=1+Math.floor(rnd()*3);
+      const shuffle=a=>a.slice().sort(()=>rnd()-.5);
+      activities.push({"Activity ID":"ACT-"+String(aid).padStart(3,"0"),"Name":g+" session",
+        "Category":cat,"Group":g,"Date":iso(d),
+        "Start Time":pick(["09:00","10:30","15:30","17:00","18:00"]),
+        "End Time":pick(["10:30","12:00","17:00","18:30","19:30"]),
+        "Location":pick(["Main Gym","Studio B","Community Pool","Kitchen","Art Room","Outdoor Track"]),
+        "Participants":shuffle(kids).slice(0,nk).join("; "),
+        "Volunteers":shuffle(vols).slice(0,nv).join("; "),
+        "Staff":rnd()<.9?pick(admins):"","Notes":""});
+    }
+  });
+  const drives=["Donate 10 running shoes!","Holiday meal boxes","Swim gear drive","Art supplies for the studio",
+    "Fund a coach for a season","Winter coats appeal"];
+  const donations=[];
+  drives.forEach((c,ci)=>{
+    const n=6+Math.floor(rnd()*14);
+    for(let i=0;i<n;i++){
+      const donor=pick(rnd()<.65?vols:people.map(p=>p.Name));
+      const d=new Date(Date.now()-Math.floor(rnd()*300)*DAY);
+      donations.push({"Donation ID":"D-"+String(donations.length+1).padStart(3,"0"),"Campaign":c,"Donor":donor,
+        "Amount":pick([25,40,50,75,100,120,150,200,250,500]),"Date":iso(d),
+        "Time":String(8+Math.floor(rnd()*12)).padStart(2,"0")+":"+String(Math.floor(rnd()*60)).padStart(2,"0"),
+        "Method":pick(["Card","Bank transfer","Cash","Cheque"]),
+        "Note":ci===0?pick(["1 pair","2 pairs","3 pairs",""]):""});
+    }
+  });
+  const visitors=[];
+  for(let d=420;d>=0;d--){
+    const day=new Date(Date.now()-d*DAY);
+    const weekend=[0,6].includes(day.getDay());
+    const n=Math.floor((weekend?3:6)+rnd()*(weekend?7:14));
+    for(let i=0;i<n;i++){
+      const t=pick(["Parents / Carers","Parents / Carers","Individual Volunteers","Corporate Volunteers",
+        "Corporations / NGOs","General Visitors","General Visitors","Individual Volunteers"]);
+      const ag=t==="Parents / Carers"?pick(["25–34","35–49","35–49","50–64"])
+        :t==="Corporations / NGOs"?pick(["35–49","50–64","65+"])
+        :pick(["0–12","13–17","18–24","25–34","35–49","50–64","65+"]);
+      visitors.push({"Date":iso(day),"User Type":t,"Age Group":ag,"Visits":1,
+        "Source":pick(["Website","Newsletter","Instagram","Referral","Walk-in","Partner site"])});
+    }
+  }
+  ingest("people",people.map(indexRow));
+  ingest("activities",activities.map(indexRow));
+  ingest("donations",donations.map(indexRow));
+  ingest("visitors",visitors.map(indexRow));
+}
+$("#btnDemo").onclick=()=>{demo();refreshAll();toast("Demo data loaded — replace it any time by uploading your own files.");};
+
+/* boot */
+if(!restore())demo();
+refreshAll();
+</script>
+</body>
+</html>
