@@ -4,6 +4,54 @@
   const TOKEN_KEY = "love21_token";
   const PERSON_KEY = "love21_person";
 
+  // --- 1. Supabase Initialization ---
+  // Ensure @supabase/supabase-js is loaded in HTML
+  const SUPABASE_URL = "https://obnbgnmdrpxoutfuenoi.supabase.co"; // Replace with your Supabase URL
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ibmJnbm1kcnB4b3V0ZnVlbm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTg1MzMsImV4cCI6MjEwMTA3NDUzM30.Q7j0xM4QCkpYjiB4wtRsjPGl3f1oCEka3Y8Azl6lGZE";             // Replace with your Anon Key
+
+  let supabase = null;
+  if (global.supabase && global.supabase.createClient) {
+    supabase = global.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } else {
+    console.warn("Supabase SDK not found globally. Make sure to load the Supabase CDN script in your HTML.");
+  }
+
+  // 1. Single global Supabase instance
+  if (!window.supabaseClient) {
+    window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  const supabase = window.supabaseClient;
+
+  // 2. Universal fetch wrapper for all API calls
+  async function apiRequest(endpoint, options = {}) {
+    // Get active session from Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    };
+
+    if (token) {
+      // Send standard Bearer token to FastAPI
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(endpoint, {
+      ...options,
+      headers
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'API request failed');
+    }
+
+    return response.json();
+  }
+
   function apiBase() {
     const configured = document
       .querySelector('meta[name="love21-api-base"]')
@@ -59,8 +107,16 @@
       { "Content-Type": "application/json", Accept: "application/json" },
       options.headers || {}
     );
+    
     const token = getToken();
-    if (token) headers["X-Demo-Token"] = token;
+    if (token) {
+      // If it's a numeric demo token, use X-Demo-Token; otherwise send as Bearer JWT
+      if (/^\d+$/.test(token)) {
+        headers["X-Demo-Token"] = token;
+      } else if (!headers["Authorization"]) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
 
     let res;
     try {
@@ -106,23 +162,120 @@
     return data;
   }
 
-  async function login(identifier, password) {
-    const data = await api("/api/auth/login", {
-      method: "POST",
-      body: { identifier: identifier, password: password },
+  async function handleLogin(email, password) {
+    // 1. Authenticate with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
-    setSession(data.token, data.person);
-    return data;
+
+    if (error) {
+      alert("Supabase Login Error: " + error.message);
+      return;
+    }
+
+    // 2. Sync with FastAPI Backend
+    try {
+      const userProfile = await apiRequest("/api/auth/login");
+      console.log("Backend Profile Synced:", userProfile);
+
+      // Save profile locally and redirect
+      localStorage.setItem("user_profile", JSON.stringify(userProfile));
+      window.location.href = "/hub.html";
+    } catch (err) {
+      console.error("FastAPI Sync Error:", err.message);
+    }
+  }
+  
+  // Supabase Login + FastAPI Sync
+  async function login(identifier, password) {
+    if (!supabase) throw new Error("Supabase SDK is not loaded");
+
+    // 1. Authenticate with Supabase
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: identifier,
+      password: password,
+    });
+
+    if (authError) throw new Error(authError.message);
+
+    const jwtToken = authData.session.access_token;
+
+    // 2. Sync Supabase token with FastAPI to get local Person model
+    const person = await api("/api/auth/login", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+
+    // 3. Persist session
+    setSession(jwtToken, person);
+    return { token: jwtToken, person: person };
   }
 
+  // Supabase Signup + FastAPI Sync
   async function signup(body) {
-    const data = await api("/api/auth/signup", {
-      method: "POST",
-      body: body,
+    if (!supabase) throw new Error("Supabase SDK is not loaded");
+
+    const email = body.email || body.identifier;
+    const password = body.password;
+
+    // 1. Register with Supabase
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: { name: body.name || "" },
+      },
     });
-    setSession(data.token, data.person);
-    return data;
+
+    if (authError) throw new Error(authError.message);
+
+    const jwtToken = authData.session?.access_token;
+
+    if (!jwtToken) {
+      throw new Error(
+        "Account created! Please check your email to confirm registration before logging in.",
+      );
+    }
+
+    // 2. Sync with FastAPI to create local DB Person record
+    const person = await api("/api/auth/login", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+
+    setSession(jwtToken, person);
+    return { token: jwtToken, person: person };
   }
+
+  async function ensureLogin(preferredEmail, opts) {
+    opts = opts || {};
+    const existing = getPerson();
+    if (getToken() && existing && !opts.force) {
+      return existing;
+    }
+    const email = preferredEmail || "carer@chen.demo";
+    const data = await demoLogin(email);
+    return data.person;
+  }
+
+  // async function login(identifier, password) {
+  //   const data = await api("/api/auth/login", {
+  //     method: "POST",
+  //     body: { identifier: identifier, password: password },
+  //   });
+  //   setSession(data.token, data.person);
+  //   return data;
+  // }
+
+  // async function signup(body) {
+  //   const data = await api("/api/auth/signup", {
+  //     method: "POST",
+  //     body: body,
+  //   });
+  //   setSession(data.token, data.person);
+  //   return data;
+  // }
 
   /**
    * Keep the current session unless force is true.

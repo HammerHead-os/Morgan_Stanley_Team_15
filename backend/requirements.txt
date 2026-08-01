@@ -4,3 +4,7 @@ sqlalchemy>=2.0.25
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
 posthog==7.35.4
+pyjwt==2.13.0
+python-multipart==0.0.32
+requests==2.34.2
+cryptography==50.0.0
