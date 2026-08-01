@@ -113,13 +113,17 @@ class Activity(Base):
 class Registration(Base):
     __tablename__ = "registrations"
     __table_args__ = (
-        UniqueConstraint("activity_id", "member_person_id", name="uq_reg_activity_member"),
+        UniqueConstraint("activity_id", "owner_person_id", name="uq_reg_activity_owner"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     activity_id: Mapped[int] = mapped_column(ForeignKey("activities.id"))
-    household_id: Mapped[int] = mapped_column(ForeignKey("households.id"))
-    member_person_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
+    owner_person_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
+    household_id: Mapped[Optional[int]] = mapped_column(ForeignKey("households.id"), nullable=True)
+    member_person_id: Mapped[Optional[int]] = mapped_column(ForeignKey("people.id"), nullable=True)
+    party_size: Mapped[int] = mapped_column(Integer, default=1)
+    contact_name: Mapped[str] = mapped_column(String(120), default="")
+    contact_phone: Mapped[str] = mapped_column(String(40), default="")
     status: Mapped[str] = mapped_column(String(40), default="registered")
     # registered | waitlist | attended | cancelled
     waitlist_position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -130,8 +134,11 @@ class Registration(Base):
     feedback_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     activity: Mapped[Activity] = relationship(back_populates="registrations")
-    household: Mapped[Household] = relationship(back_populates="registrations")
-    member: Mapped[Person] = relationship(foreign_keys=[member_person_id])
+    household: Mapped[Optional[Household]] = relationship(back_populates="registrations")
+    member: Mapped[Optional[Person]] = relationship(foreign_keys=[member_person_id])
+    attendees: Mapped[list["RegistrationAttendee"]] = relationship(
+        back_populates="registration", cascade="all, delete-orphan"
+    )
 
 
 class Achievement(Base):
@@ -296,3 +303,16 @@ class JourneyEvent(Base):
     channel: Mapped[str] = mapped_column(String(20), default="email")
     payload: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class RegistrationAttendee(Base):
+    __tablename__ = "registration_attendees"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    registration_id: Mapped[int] = mapped_column(ForeignKey("registrations.id"))
+    full_name: Mapped[str] = mapped_column(String(120))
+    phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    age: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    registration: Mapped[Registration] = relationship(back_populates="attendees")

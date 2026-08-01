@@ -7,6 +7,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
 from ..labels import status_label
+from sqlalchemy import or_
 
 router = APIRouter(prefix="/api/family", tags=["family"])
 
@@ -18,18 +19,18 @@ def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
     return schemas.RegistrationOut(
         id=reg.id,
         activity_id=reg.activity_id,
-        household_id=reg.household_id,
-        member_person_id=reg.member_person_id,
+        party_size=reg.party_size,
+        contact_name=reg.contact_name,
+        contact_phone=reg.contact_phone,
         status=reg.status,
         status_label=label,
         waitlist_position=reg.waitlist_position,
         reminder_channel=reg.reminder_channel,
         created_at=reg.created_at,
-        session_date=reg.session_date,
         feedback=reg.feedback,
         activity_title=reg.activity.title if reg.activity else None,
         activity_location=reg.activity.location if reg.activity else None,
-        member_name=reg.member.name if reg.member else None,
+        attendees=[schemas.AttendeeOut.model_validate(a) for a in reg.attendees],
     )
 
 
@@ -50,13 +51,6 @@ def register_for_activity(
     person: models.Person = Depends(get_current_person),
     db: Session = Depends(get_db),
 ):
-    if not person.household_id:
-        raise HTTPException(status_code=400, detail="Person has no household")
-
-    member = db.get(models.Person, body.member_person_id)
-    if not member or member.household_id != person.household_id:
-        raise HTTPException(status_code=403, detail="Member not in your household")
-
     activity = db.get(models.Activity, body.activity_id)
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
@@ -65,27 +59,25 @@ def register_for_activity(
         db.query(models.Registration)
         .filter(
             models.Registration.activity_id == body.activity_id,
-            models.Registration.member_person_id == body.member_person_id,
-            models.Registration.status.in_(["registered", "waitlist"]),
+            models.Registration.owner_person_id == person.id,
+            models.Registration.status.in_("registered", "waitlist"),
         )
         .first()
     )
     if existing:
-        raise HTTPException(status_code=409, detail="Already registered or on waitlist")
+        raise HTTPException(status_code=409, detail="You already registered for this class")
 
-    if activity.spots_left > 0:
-        status = "registered"
-        waitlist_position = None
-        activity.spots_left -= 1
+    party_size = max(body.party_size, len(body.attendees) or 1)
+
+    if activity.spots_left >= party_size:
+        status, waitlist_position = "registered", None
+        activity.spots_left -= party_size
         event = "registration_confirmed"
     else:
         status = "waitlist"
         waiting = (
             db.query(models.Registration)
-            .filter(
-                models.Registration.activity_id == activity.id,
-                models.Registration.status == "waitlist",
-            )
+            .filter(models.Registration.activity_id == activity.id, models.Registration.status == "waitlist")
             .count()
         )
         waitlist_position = waiting + 1
@@ -100,37 +92,38 @@ def register_for_activity(
 
     reg = models.Registration(
         activity_id=activity.id,
+        owner_person_id=person.id,
         household_id=person.household_id,
-        member_person_id=member.id,
+        party_size=party_size,
+        contact_name=body.contact_name,
+        contact_phone=body.contact_phone,
         status=status,
         waitlist_position=waitlist_position,
         reminder_channel=channel,
     )
     db.add(reg)
-    _log_journey(
-        db,
-        person.id,
-        event,
-        channel,
-        f"activity={activity.id};member={member.id};status={status}",
-    )
+    db.flush()
+    for a in body.attendees:
+        db.add(models.RegistrationAttendee(
+            registration_id=reg.id, full_name=a.full_name, phone=a.phone, email=a.email, age=a.age
+        ))
+
+    _log_journey(db, person.id, event, channel, f"activity={activity.id};party={party_size};status={status}")
     db.commit()
     db.refresh(reg)
     reg.activity = activity
-    reg.member = member
     return _registration_out(reg)
 
 
 @router.get("/registrations", response_model=list[schemas.RegistrationOut])
-def list_registrations(
-    person: models.Person = Depends(get_current_person),
-    db: Session = Depends(get_db),
-):
-    if not person.household_id:
-        return []
+def list_registrations(person: models.Person = Depends(get_current_person), db: Session = Depends(get_db)):
+    from sqlalchemy import or_
     regs = (
         db.query(models.Registration)
-        .filter(models.Registration.household_id == person.household_id)
+        .filter(or_(
+            models.Registration.owner_person_id == person.id,
+            models.Registration.household_id == person.household_id,
+        ))
         .order_by(models.Registration.created_at.desc())
         .all()
     )

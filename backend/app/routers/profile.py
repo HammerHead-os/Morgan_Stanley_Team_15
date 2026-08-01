@@ -177,9 +177,13 @@ def get_profile(
             .filter(models.Person.household_id == person.household_id)
             .all()
         )
+        from sqlalchemy import or_
         regs = (
             db.query(models.Registration)
-            .filter(models.Registration.household_id == person.household_id)
+            .filter(or_(
+                models.Registration.owner_person_id == person.id,
+                models.Registration.household_id == person.household_id,
+            ))
             .order_by(models.Registration.created_at.desc())
             .all()
         )

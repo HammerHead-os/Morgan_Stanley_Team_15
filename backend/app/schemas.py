@@ -280,8 +280,6 @@ class OnboardIn(BaseModel):
     skills: Optional[str] = None
     languages: Optional[str] = None
     availability: Optional[str] = None
-
-
 class HireIn(BaseModel):
     creator_label: str = Field(min_length=2, max_length=200)
     requester_name: str = Field(min_length=1, max_length=120)
@@ -303,6 +301,47 @@ class HireOut(OrmModel):
     contact_phone: Optional[str] = None
     status: str
     created_at: datetime
+
+
+class AttendeeIn(BaseModel):
+    full_name: str = Field(min_length=1, max_length=120)
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    age: Optional[int] = Field(default=None, ge=0, le=120)
+
+
+class RegisterIn(BaseModel):
+    activity_id: int
+    party_size: int = Field(default=1, ge=1, le=20)
+    contact_name: str = Field(min_length=1, max_length=120)
+    contact_phone: str = Field(min_length=1, max_length=40)
+    reminder_channel: str = "email"
+    attendees: list[AttendeeIn] = Field(default_factory=list)
+
+
+class AttendeeOut(OrmModel):
+    id: int
+    full_name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    age: Optional[int] = None
+
+
+class RegistrationOut(OrmModel):
+    id: int
+    activity_id: int
+    party_size: int
+    contact_name: str
+    contact_phone: str
+    status: str
+    status_label: str = ""
+    waitlist_position: Optional[int] = None
+    reminder_channel: str
+    created_at: datetime
+    feedback: Optional[str] = None
+    activity_title: Optional[str] = None
+    activity_location: Optional[str] = None
+    attendees: list[AttendeeOut] = []
 
 
 class FamilyMemberIn(BaseModel):
