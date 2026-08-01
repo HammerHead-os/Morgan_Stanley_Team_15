@@ -35,6 +35,12 @@ class Person(Base):
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    # Authentication fields
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    auth_provider: Mapped[str] = mapped_column(String(20), default="password")
+    google_sub: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
+    is_staff: Mapped[bool] = mapped_column(Boolean, default=False)
+
     household_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("households.id"), nullable=True
     )

@@ -53,6 +53,28 @@ class DemoLoginOut(BaseModel):
     token: str
 
 
+class RegisterAccountIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    email: str
+    password: str = Field(min_length=6, max_length=200)
+    phone: Optional[str] = None
+    context: Optional[str] = None
+
+
+class LoginIn(BaseModel):
+    email: str
+    password: str
+
+
+class GoogleLoginIn(BaseModel):
+    credential: str
+
+
+class AuthOut(BaseModel):
+    person: PersonOut
+    token: str
+
+
 class ActivityOut(OrmModel):
     id: int
     title: str

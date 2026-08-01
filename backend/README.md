@@ -23,6 +23,14 @@ Then open http://127.0.0.1:8000 (serves the website + API) or http://127.0.0.1:8
 
 Login: `POST /api/auth/demo-login` `{ "email": "..." }` → send `X-Demo-Token: <person_id>` on later requests.
 
+Staff account for admin/testing:
+
+| Email | Password |
+|-------|----------|
+| `staff@love21.org` | `changeme123` |
+
+Authentication header scheme changed: use `Authorization: Bearer <jwt>` for authenticated endpoints. Tokens are returned from `POST /api/auth/login`, `POST /api/auth/register`, `POST /api/auth/google`, and `POST /api/auth/demo-login`.
+
 ## Key endpoints
 
 - `GET /api/activities` — Activity Finder filters

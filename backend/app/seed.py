@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from . import models
 from .database import Base, SessionLocal, engine
+from .security import hash_password
 
 
 def seed(db: Session) -> None:
@@ -191,7 +192,7 @@ def seed(db: Session) -> None:
                 status="coach_approved",
                 share_consent=True,
                 coach_name="Coach Pat",
-                approved_at=datetime.utcnow() - timedelta(days=40),
+                approved_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=40),
             ),
             models.Achievement(
                 member_person_id=member.id,
@@ -200,7 +201,7 @@ def seed(db: Session) -> None:
                 status="coach_approved",
                 share_consent=False,
                 coach_name="Coach Yan",
-                approved_at=datetime.utcnow() - timedelta(days=14),
+                approved_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=14),
             ),
             models.Goal(
                 member_person_id=member.id,
@@ -210,7 +211,28 @@ def seed(db: Session) -> None:
             ),
         ]
     )
-
+    # Add a staff account for admin/testing
+    staff = models.Person(
+        email="staff@love21.org",
+        name="Love 21 Staff",
+        role_primary="donor",
+        language="en",
+        profile_code="L21-HK-9000",
+        password_hash=hash_password("changeme123"),
+        auth_provider="password",
+        is_staff=True,
+    )
+    db.add(staff)
+    db.flush()
+    db.add(
+        models.CommPreferences(
+            person_id=staff.id,
+            email_on=True,
+            sms_on=False,
+            whatsapp_on=False,
+            opt_out_token=secrets.token_urlsafe(16),
+        )
+    )
     commitment = models.DonationCommitment(
         supporter_person_id=donor.id,
         amount_hkd=300,
@@ -224,7 +246,7 @@ def seed(db: Session) -> None:
         models.DonationReceipt(
             commitment_id=commitment.id,
             amount_hkd=300,
-            paid_at=datetime.utcnow() - timedelta(days=20),
+            paid_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=20),
             story_back=(
                 "Your donation of HKD 300 allowed us to fund two coach-led swim "
                 "sessions, cover lane fees, and print bilingual class sheets."
@@ -236,7 +258,7 @@ def seed(db: Session) -> None:
             person_id=donor.id,
             title="Local contributor",
             level="bronze",
-            earned_at=datetime.utcnow() - timedelta(days=20),
+            earned_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=20),
         )
     )
 
@@ -327,7 +349,7 @@ def seed(db: Session) -> None:
             status="completed",
             hours=0.25,
             reflection="Quick. Flyers look clearer in Cantonese.",
-            completed_at=datetime.utcnow() - timedelta(days=18),
+            completed_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=18),
             points_awarded=20,
         )
     )
@@ -338,7 +360,7 @@ def seed(db: Session) -> None:
             status="completed",
             hours=0.5,
             reflection="Sorted hiking set; tagged for social wall.",
-            completed_at=datetime.utcnow() - timedelta(days=10),
+            completed_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=10),
             points_awarded=35,
         )
     )
@@ -362,28 +384,28 @@ def seed(db: Session) -> None:
                 event_type="registration_confirmed",
                 channel="email",
                 payload="Swim · beginners",
-                created_at=datetime.utcnow() - timedelta(days=12),
+                created_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=12),
             ),
             models.JourneyEvent(
                 person_id=carer.id,
                 event_type="waitlist_joined",
                 channel="email",
                 payload="One-on-one nutrition",
-                created_at=datetime.utcnow() - timedelta(days=5),
+                created_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=5),
             ),
             models.JourneyEvent(
                 person_id=donor.id,
                 event_type="commitment_started",
                 channel="email",
                 payload="amount=300;fund=Sports programmes",
-                created_at=datetime.utcnow() - timedelta(days=20),
+                created_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=20),
             ),
             models.JourneyEvent(
                 person_id=volunteer.id,
                 event_type="shift_completed",
                 channel="email",
                 payload="Cantonese flyer check",
-                created_at=datetime.utcnow() - timedelta(days=18),
+                created_at=datetime.now(datetime.UTC).replace(tzinfo=None) - timedelta(days=18),
             ),
         ]
     )
