@@ -116,68 +116,129 @@
       {
         id: null,
         title: "Cantonese flyer check",
-        description: "Proofread banquet flyers.",
+        description: "Proofread banquet flyers. Do anytime this week.",
         duration_min: 15,
         skills_needed: "cantonese",
         remote: true,
         requires_onboarding: false,
+        scheduled_date: null,
       },
       {
         id: null,
         title: "Photo sort",
-        description: "Sort July hike photos into swim, kitchen, and track folders.",
+        description: "Sort July hike photos. Async.",
         duration_min: 30,
         skills_needed: "photos",
         remote: true,
         requires_onboarding: false,
+        scheduled_date: null,
       },
       {
         id: null,
         title: "Voice cheers",
-        description: "Record a few short cheers for Saturday track.",
+        description: "Record a few short cheers. Upload when ready.",
         duration_min: 45,
         skills_needed: "voice",
         remote: true,
         requires_onboarding: false,
+        scheduled_date: null,
+      },
+      {
+        id: null,
+        title: "Kitchen prep · Saturday",
+        description: "Help set tables before the banquet.",
+        duration_min: 90,
+        skills_needed: "sports",
+        remote: false,
+        requires_onboarding: false,
+        scheduled_date: "soon",
+      },
+      {
+        id: null,
+        title: "Track day helper",
+        description: "Hand out water at San Po Kong.",
+        duration_min: 120,
+        skills_needed: "sports",
+        remote: false,
+        requires_onboarding: false,
+        scheduled_date: "soon",
       },
     ];
+
+    function fmtDate(iso) {
+      if (!iso || iso === "soon") return "Date on claim";
+      try {
+        return new Date(iso + "T12:00:00").toLocaleDateString(undefined, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        });
+      } catch (e) {
+        return String(iso);
+      }
+    }
+
+    function cardHtml(s) {
+      const skill = skillLabel(s.skills_needed);
+      const btn = s.id
+        ? '<button type="button" class="btn btn-sm btn-primary" data-claim-shift="' +
+          s.id +
+          '" data-claim-stay>Claim</button>'
+        : '<button type="button" class="btn btn-sm btn-primary" data-demo-claim>Claim</button>';
+      const when = s.remote
+        ? "Async · do anytime"
+        : "In person · " + fmtDate(s.scheduled_date);
+      return (
+        '<article class="micro-task">' +
+        '<p class="micro-task-time">' +
+        s.duration_min +
+        " min · " +
+        when +
+        "</p><h3>" +
+        escapeHtml(s.title) +
+        "</h3><p>" +
+        escapeHtml(s.description) +
+        "</p>" +
+        (skill
+          ? '<p class="task-meta-line">Skills needed: ' +
+            escapeHtml(skill) +
+            "</p>"
+          : "") +
+        '<p class="task-meta-line">Points given: ' +
+        pointsFor(s.duration_min) +
+        "</p>" +
+        btn +
+        "</article>"
+      );
+    }
 
     function render(shifts) {
       const list = (shifts || []).filter(function (s) {
         return !s.requires_onboarding;
-      }).slice(0, 6);
+      });
       const rows = list.length ? list : fallback;
-      board.innerHTML = rows
-        .map(function (s) {
-          const skill = skillLabel(s.skills_needed);
-          const btn = s.id
-            ? '<button type="button" class="btn btn-sm btn-primary" data-claim-shift="' +
-              s.id +
-              '" data-claim-stay>Claim</button>'
-            : '<button type="button" class="btn btn-sm btn-primary" data-demo-claim>Claim</button>';
-          return (
-            '<article class="micro-task">' +
-            '<p class="micro-task-time">' +
-            s.duration_min +
-            (s.remote ? " min · remote" : " min · on-site") +
-            "</p><h3>" +
-            escapeHtml(s.title) +
-            "</h3><p>" +
-            escapeHtml(s.description) +
-            "</p>" +
-            (skill
-              ? '<p class="task-meta-line">Skills needed: ' +
-                escapeHtml(skill) +
-                "</p>"
-              : "") +
-            '<p class="task-meta-line">Points given: ' +
-            pointsFor(s.duration_min) +
-            "</p>" +
-            btn +
-            "</article>"
-          );
-        })
-        .join("");
+      const remote = rows.filter(function (s) {
+        return !!s.remote;
+      });
+      const onsite = rows.filter(function (s) {
+        return !s.remote;
+      });
+      let html = "";
+      if (remote.length) {
+        html +=
+          '<h3 class="task-split-title">Remote · async</h3>' +
+          '<div class="micro-task-grid">' +
+          remote.map(cardHtml).join("") +
+          "</div>";
+      }
+      if (onsite.length) {
+        html +=
+          '<h3 class="task-split-title">In person · dated</h3>' +
+          '<div class="micro-task-grid">' +
+          onsite.map(cardHtml).join("") +
+          "</div>";
+      }
+      board.innerHTML = html || '<p class="empty-hint">No tasks open right now.</p>';
     }
 
     if (!L) {

@@ -1,0 +1,240 @@
+/* Love 21 story · side-stage scrollytelling */
+
+.page-story {
+  --story-ink: #14231f;
+  --story-muted: #3d524c;
+  --story-paper: #f3f6f4;
+  --story-deep: #0c1614;
+  --story-teal: #0d7c6b;
+  --story-accent: #e85d4c;
+  margin: 0;
+  background: var(--story-paper);
+  color: var(--story-ink);
+  font-family: "IBM Plex Sans", var(--font-body), sans-serif;
+  overflow-x: hidden;
+}
+
+.story-skip {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: #fff;
+  color: #111;
+}
+
+.story-skip:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+.story-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(243, 246, 244, 0.92);
+  border-bottom: 1px solid rgba(20, 35, 31, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.story-brand img {
+  display: block;
+  height: 40px;
+  width: auto;
+}
+
+.story-top-mark {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--story-muted);
+}
+
+.story-exit {
+  color: var(--story-ink);
+  text-decoration: none;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(20, 35, 31, 0.25);
+}
+
+.story-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 50;
+  background: rgba(20, 35, 31, 0.08);
+}
+
+.story-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--story-teal), var(--story-accent));
+  transition: width 0.08s linear;
+}
+
+/* Split shell: image side + text */
+.story-shell {
+  display: grid;
+  grid-template-columns: minmax(280px, 46vw) 1fr;
+  min-height: 100vh;
+  padding-top: 4.25rem;
+}
+
+.story-stage {
+  position: sticky;
+  top: 4.25rem;
+  height: calc(100vh - 4.25rem);
+  align-self: start;
+  background:
+    radial-gradient(ellipse at 40% 45%, rgba(13, 124, 107, 0.08), transparent 55%),
+    linear-gradient(165deg, #e7eeeb 0%, #dfe8e4 100%);
+  border-right: 1px solid rgba(20, 35, 31, 0.08);
+  overflow: hidden;
+}
+
+.story-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.story-stage-hint {
+  position: absolute;
+  left: 1.1rem;
+  bottom: 1.1rem;
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(20, 35, 31, 0.35);
+  pointer-events: none;
+}
+
+.story-scroll {
+  position: relative;
+  z-index: 2;
+}
+
+.story-beat {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 12vh 8vw 12vh 4vw;
+  box-sizing: border-box;
+}
+
+.story-beat-end {
+  min-height: 85vh;
+  align-items: flex-start;
+  padding-top: 18vh;
+}
+
+.story-copy {
+  max-width: 34rem;
+  opacity: 0.4;
+  transform: translateY(12px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+.story-beat.is-active .story-copy {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.story-kicker {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--story-teal);
+  font-weight: 600;
+}
+
+.story-copy h1,
+.story-copy h2 {
+  margin: 0 0 0.9rem;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(1.9rem, 4vw, 2.75rem);
+  line-height: 1.12;
+  color: var(--story-ink);
+  text-wrap: balance;
+}
+
+.story-line {
+  margin: 0 0 0.85rem;
+  font-size: clamp(1.02rem, 1.6vw, 1.12rem);
+  line-height: 1.55;
+  color: var(--story-muted);
+  max-width: 38ch;
+}
+
+.story-line strong {
+  color: var(--story-ink);
+  font-weight: 600;
+}
+
+.story-line a {
+  color: var(--story-teal);
+  text-underline-offset: 3px;
+}
+
+.story-end-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 1.35rem 0 1rem;
+}
+
+.story-credit {
+  margin: 1rem 0 0;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 860px) {
+  .story-shell {
+    grid-template-columns: 1fr;
+    padding-top: 4rem;
+  }
+
+  .story-stage {
+    position: relative;
+    top: 0;
+    height: 42vh;
+    border-right: 0;
+    border-bottom: 1px solid rgba(20, 35, 31, 0.08);
+  }
+
+  .story-beat {
+    min-height: auto;
+    padding: 2.5rem 1.25rem 3.5rem;
+  }
+
+  .story-beat-end {
+    min-height: auto;
+    padding-top: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-copy {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

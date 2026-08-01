@@ -287,33 +287,55 @@ def seed(db: Session) -> None:
     shifts = [
         models.VolunteerShift(
             title="Cantonese flyer check",
-            description="Proofread banquet flyers.",
+            description="Proofread banquet flyers. Do anytime this week.",
             duration_min=15,
             skills_needed="cantonese",
             language="yue",
             remote=True,
             spots_left=3,
-            scheduled_date=date.today() + timedelta(days=2),
+            scheduled_date=None,
         ),
         models.VolunteerShift(
             title="Photo sort",
-            description="Sort July hike photos into swim, kitchen, and track folders.",
+            description="Sort July hike photos into swim, kitchen, and track folders. Async.",
             duration_min=30,
             skills_needed="photos",
             language="en",
             remote=True,
             spots_left=2,
-            scheduled_date=date.today() + timedelta(days=6),
+            scheduled_date=None,
         ),
         models.VolunteerShift(
             title="Voice cheers",
-            description="Record a few short cheers for Saturday track.",
+            description="Record a few short cheers for Saturday track. Upload when ready.",
             duration_min=45,
             skills_needed="voice",
             language="en",
             remote=True,
             spots_left=5,
-            scheduled_date=date.today() + timedelta(days=9),
+            scheduled_date=None,
+        ),
+        models.VolunteerShift(
+            title="Kitchen prep · Saturday",
+            description="Help set tables and label snack boxes before the banquet.",
+            duration_min=90,
+            skills_needed="sports",
+            language="both",
+            remote=False,
+            spots_left=4,
+            requires_onboarding=False,
+            scheduled_date=date.today() + timedelta(days=5),
+        ),
+        models.VolunteerShift(
+            title="Track day helper",
+            description="Hand out water and cheer on the straight at San Po Kong.",
+            duration_min=120,
+            skills_needed="sports",
+            language="both",
+            remote=False,
+            spots_left=6,
+            requires_onboarding=False,
+            scheduled_date=date.today() + timedelta(days=12),
         ),
         models.VolunteerShift(
             title="Session buddy · swimming",
@@ -324,7 +346,7 @@ def seed(db: Session) -> None:
             remote=False,
             spots_left=2,
             requires_onboarding=True,
-            scheduled_date=date.today() + timedelta(days=12),
+            scheduled_date=date.today() + timedelta(days=19),
         ),
     ]
     db.add_all(shifts)
@@ -361,9 +383,20 @@ def seed(db: Session) -> None:
             points_awarded=0,
         )
     )
+    # Open in-person claim so the profile calendar has a dated mark
+    db.add(
+        models.VolunteerShiftClaim(
+            shift_id=shifts[3].id,
+            volunteer_profile_id=vprofile.id,
+            status="claimed",
+            hours=shifts[3].duration_min / 60.0,
+            points_awarded=0,
+        )
+    )
     shifts[0].spots_left = 2
     shifts[1].spots_left = 1
     shifts[2].spots_left = max(0, shifts[2].spots_left - 1)
+    shifts[3].spots_left = max(0, shifts[3].spots_left - 1)
 
     db.add_all(
         [
@@ -439,3 +472,70 @@ def _migrate_sqlite_columns() -> None:
                 """
             )
         )
+        # Remote = async (no calendar date); in-person must have a date
+        conn.execute(
+            text("UPDATE volunteer_shifts SET scheduled_date = NULL WHERE remote = 1")
+        )
+        conn.execute(
+            text(
+                """
+                UPDATE volunteer_shifts
+                SET scheduled_date = date('now', '+7 days')
+                WHERE remote = 0 AND scheduled_date IS NULL
+                """
+            )
+        )
+        # Add dated in-person tasks if missing (existing DBs)
+        existing = {
+            r[0]
+            for r in conn.execute(text("SELECT title FROM volunteer_shifts")).fetchall()
+        }
+        extras = [
+            (
+                "Kitchen prep · Saturday",
+                "Help set tables and label snack boxes before the banquet.",
+                90,
+                "sports",
+                "both",
+                0,
+                4,
+                0,
+                "date('now', '+5 days')",
+            ),
+            (
+                "Track day helper",
+                "Hand out water and cheer on the straight at San Po Kong.",
+                120,
+                "sports",
+                "both",
+                0,
+                6,
+                0,
+                "date('now', '+12 days')",
+            ),
+        ]
+        for title, desc, mins, skills, lang, remote, spots, onboard, when_sql in extras:
+            if title in existing:
+                continue
+            conn.execute(
+                text(
+                    f"""
+                    INSERT INTO volunteer_shifts
+                    (title, description, duration_min, skills_needed, language,
+                     remote, spots_left, requires_onboarding, scheduled_date)
+                    VALUES
+                    (:title, :desc, :mins, :skills, :lang,
+                     :remote, :spots, :onboard, {when_sql})
+                    """
+                ),
+                {
+                    "title": title,
+                    "desc": desc,
+                    "mins": mins,
+                    "skills": skills,
+                    "lang": lang,
+                    "remote": remote,
+                    "spots": spots,
+                    "onboard": onboard,
+                },
+            )

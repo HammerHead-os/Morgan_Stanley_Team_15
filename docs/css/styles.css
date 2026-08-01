@@ -1363,9 +1363,84 @@ p {
   align-items: start;
 }
 
+.contact-visit {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.contact-visit-map {
+  min-height: 320px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #e8eeeb;
+}
+
+.contact-visit-map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  border: 0;
+}
+
+.contact-visit-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.35rem 1.4rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.contact-visit-list {
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-visit-list > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.contact-visit-list dt {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.contact-visit-list dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.contact-visit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: auto;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--line);
+}
+
 @media (max-width: 800px) {
-  .contact-layout {
+  .contact-layout,
+  .contact-visit {
     grid-template-columns: 1fr;
+  }
+
+  .contact-visit-map,
+  .contact-visit-map iframe {
+    min-height: 240px;
   }
 }
 
@@ -2601,6 +2676,8 @@ body.iam-open {
   padding: 0.35rem;
   cursor: pointer;
   text-align: left;
+  position: relative;
+  overflow: visible;
 }
 
 .cal-cell.empty {
@@ -2637,6 +2714,52 @@ body.iam-open {
   box-shadow: 0 0 0 2px #fff;
 }
 
+.cal-hover {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  transform: translateX(-50%);
+  z-index: 12;
+  min-width: 11rem;
+  max-width: 16rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  background: #1a2e28;
+  color: #fff;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  box-shadow: 0 8px 20px rgba(20, 35, 31, 0.22);
+  pointer-events: none;
+  text-align: left;
+}
+
+.cal-hover::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: #1a2e28;
+}
+
+.cal-cell:hover .cal-hover,
+.cal-cell:focus .cal-hover,
+.cal-cell:focus-visible .cal-hover {
+  display: block;
+}
+
+.cal-hover-line {
+  display: block;
+}
+
+.cal-hover-line + .cal-hover-line {
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 .cal-legend {
   display: flex;
   gap: 1rem;
@@ -2664,6 +2787,55 @@ body.iam-open {
   padding-left: 1.1rem;
   color: var(--ink-soft);
   line-height: 1.55;
+}
+
+.feed-month {
+  border-bottom: 1px solid var(--line);
+}
+
+.feed-month:last-child {
+  border-bottom: 0;
+}
+
+.feed-month > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.feed-month > summary::-webkit-details-marker {
+  display: none;
+}
+
+.feed-month > summary::after {
+  content: "+";
+  font-family: inherit;
+  font-size: 1.1rem;
+  color: var(--ink-soft);
+}
+
+.feed-month[open] > summary::after {
+  content: "–";
+}
+
+.feed-month-count {
+  margin-left: auto;
+  margin-right: 0.5rem;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.feed-month-body {
+  padding-bottom: 0.5rem;
 }
 
 /* Bank-style spotlight tour */
@@ -3034,6 +3206,7 @@ body.auth-modal-open {
   color: var(--coral);
   font-size: 0.92rem;
 }
+
 
 /* Profile passport reader, adapted to the existing Love 21 profile theme. */
 .passport-selector-section {
@@ -3628,3 +3801,31 @@ body.auth-modal-open {
   .passport-book.role-change { animation: none; }
   .passport-turning-leaf { display: none; }
 }
+
+/* Remote vs in-person task boards */
+.task-board .task-split-title,
+.task-split-title {
+  font-size: 0.95rem;
+  margin: 1.25rem 0 0.65rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.task-board .task-split-title:first-child {
+  margin-top: 0;
+}
+
+.task-board .micro-task-grid,
+.task-board .activity-grid {
+  margin-bottom: 0.5rem;
+}
+
+.async-tasks ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.async-tasks li {
+  margin: 0.35rem 0;
+  font-size: 0.95rem;
+

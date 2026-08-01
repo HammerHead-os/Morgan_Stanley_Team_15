@@ -329,7 +329,8 @@ def get_profile(
             )
     for c in claims:
         shift = db.get(models.VolunteerShift, c.shift_id)
-        if not shift or not shift.scheduled_date:
+        # Calendar is for dated in-person work only; remote tasks are async
+        if not shift or shift.remote or not shift.scheduled_date:
             continue
         calendar_events.append(
             schemas.CalendarEventOut(
@@ -337,7 +338,7 @@ def get_profile(
                 title=shift.title,
                 date=shift.scheduled_date,
                 kind="volunteer",
-                detail=f"{shift.duration_min} min",
+                detail=f"In person · {shift.duration_min} min",
                 status=status_label(c.status),
             )
         )

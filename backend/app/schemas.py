@@ -228,6 +228,8 @@ class ClaimOut(OrmModel):
     points_awarded: int = 0
     points_available: int = 0
     duration_min: Optional[int] = None
+    remote: bool = True
+    scheduled_date: Optional[date] = None
 
 
 class ReflectionIn(BaseModel):

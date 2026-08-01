@@ -179,6 +179,49 @@
 
   let calCursor = new Date();
   calCursor.setDate(1);
+  let calAligned = false;
+
+  function fmtTaskWhen(c) {
+    if (c.remote || !c.scheduled_date) return "Async · do anytime";
+    try {
+      return (
+        "In person · " +
+        new Date(c.scheduled_date + "T12:00:00").toLocaleDateString(undefined, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        })
+      );
+    } catch (e) {
+      return "In person · " + String(c.scheduled_date);
+    }
+  }
+
+  function renderAsyncTasks(data) {
+    const box = document.querySelector("[data-async-tasks]");
+    const list = document.querySelector("[data-async-list]");
+    if (!box || !list) return;
+    const claims = ((data.volunteer || {}).claims || []).filter(function (c) {
+      return c.status === "claimed" && (c.remote || !c.scheduled_date);
+    });
+    if (!claims.length) {
+      box.hidden = true;
+      list.innerHTML = "";
+      return;
+    }
+    box.hidden = false;
+    list.innerHTML = claims
+      .map(function (c) {
+        return (
+          "<li><strong>" +
+          escapeHtml(c.shift_title || "Task") +
+          "</strong> · async" +
+          (c.points_available ? " · +" + c.points_available + " pts" : "") +
+          "</li>"
+        );
+      })
+      .join("");
+  }
 
   function renderCalendar(data) {
     const grid = document.querySelector("[data-cal-grid]");
@@ -187,6 +230,26 @@
     if (!grid || !label) return;
 
     const events = data.calendar_events || [];
+
+    // Jump to the month that has the next dated event (once)
+    if (!calAligned && events.length) {
+      const sorted = events
+        .slice()
+        .sort(function (a, b) {
+          return String(a.date).localeCompare(String(b.date));
+        });
+      const todayIso = new Date().toISOString().slice(0, 10);
+      let pick = sorted.find(function (e) {
+        return String(e.date).slice(0, 10) >= todayIso;
+      });
+      if (!pick) pick = sorted[sorted.length - 1];
+      if (pick) {
+        const parts = String(pick.date).slice(0, 10).split("-");
+        calCursor = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+      }
+      calAligned = true;
+    }
+
     const y = calCursor.getFullYear();
     const m = calCursor.getMonth();
     label.textContent = calCursor.toLocaleDateString(undefined, {
@@ -223,11 +286,38 @@
         (evs.length ? " has-event" : "") +
         '" data-cal-day="' +
         day +
-        '"><span class="cal-num">' +
+        '"' +
+        (evs.length
+          ? ' aria-label="' +
+            escapeHtml(
+              evs
+                .map(function (e) {
+                  return e.title;
+                })
+                .join(", ")
+            ) +
+            '"'
+          : "") +
+        '><span class="cal-num">' +
         day +
         "</span>";
       if (evs.length) {
         html += '<span class="cal-marks ' + escapeHtml(kinds) + '"></span>';
+        html +=
+          '<span class="cal-hover" role="tooltip">' +
+          evs
+            .map(function (e) {
+              return (
+                '<span class="cal-hover-line"><strong>' +
+                escapeHtml(e.title) +
+                "</strong>" +
+                (e.detail ? " · " + escapeHtml(e.detail) : "") +
+                (e.status ? " · " + escapeHtml(e.status) : "") +
+                "</span>"
+              );
+            })
+            .join("") +
+          "</span>";
       }
       html += "</button>";
     }
@@ -238,7 +328,7 @@
       const evs = byDay[day] || [];
       if (!evs.length) {
         dayList.innerHTML =
-          '<li class="muted">No classes or shifts on this day.</li>';
+          '<li class="muted">No classes or in-person shifts on this day.</li>';
         return;
       }
       dayList.innerHTML = evs
@@ -260,20 +350,50 @@
       btn.addEventListener("click", function () {
         showDay(Number(btn.getAttribute("data-cal-day")));
       });
+      btn.addEventListener("mouseenter", function () {
+        showDay(Number(btn.getAttribute("data-cal-day")));
+      });
+      btn.addEventListener("focus", function () {
+        showDay(Number(btn.getAttribute("data-cal-day")));
+      });
     });
 
     const today = new Date();
     if (today.getFullYear() === y && today.getMonth() === m) {
       showDay(today.getDate());
-    } else if (dayList) {
-      dayList.innerHTML =
-        '<li class="muted">Tap a day to see classes and volunteer shifts.</li>';
+    } else {
+      const firstEventDay = Object.keys(byDay)
+        .map(Number)
+        .sort(function (a, b) {
+          return a - b;
+        })[0];
+      if (firstEventDay) showDay(firstEventDay);
+      else if (dayList) {
+        dayList.innerHTML =
+          '<li class="muted">Tap a day to see classes and in-person shifts.</li>';
+      }
     }
+
+    renderAsyncTasks(data);
   }
 
   function feedItem(dateIso, title, body, tag) {
+    const d = dateIso ? new Date(dateIso) : null;
+    const t = d && !isNaN(d.getTime()) ? d.getTime() : 0;
+    let monthKey = "unknown";
+    let monthLabel = "Earlier";
+    if (t) {
+      monthKey =
+        d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      monthLabel = d.toLocaleDateString(undefined, {
+        month: "long",
+        year: "numeric",
+      });
+    }
     return {
-      t: dateIso ? new Date(dateIso).getTime() : 0,
+      t: t,
+      monthKey: monthKey,
+      monthLabel: monthLabel,
       html:
         '<article class="feed-item">' +
         '<div class="feed-meta"><span class="tag">' +
@@ -299,7 +419,7 @@
       family.registrations.forEach(function (r) {
         items.push(
           feedItem(
-            r.created_at,
+            r.created_at || r.session_date,
             (r.activity_title || "Class") +
               (r.member_name ? " · " + r.member_name : ""),
             escapeHtml(r.status_label || r.status) +
@@ -330,9 +450,11 @@
       data.volunteer.claims.forEach(function (c) {
         items.push(
           feedItem(
-            c.completed_at || c.claimed_at,
+            c.completed_at || c.claimed_at || c.scheduled_date,
             c.shift_title || "Volunteer shift",
-            escapeHtml(c.status_label || c.status) +
+            escapeHtml(fmtTaskWhen(c)) +
+              " · " +
+              escapeHtml(c.status_label || c.status) +
               (c.hours ? " · " + c.hours + " hrs" : ""),
             "Volunteer"
           )
@@ -388,10 +510,38 @@
         '<p class="muted">No activity yet. Use the actions above to get started.</p>';
       return;
     }
-    el.innerHTML = items
-      .slice(0, 40)
-      .map(function (i) {
-        return i.html;
+
+    const order = [];
+    const groups = {};
+    items.forEach(function (i) {
+      if (!groups[i.monthKey]) {
+        groups[i.monthKey] = { label: i.monthLabel, items: [] };
+        order.push(i.monthKey);
+      }
+      groups[i.monthKey].items.push(i);
+    });
+
+    el.innerHTML = order
+      .map(function (key, idx) {
+        const g = groups[key];
+        const open = idx === 0 ? " open" : "";
+        return (
+          '<details class="feed-month"' +
+          open +
+          ">" +
+          "<summary>" +
+          escapeHtml(g.label) +
+          " <span class=\"feed-month-count\">" +
+          g.items.length +
+          "</span></summary>" +
+          '<div class="feed-month-body">' +
+          g.items
+            .map(function (i) {
+              return i.html;
+            })
+            .join("") +
+          "</div></details>"
+        );
       })
       .join("");
   }
@@ -480,6 +630,8 @@
               escapeHtml(c.shift_title || "Task") +
               "</strong>" +
               '<p class="muted" style="margin:0.25rem 0 0;font-size:0.88rem">' +
+              escapeHtml(fmtTaskWhen(c)) +
+              " · " +
               escapeHtml(c.status_label || "Claimed") +
               (pts ? " · +" + pts + " pts when done" : "") +
               "</p>" +
@@ -504,7 +656,8 @@
               escapeHtml(c.shift_title || "Task") +
               "</strong>" +
               '<p class="muted" style="margin:0.25rem 0 0;font-size:0.88rem">' +
-              "Completed" +
+              escapeHtml(fmtTaskWhen(c)) +
+              " · Completed" +
               (c.points_awarded ? " · +" + c.points_awarded + " pts" : "") +
               (c.reflection
                 ? "<br/>" + escapeHtml(c.reflection)

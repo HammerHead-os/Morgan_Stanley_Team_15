@@ -336,13 +336,21 @@
               </button>
             </div>
           </div>
-          <p class="muted">Classes and volunteer shifts on this profile.</p>
+          <p class="muted">
+            Classes and in-person volunteer shifts. Remote tasks are async and listed below.
+          </p>
           <div class="cal-grid" data-cal-grid></div>
           <div class="cal-legend">
             <span class="cal-dot class"></span> Class
-            <span class="cal-dot volunteer"></span> Volunteer
+            <span class="cal-dot volunteer"></span> Volunteer (in person)
           </div>
           <ul class="cal-day-list" data-cal-day-list></ul>
+          <div class="async-tasks mt-1" data-async-tasks hidden>
+            <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem">
+              Open remote tasks (async)
+            </h3>
+            <ul data-async-list></ul>
+          </div>
         </section>
 
         <section
@@ -353,7 +361,7 @@
         >
           <h2>All activity</h2>
           <p class="muted">
-            One feed for classes, volunteer hours, gifts, hires, and milestones.
+            Grouped by month. Open a month to see classes, tasks, gifts, and hires.
           </p>
           <div class="activity-feed panel-soft mt-1" data-activity-feed>
             <p class="muted">Loading…</p>

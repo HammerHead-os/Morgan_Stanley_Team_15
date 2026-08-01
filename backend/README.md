@@ -4,13 +4,23 @@ FastAPI + SQLite backend for **Disconnected Journeys / Love 21 Profile**.
 
 ## Run
 
+First time:
+
 ```bash
 cd backend
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
 ```
 
-Then open http://127.0.0.1:8000 (serves the website + API) or http://127.0.0.1:8000/docs
+Every time after that (kills anything already on 8000, then starts):
+
+```bash
+cd backend
+./run.sh
+```
+
+Leave that terminal open. Open **http://127.0.0.1:8000** (site + API). Docs: http://127.0.0.1:8000/docs
+
+If the site says Offline, you're on GitHub Pages or the API isn't running — use the local URL above.
 
 ## Demo accounts
 
