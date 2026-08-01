@@ -378,13 +378,15 @@
     if (!slot || !L) return;
     try {
       await L.api("/api/health");
-      const person = L.getPerson();
+      const person = L.getToken() ? L.getPerson() : null;
       slot.textContent = person ? person.name : "Profile";
       if (person) slot.title = person.email;
+      else slot.removeAttribute("title");
       paintAdminLink(person);
     } catch (e) {
       slot.textContent = "Offline";
     }
   }
+  window.addEventListener("love21:session-changed", paintSession);
   paintSession();
 })();

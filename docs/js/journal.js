@@ -1,98 +1,8 @@
-/* Love 21 role journal reader, adapted from team15-philip. */
+/* Love 21 role passport reader - populated from GET /api/profile. */
 
-(function () {
+(function (global) {
   const root = document.querySelector("[data-profile-root]");
   if (!root) return;
-
-  const PASSPORTS = {
-    family: {
-      label: "Family",
-      title: "Our journey together",
-      description: "Family activities, programmes, and milestones in one place.",
-      code: "L21-F-1001",
-      joined: "March 2022",
-      summary: [
-        ["18", "activities joined"],
-        ["4", "programmes explored"],
-        ["2", "family members"],
-      ],
-      details: [
-        ["Family member", "Alex Chen"],
-        ["Home district", "Kowloon"],
-        ["Favourite programme", "Inclusive swimming"],
-      ],
-      badges: [
-        ["10", "Active family", "10 activities joined"],
-        ["3", "Programme explorer", "3 programmes completed"],
-        ["★", "Milestone maker", "First 50m swim"],
-        ["♥", "Community regular", "One year of activities"],
-      ],
-      activities: [
-        ["24 Jul 2026", "Family Summer Sports Day", "Community event", "Attended with Alex · Kowloon Cricket Club", "Attended"],
-        ["18 Jun 2026", "Inclusive Swimming", "Weekly class", "Alex completed 50 metres without stopping", "Milestone"],
-        ["07 Jun 2026", "Parent Coffee Morning", "Family support", "Peer sharing session · Love 21 Space", "Attended"],
-        ["21 May 2026", "Healthy Cooking Together", "Nutrition", "Family workshop · 2 hours", "Completed"],
-      ],
-    },
-    volunteer: {
-      label: "Volunteer",
-      title: "Time given with purpose",
-      description: "Completed shifts, contributed hours, and community skills.",
-      code: "L21-V-1001",
-      joined: "November 2023",
-      summary: [
-        ["42", "hours contributed"],
-        ["12", "activities joined"],
-        ["4", "days volunteered"],
-      ],
-      details: [
-        ["Volunteer since", "November 2023"],
-        ["Skills", "Events · Photography"],
-        ["Languages", "English · Cantonese"],
-      ],
-      badges: [
-        ["25h", "Helping hands", "25 volunteer hours"],
-        ["10", "Reliable teammate", "10 shifts completed"],
-        ["4", "Programme supporter", "4 teams supported"],
-        ["★", "Skills sharer", "Photography volunteer"],
-      ],
-      activities: [
-        ["12 Jul 2026", "Nutrition Workshop Support", "Event support", "Set-up, registration, and family welcome", "4 hrs"],
-        ["28 Jun 2026", "Sunday Football Assistant", "Sports programme", "Warm-up and small-group activity support", "3 hrs"],
-        ["14 Jun 2026", "Love 21 Open Day", "Community event", "Visitor guide and activity-station support", "6 hrs"],
-        ["31 May 2026", "Family Photography Session", "Skills sharing", "Portrait photography and photo selection", "5 hrs"],
-      ],
-    },
-    donor: {
-      label: "Donor",
-      title: "A record of your impact",
-      description: "Donation history, supported programmes, and giving milestones.",
-      code: "L21-D-1001",
-      joined: "May 2024",
-      summary: [
-        ["HKD 6,800", "total donated"],
-        ["15", "gifts made"],
-        ["3", "giving occasions"],
-      ],
-      details: [
-        ["Supporter since", "May 2024"],
-        ["Regular gift", "HKD 500 monthly"],
-        ["Primary fund", "Sports programmes"],
-      ],
-      badges: [
-        ["5k", "Impact maker", "HKD 5,000 donated"],
-        ["12", "One full year", "12 monthly gifts"],
-        ["3", "Broad supporter", "3 programmes funded"],
-        ["♥", "Family champion", "Summer appeal supporter"],
-      ],
-      activities: [
-        ["01 Jul 2026", "Monthly programme gift", "Sports programmes", "Receipt L21-0726-184 · Tax deductible", "HKD 500"],
-        ["01 Jun 2026", "Monthly programme gift", "Sports programmes", "Receipt L21-0626-151 · Tax deductible", "HKD 500"],
-        ["17 May 2026", "Family Summer Programme", "Special appeal", "Receipt L21-0526-098 · Tax deductible", "HKD 1,800"],
-        ["01 May 2026", "Monthly programme gift", "Sports programmes", "Receipt L21-0526-012 · Tax deductible", "HKD 500"],
-      ],
-    },
-  };
 
   const legacyRoles = {
     ability: "family",
@@ -105,25 +15,250 @@
   const spread = document.querySelector("[data-book-spread]");
   const prevButton = document.querySelector("[data-page-prev]");
   const nextButton = document.querySelector("[data-page-next]");
+  let profileData = null;
+  let passports = buildPassports(null);
   let activeRole = "family";
   let activeSpread = 0;
 
   if (!roleButtons.length || !stage || !spread || !prevButton || !nextButton) return;
 
   function escapeHtml(value) {
-    return String(value || "")
+    return String(value == null ? "" : value)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/\"/g, "&quot;");
   }
 
+  function formatDate(value) {
+    if (!value) return "Date not set";
+    const raw = String(value);
+    const parsed = new Date(raw.length === 10 ? raw + "T12:00:00" : raw);
+    if (isNaN(parsed.getTime())) return raw;
+    return parsed.toLocaleDateString(undefined, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  function formatMonth(value) {
+    if (!value) return "Not recorded";
+    const parsed = new Date(value);
+    if (isNaN(parsed.getTime())) return "Not recorded";
+    return parsed.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  }
+
+  function formatNumber(value) {
+    return new Intl.NumberFormat("en-HK", { maximumFractionDigits: 1 }).format(
+      Number(value || 0)
+    );
+  }
+
+  function joinWords(value) {
+    if (!value) return "Not added yet";
+    return String(value)
+      .split(",")
+      .map(function (part) { return part.trim(); })
+      .filter(Boolean)
+      .join(" · ");
+  }
+
+  function sortNewest(items, dateAt) {
+    return items.slice().sort(function (a, b) {
+      return String(dateAt(b) || "").localeCompare(String(dateAt(a) || ""));
+    });
+  }
+
+  function badgeRows(items) {
+    return (items || []).map(function (badge) {
+      return [badge.icon || "★", badge.title, badge.description];
+    });
+  }
+
+  function emptyPassport(role, label, title, description) {
+    return {
+      role: role,
+      label: label,
+      title: title,
+      description: description,
+      code: "-",
+      joined: "Not recorded",
+      summary: [["0", "records"]],
+      details: [["Status", profileData ? "No data yet" : "Sign in to view"]],
+      badges: [],
+      activities: [],
+      emptyMessage: profileData ? "No records yet." : "Sign in to see this passport.",
+    };
+  }
+
+  function familyPassport(data) {
+    const family = data.family;
+    const metrics = (family && family.metrics) || {};
+    const childNames = metrics.child_names || [];
+    const childIds = new Set(
+      ((family && family.members) || [])
+        .filter(function (member) {
+          return member.household_role === "child" || member.role_primary === "member";
+        })
+        .map(function (member) { return member.id; })
+    );
+    const registrations = ((family && family.registrations) || []).filter(function (item) {
+      return childIds.has(item.member_person_id) &&
+        (item.status === "registered" || item.status === "attended");
+    });
+    const activities = sortNewest(registrations, function (item) {
+      return item.session_date || item.created_at;
+    }).map(function (item) {
+      const detail = [item.member_name, item.activity_location]
+        .filter(Boolean)
+        .join(" · ");
+      return [
+        formatDate(item.session_date || item.created_at),
+        item.activity_title || "Love 21 activity",
+        item.activity_goal || "Programme",
+        detail || "Household activity",
+        item.status_label || item.status,
+      ];
+    });
+
+    return {
+      role: "family",
+      label: "Family",
+      title: "Our journey together",
+      description: "Family activities, programmes, and milestones in one place.",
+      code: data.person.profile_code,
+      joined: formatMonth(data.person.issued_at),
+      summary: [
+        [metrics.activities_joined || 0, "activities joined"],
+        [metrics.programmes_explored || 0, "programmes explored"],
+        [childNames.length, childNames.length === 1 ? "child member" : "child members"],
+      ],
+      details: [
+        ["Family member", childNames.length ? childNames.join(", ") : "No child members yet"],
+        ["Home district", "Hong Kong"],
+        ["Favourite programme", metrics.favourite_programme || "Not enough activity yet"],
+      ],
+      badges: badgeRows(metrics.badges),
+      activities: activities,
+      emptyMessage: "No confirmed or attended child activities yet.",
+    };
+  }
+
+  function volunteerPassport(data) {
+    const volunteer = data.volunteer || {};
+    const profile = volunteer.profile || {};
+    const metrics = volunteer.metrics || {};
+    const claims = (volunteer.claims || []).filter(function (item) {
+      return item.status !== "cancelled";
+    });
+    const activities = sortNewest(claims, function (item) {
+      return item.completed_at || item.scheduled_date || item.claimed_at;
+    }).map(function (item) {
+      const where = item.remote || !item.scheduled_date ? "Remote · async" : "In person";
+      const detail = [where, item.duration_min ? item.duration_min + " min" : "", item.reflection]
+        .filter(Boolean)
+        .join(" · ");
+      return [
+        formatDate(item.completed_at || item.scheduled_date || item.claimed_at),
+        item.shift_title || "Volunteer task",
+        item.remote ? "Remote task" : "Volunteer shift",
+        detail,
+        item.status_label || item.status,
+      ];
+    });
+    const hours = Number(profile.hours_logged || 0);
+
+    return {
+      role: "volunteer",
+      label: "Volunteer",
+      title: "Time given with purpose",
+      description: "Completed shifts, contributed hours, and community skills.",
+      code: data.person.profile_code,
+      joined: formatMonth(data.person.issued_at),
+      summary: [
+        [formatNumber(hours), "hours contributed"],
+        [metrics.completed_shifts || 0, "shifts completed"],
+        [metrics.days_volunteered || 0, "days volunteered"],
+      ],
+      details: [
+        ["Volunteer since", formatMonth(data.person.issued_at)],
+        ["Skills", joinWords(profile.skills)],
+        ["Languages", joinWords(profile.languages)],
+      ],
+      badges: badgeRows(metrics.badges),
+      activities: activities,
+      emptyMessage: "No volunteer shifts or tasks yet.",
+    };
+  }
+
+  function donorPassport(data) {
+    const impact = data.impact || {};
+    const metrics = impact.metrics || {};
+    const commitments = impact.commitments || [];
+    const commitmentById = {};
+    commitments.forEach(function (item) { commitmentById[item.id] = item; });
+    const active = commitments
+      .filter(function (item) { return item.status === "active"; })
+      .sort(function (a, b) { return String(b.updated_at).localeCompare(String(a.updated_at)); })[0];
+    const receipts = impact.receipts || [];
+    const activities = sortNewest(receipts, function (item) { return item.paid_at; })
+      .map(function (item) {
+        const commitment = commitmentById[item.commitment_id] || {};
+        return [
+          formatDate(item.paid_at),
+          "Gift · HKD " + formatNumber(item.amount_hkd),
+          commitment.fund_category || metrics.primary_fund || "Love 21 programmes",
+          item.story_back || "Donation recorded",
+          "Paid",
+        ];
+      });
+
+    return {
+      role: "donor",
+      label: "Donor",
+      title: "A record of your impact",
+      description: "Donation history, supported programmes, and giving milestones.",
+      code: data.person.profile_code,
+      joined: formatMonth(data.person.issued_at),
+      summary: [
+        ["HKD " + formatNumber(metrics.total_donated), "total donated"],
+        [metrics.gift_count || 0, "gifts made"],
+        [metrics.giving_occasions || 0, "giving occasions"],
+      ],
+      details: [
+        ["Supporter since", formatMonth(data.person.issued_at)],
+        [
+          "Regular gift",
+          active
+            ? "HKD " + formatNumber(active.amount_hkd) + " " + active.cadence
+            : "No active regular gift",
+        ],
+        ["Primary fund", metrics.primary_fund || "Not recorded"],
+      ],
+      badges: badgeRows(metrics.badges),
+      activities: activities,
+      emptyMessage: "No paid gifts recorded yet.",
+    };
+  }
+
+  function buildPassports(data) {
+    if (!data || !data.person) {
+      return {
+        family: emptyPassport("family", "Family", "Our journey together", "Family activities, programmes, and milestones in one place."),
+        volunteer: emptyPassport("volunteer", "Volunteer", "Time given with purpose", "Completed shifts, contributed hours, and community skills."),
+        donor: emptyPassport("donor", "Donor", "A record of your impact", "Donation history, supported programmes, and giving milestones."),
+      };
+    }
+    return {
+      family: familyPassport(data),
+      volunteer: volunteerPassport(data),
+      donor: donorPassport(data),
+    };
+  }
+
   function holderName() {
-    const coverName = document.querySelector("[data-cover-name]");
-    const name = coverName ? coverName.textContent.trim() : "";
-    return name && name !== "Loading…" && name !== "Profile offline"
-      ? name
-      : "Jamie Chen";
+    return profileData && profileData.person ? profileData.person.name : "Profile holder";
   }
 
   function holderInitials() {
@@ -154,14 +289,16 @@
     const details = data.details.map(function (item) {
       return '<div><span>' + escapeHtml(item[0]) + '</span><strong>' + escapeHtml(item[1]) + "</strong></div>";
     }).join("");
-    const badges = data.badges.map(function (badge) {
-      return '<article class="book-badge"><span aria-hidden="true">' + escapeHtml(badge[0]) + '</span><div><h4>' + escapeHtml(badge[1]) + '</h4><p>' + escapeHtml(badge[2]) + "</p></div></article>";
-    }).join("");
+    const badges = data.badges.length
+      ? data.badges.map(function (badge) {
+          return '<article class="book-badge"><span aria-hidden="true">' + escapeHtml(badge[0]) + '</span><div><h4>' + escapeHtml(badge[1]) + '</h4><p>' + escapeHtml(badge[2]) + "</p></div></article>";
+        }).join("")
+      : '<p class="muted">Keep taking part to earn your first badge.</p>';
 
     return (
       '<article class="book-page book-page-left">' +
       pageHeader(data, 1, "Personal profile") +
-      '<div class="book-profile"><div class="book-profile-photo">' + escapeHtml(holderInitials()) + '</div><div><p class="book-overline">Journal holder</p><h3>' + escapeHtml(holderName()) + '<\/h3><p>Hong Kong · Member since ' +
+      '<div class="book-profile"><div class="book-profile-photo">' + escapeHtml(holderInitials()) + '</div><div><p class="book-overline">Journal holder</p><h3>' + escapeHtml(holderName()) + '</h3><p>Hong Kong · Member since ' +
       escapeHtml(data.joined) +
       "</p></div></div>" +
       '<div class="book-role-summary">' + stats + "</div>" +
@@ -171,9 +308,7 @@
       "</strong></footer></article>" +
       '<article class="book-page book-page-right">' +
       pageHeader(data, 2, "Achievements") +
-      '<div class="book-page-title"><p class="book-overline">Collected stamps</p><h3>Your badges</h3><p>Milestones earned through your ' +
-      escapeHtml(data.label.toLowerCase()) +
-      " journey.</p></div>" +
+      '<div class="book-page-title"><p class="book-overline">Collected stamps</p><h3>Your badges</h3><p>Badges are earned automatically from your real activity.</p></div>' +
       '<div class="book-badge-grid">' + badges + "</div>" +
       '<div class="book-stamp-note"><span aria-hidden="true">21</span><p>Every activity adds another mark to your Love 21 story.</p></div>' +
       "</article>"
@@ -184,7 +319,7 @@
     return (
       '<article class="book-activity"><div class="book-activity-date"><span>' +
       escapeHtml(activity[0]) +
-      '</span><strong>' +
+      "</span><strong>" +
       String(index + 1).padStart(2, "0") +
       '</strong></div><div class="book-activity-copy"><p class="book-overline">' +
       escapeHtml(activity[2]) +
@@ -200,47 +335,76 @@
     );
   }
 
-  function activitySpread(data) {
-    const left = data.activities.slice(0, 2).map(function (item, index) {
-      return activityCard(item, index, data);
+  function activitySpread(data, activitySpreadIndex) {
+    const start = activitySpreadIndex * 4;
+    const activities = data.activities.slice(start, start + 4);
+    const left = activities.slice(0, 2).map(function (item, index) {
+      return activityCard(item, start + index, data);
     }).join("");
-    const right = data.activities.slice(2, 4).map(function (item, index) {
-      return activityCard(item, index + 2, data);
+    const right = activities.slice(2, 4).map(function (item, index) {
+      return activityCard(item, start + index + 2, data);
     }).join("");
+    const empty = activities.length
+      ? ""
+      : '<p class="muted">' + escapeHtml(data.emptyMessage) + "</p>";
+    const leftPage = activitySpreadIndex * 2 + 3;
     return (
       '<article class="book-page book-page-left">' +
-      pageHeader(data, 3, "Recent activities") +
+      pageHeader(data, leftPage, "Recent activities") +
       '<div class="book-page-title"><p class="book-overline">Recent records</p><h3>Latest entries</h3></div>' +
-      '<div class="book-activity-list">' + left + "</div></article>" +
+      '<div class="book-activity-list">' + (left || empty) + "</div></article>" +
       '<article class="book-page book-page-right">' +
-      pageHeader(data, 4, "Recent activities") +
+      pageHeader(data, leftPage + 1, "Recent activities") +
       '<div class="book-page-title"><p class="book-overline">Continued</p><h3>More from your journey</h3></div>' +
       '<div class="book-activity-list">' + right + "</div></article>"
     );
   }
 
+  function spreadCount(data) {
+    return 1 + Math.max(1, Math.ceil(data.activities.length / 4));
+  }
+
+  function renderSelectorSummaries() {
+    const values = {
+      family: passports.family.summary[0][0] + " activities joined",
+      volunteer: passports.volunteer.summary[0][0] + " hours given",
+      donor: passports.donor.summary[0][0] + " donated",
+    };
+    roleButtons.forEach(function (button) {
+      const small = button.querySelector("small");
+      if (small) small.textContent = values[button.dataset.rolePassport] || "No data";
+    });
+  }
+
   function renderBook(roleChanged) {
-    const data = PASSPORTS[activeRole];
+    const data = passports[activeRole];
+    const totalSpreads = spreadCount(data);
+    if (activeSpread >= totalSpreads) activeSpread = totalSpreads - 1;
     stage.dataset.role = activeRole;
     spread.classList.remove("role-change");
     if (roleChanged) {
       void spread.offsetWidth;
       spread.classList.add("role-change");
     }
-    spread.innerHTML = activeSpread === 0 ? identitySpread(data) : activitySpread(data);
+    spread.innerHTML = activeSpread === 0
+      ? identitySpread(data)
+      : activitySpread(data, activeSpread - 1);
 
     document.querySelector("[data-book-kicker]").textContent = data.label + " journal";
     document.querySelector("[data-book-title]").textContent = data.title;
     document.querySelector("[data-book-description]").textContent = data.description;
-    document.querySelector("[data-page-label]").textContent = activeSpread === 0 ? "Pages 01–02 of 04" : "Pages 03–04 of 04";
-    document.querySelector("[data-page-dots]").innerHTML = '<span class="active"></span><span></span>';
-    if (activeSpread === 1) {
-      const dots = document.querySelectorAll("[data-page-dots] span");
-      dots[0].classList.remove("active");
-      dots[1].classList.add("active");
-    }
+    const totalPages = totalSpreads * 2;
+    const firstPage = activeSpread * 2 + 1;
+    document.querySelector("[data-page-label]").textContent =
+      "Pages " + String(firstPage).padStart(2, "0") + "–" +
+      String(firstPage + 1).padStart(2, "0") + " of " +
+      String(totalPages).padStart(2, "0");
+    document.querySelector("[data-page-dots]").innerHTML = Array.from(
+      { length: totalSpreads },
+      function (_, index) { return '<span' + (index === activeSpread ? ' class="active"' : "") + "></span>"; }
+    ).join("");
     prevButton.disabled = activeSpread === 0;
-    nextButton.disabled = activeSpread === 1;
+    nextButton.disabled = activeSpread === totalSpreads - 1;
   }
 
   function turnTo(targetSpread, direction) {
@@ -270,7 +434,7 @@
   }
 
   function selectRole(role, updateHash) {
-    activeRole = PASSPORTS[role] ? role : "family";
+    activeRole = passports[role] ? role : "family";
     activeSpread = 0;
     roleButtons.forEach(function (button) {
       const selected = button.dataset.rolePassport === activeRole;
@@ -280,6 +444,13 @@
     });
     renderBook(true);
     if (updateHash) history.replaceState(null, "", "#" + activeRole);
+  }
+
+  function update(data) {
+    profileData = data && data.person ? data : null;
+    passports = buildPassports(profileData);
+    renderSelectorSummaries();
+    renderBook(false);
   }
 
   roleButtons.forEach(function (button, index) {
@@ -297,23 +468,18 @@
   });
 
   prevButton.addEventListener("click", function () {
-    if (activeSpread !== 0) turnTo(0, "back");
+    if (activeSpread > 0) turnTo(activeSpread - 1, "back");
   });
   nextButton.addEventListener("click", function () {
-    if (activeSpread !== 1) turnTo(1, "forward");
+    const total = spreadCount(passports[activeRole]);
+    if (activeSpread < total - 1) turnTo(activeSpread + 1, "forward");
   });
-  window.addEventListener("hashchange", function () {
+  global.addEventListener("hashchange", function () {
     const raw = location.hash.slice(1);
     selectRole(legacyRoles[raw] || raw, false);
   });
 
-  const coverName = document.querySelector("[data-cover-name]");
-  if (coverName) {
-    new MutationObserver(function () {
-      if (activeSpread === 0) renderBook(false);
-    }).observe(coverName, { childList: true, characterData: true, subtree: true });
-  }
-
+  global.Love21Passports = { update: update };
   const initial = location.hash.slice(1);
   selectRole(legacyRoles[initial] || initial || "family", false);
-})();
+})(window);

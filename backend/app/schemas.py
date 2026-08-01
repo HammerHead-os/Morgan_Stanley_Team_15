@@ -40,7 +40,8 @@ class CalendarEventOut(BaseModel):
     id: str
     title: str
     date: date
-    kind: str  # class | volunteer | hire
+    kind: str  # class | volunteer | donation | hire
+    person_name: str = ""
     detail: str = ""
     status: str = ""
 
@@ -106,6 +107,7 @@ class RegistrationOut(OrmModel):
     feedback: Optional[str] = None
     activity_title: Optional[str] = None
     activity_location: Optional[str] = None
+    activity_goal: Optional[str] = None
     member_name: Optional[str] = None
 
 
@@ -330,16 +332,40 @@ class NextActionOut(BaseModel):
     tab: Optional[str] = None
 
 
+class RuleBadgeOut(BaseModel):
+    icon: str
+    title: str
+    description: str
+
+
+class FamilyMetricsOut(BaseModel):
+    child_names: list[str] = Field(default_factory=list)
+    activities_joined: int = 0
+    programmes_explored: int = 0
+    favourite_programme: Optional[str] = None
+    badges: list[RuleBadgeOut] = Field(default_factory=list)
+
+
 class FamilyProfileOut(BaseModel):
     household_name: str
     members: list[PersonOut]
     registrations: list[RegistrationOut]
+    metrics: FamilyMetricsOut = Field(default_factory=FamilyMetricsOut)
 
 
 class AchievementProfileOut(BaseModel):
     member: PersonOut
+    members: list[PersonOut] = Field(default_factory=list)
     achievements: list[AchievementOut]
     goals: list[GoalOut]
+
+
+class ImpactMetricsOut(BaseModel):
+    total_donated: float = 0
+    gift_count: int = 0
+    giving_occasions: int = 0
+    primary_fund: Optional[str] = None
+    badges: list[RuleBadgeOut] = Field(default_factory=list)
 
 
 class ImpactProfileOut(BaseModel):
@@ -347,6 +373,13 @@ class ImpactProfileOut(BaseModel):
     receipts: list[ReceiptOut]
     badges: list[ImpactBadgeOut] = []
     programmes_pct: float = 74.6
+    metrics: ImpactMetricsOut = Field(default_factory=ImpactMetricsOut)
+
+
+class VolunteerMetricsOut(BaseModel):
+    completed_shifts: int = 0
+    days_volunteered: int = 0
+    badges: list[RuleBadgeOut] = Field(default_factory=list)
 
 
 class VolunteerProfileSummaryOut(BaseModel):
@@ -356,6 +389,7 @@ class VolunteerProfileSummaryOut(BaseModel):
     points_balance: int = 0
     points_spent: int = 0
     rewards: list[RewardOut] = []
+    metrics: VolunteerMetricsOut = Field(default_factory=VolunteerMetricsOut)
 
 
 class ProfileOut(BaseModel):

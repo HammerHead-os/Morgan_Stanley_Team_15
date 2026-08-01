@@ -36,11 +36,13 @@
   function setSession(token, person) {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(PERSON_KEY, JSON.stringify(person));
+    global.dispatchEvent(new CustomEvent("love21:session-changed"));
   }
 
   function clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(PERSON_KEY);
+    global.dispatchEvent(new CustomEvent("love21:session-changed"));
   }
 
   function friendlyError(err) {

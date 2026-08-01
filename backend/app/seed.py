@@ -466,6 +466,7 @@ def init_db() -> None:
     try:
         seed(db)
         _ensure_admin_demo_account(db)
+        _ensure_profile_demo_data(db)
     finally:
         db.close()
 
@@ -486,6 +487,438 @@ def _ensure_admin_demo_account(db: Session) -> None:
             profile_code="L21-HK-9001",
         )
     )
+    db.commit()
+
+
+def _ensure_profile_demo_data(db: Session) -> None:
+    """Add an idempotent profile showcase to both old and freshly seeded DBs."""
+    demo_hash = hash_password(DEMO_PASSWORD)
+
+    carer = db.query(models.Person).filter_by(email="carer@chen.demo").first()
+    household = carer.household if carer else None
+    if not household:
+        household = db.query(models.Household).filter_by(name="Chen family").first()
+    if not household:
+        household = models.Household(name="Chen family", notes="Demo household")
+        db.add(household)
+        db.flush()
+    if not carer:
+        carer = models.Person(
+            email="carer@chen.demo",
+            name="Jamie Chen",
+            role_primary="family",
+            roles="family,volunteer,donor",
+            language="both",
+            household_id=household.id,
+            household_role="mom",
+            password_hash=demo_hash,
+            profile_code="L21-HK-1001",
+        )
+        db.add(carer)
+        db.flush()
+    if not household.carer_person_id:
+        household.carer_person_id = carer.id
+
+    def ensure_person(email: str, **values) -> models.Person:
+        existing = db.query(models.Person).filter_by(email=email).first()
+        if existing:
+            return existing
+        person = models.Person(email=email, password_hash=demo_hash, **values)
+        db.add(person)
+        db.flush()
+        return person
+
+    alex = ensure_person(
+        "alex@chen.demo",
+        name="Alex Chen",
+        role_primary="member",
+        roles="member",
+        language="yue",
+        household_id=household.id,
+        household_role="child",
+        profile_code="L21-HK-1002",
+    )
+    dad = ensure_person(
+        "dad@chen.demo",
+        name="Chris Chen",
+        role_primary="family",
+        roles="family,donor",
+        language="en",
+        household_id=household.id,
+        household_role="dad",
+        profile_code="L21-HK-1003",
+    )
+    casey = ensure_person(
+        "casey@chen.demo",
+        name="Casey Chen",
+        role_primary="member",
+        roles="member",
+        language="both",
+        household_id=household.id,
+        household_role="child",
+        profile_code="L21-HK-1004",
+    )
+    donor = ensure_person(
+        "donor@demo.love21",
+        name="Sam Wong",
+        role_primary="donor",
+        roles="donor,volunteer",
+        language="en",
+        profile_code="L21-HK-2001",
+    )
+    volunteer = ensure_person(
+        "volunteer@demo.love21",
+        name="Taylor Ng",
+        role_primary="volunteer",
+        roles="volunteer,donor",
+        language="both",
+        profile_code="L21-HK-3001",
+    )
+
+    for demo_person in (carer, alex, dad, casey, donor, volunteer):
+        if not demo_person.prefs:
+            db.add(
+                models.CommPreferences(
+                    person_id=demo_person.id,
+                    email_on=True,
+                    sms_on=False,
+                    whatsapp_on=False,
+                    opt_out_token=secrets.token_urlsafe(16),
+                )
+            )
+
+    activities = {
+        activity.title: activity for activity in db.query(models.Activity).all()
+    }
+
+    def ensure_registration(
+        member: models.Person, title: str, status: str, session_date: date
+    ) -> None:
+        activity = activities.get(title)
+        if not activity:
+            return
+        existing = (
+            db.query(models.Registration)
+            .filter_by(activity_id=activity.id, member_person_id=member.id)
+            .first()
+        )
+        if existing:
+            return
+        db.add(
+            models.Registration(
+                activity_id=activity.id,
+                household_id=household.id,
+                member_person_id=member.id,
+                status=status,
+                reminder_channel="email",
+                session_date=session_date,
+                created_at=datetime.combine(session_date, datetime.min.time()),
+            )
+        )
+
+    today = date.today()
+    ensure_registration(casey, "Swim · beginners", "attended", today - timedelta(days=95))
+    ensure_registration(casey, "Yoga & stretch", "attended", today - timedelta(days=70))
+    ensure_registration(casey, "Parent counselling circle", "attended", today - timedelta(days=45))
+    ensure_registration(casey, "Cooking together", "registered", today + timedelta(days=14))
+
+    if not db.query(models.Achievement).filter_by(
+        member_person_id=casey.id, title="Confident group warm-up"
+    ).first():
+        db.add(
+            models.Achievement(
+                member_person_id=casey.id,
+                title="Confident group warm-up",
+                pillar="sport",
+                status="coach_approved",
+                share_consent=True,
+                coach_name="Coach Lee",
+                approved_at=datetime.utcnow() - timedelta(days=35),
+            )
+        )
+
+    donor_commitment = (
+        db.query(models.DonationCommitment)
+        .filter_by(supporter_person_id=donor.id)
+        .first()
+    )
+    if not donor_commitment:
+        donor_commitment = models.DonationCommitment(
+            supporter_person_id=donor.id,
+            amount_hkd=500,
+            fund_category="Sports programmes",
+            status="active",
+            cadence="monthly",
+        )
+        db.add(donor_commitment)
+        db.flush()
+
+    donor_profile = db.query(models.VolunteerProfile).filter_by(person_id=donor.id).first()
+    if not donor_profile:
+        donor_profile = models.VolunteerProfile(
+            person_id=donor.id,
+            skills="photos",
+            languages="en",
+            availability="remote",
+            onboarded=False,
+            hours_logged=0,
+        )
+        db.add(donor_profile)
+
+    demo_gifts = [
+        (datetime(2026, 3, 1), 500, "A monthly gift helped cover pool-lane fees."),
+        (datetime(2026, 4, 1), 750, "This gift supported bilingual class materials."),
+        (datetime(2026, 5, 1), 1200, "This gift helped fund family nutrition workshops."),
+        (datetime(2026, 6, 1), 1500, "This gift supported coach-led sports sessions."),
+        (datetime(2026, 8, 1), 1000, "This gift helped fund the summer activity programme."),
+    ]
+    existing_gift_months = {
+        receipt.paid_at.strftime("%Y-%m")
+        for receipt in donor_commitment.receipts
+        if receipt.paid_at
+    }
+    for paid_at, amount, story in demo_gifts:
+        if paid_at.strftime("%Y-%m") in existing_gift_months:
+            continue
+        db.add(
+            models.DonationReceipt(
+                commitment_id=donor_commitment.id,
+                amount_hkd=amount,
+                paid_at=paid_at,
+                story_back=story,
+            )
+        )
+
+    volunteer_profile = (
+        db.query(models.VolunteerProfile).filter_by(person_id=volunteer.id).first()
+    )
+    if not volunteer_profile:
+        volunteer_profile = models.VolunteerProfile(
+            person_id=volunteer.id,
+            skills="events,photos,cantonese",
+            languages="yue,en",
+            availability="saturday mornings, remote",
+            onboarded=True,
+            hours_logged=0,
+            points_balance=55,
+        )
+        db.add(volunteer_profile)
+        db.flush()
+
+    volunteer_commitment = (
+        db.query(models.DonationCommitment)
+        .filter_by(supporter_person_id=volunteer.id)
+        .first()
+    )
+    if not volunteer_commitment:
+        volunteer_commitment = models.DonationCommitment(
+            supporter_person_id=volunteer.id,
+            amount_hkd=300,
+            fund_category="Sports programmes",
+            status="active",
+            cadence="monthly",
+        )
+        db.add(volunteer_commitment)
+        db.flush()
+        db.add(
+            models.DonationReceipt(
+                commitment_id=volunteer_commitment.id,
+                amount_hkd=300,
+                paid_at=datetime.utcnow() - timedelta(days=15),
+                story_back="A sports-programme gift recorded for the volunteer demo.",
+            )
+        )
+
+    historical_shifts = [
+        ("Family sports day welcome", 120, today - timedelta(days=100), 2.0, 50),
+        ("Nutrition workshop support", 180, today - timedelta(days=72), 3.0, 60),
+        ("Open day photography", 240, today - timedelta(days=38), 4.0, 80),
+    ]
+    for title, duration, scheduled, hours, points in historical_shifts:
+        shift = db.query(models.VolunteerShift).filter_by(title=title).first()
+        if not shift:
+            shift = models.VolunteerShift(
+                title=title,
+                description="Completed demo shift for the live volunteer passport.",
+                duration_min=duration,
+                skills_needed="events",
+                language="both",
+                remote=False,
+                spots_left=0,
+                requires_onboarding=False,
+                scheduled_date=scheduled,
+            )
+            db.add(shift)
+            db.flush()
+        claim = (
+            db.query(models.VolunteerShiftClaim)
+            .filter_by(shift_id=shift.id, volunteer_profile_id=volunteer_profile.id)
+            .first()
+        )
+        if not claim:
+            db.add(
+                models.VolunteerShiftClaim(
+                    shift_id=shift.id,
+                    volunteer_profile_id=volunteer_profile.id,
+                    status="completed",
+                    hours=hours,
+                    reflection="Completed as part of the Love 21 demo journey.",
+                    claimed_at=datetime.combine(scheduled, datetime.min.time()),
+                    completed_at=datetime.combine(scheduled, datetime.min.time()),
+                    points_awarded=points,
+                )
+            )
+
+    db.flush()
+    completed_hours = sum(
+        float(claim.hours or 0)
+        for claim in db.query(models.VolunteerShiftClaim)
+        .filter_by(volunteer_profile_id=volunteer_profile.id, status="completed")
+        .all()
+    )
+    volunteer_profile.hours_logged = max(
+        float(volunteer_profile.hours_logged or 0), completed_hours
+    )
+
+    # Upgrade only legacy demo accounts that already have matching role data.
+    carer_profile = db.query(models.VolunteerProfile).filter_by(person_id=carer.id).first()
+    carer_commitment = (
+        db.query(models.DonationCommitment).filter_by(supporter_person_id=carer.id).first()
+    )
+    if not carer_profile:
+        carer_profile = models.VolunteerProfile(
+            person_id=carer.id,
+            skills="photos,voice,events",
+            languages="both",
+            availability="weekday evenings, saturday mornings",
+            onboarded=True,
+            hours_logged=1.0,
+        )
+        db.add(carer_profile)
+        db.flush()
+    if not carer_commitment:
+        carer_commitment = models.DonationCommitment(
+            supporter_person_id=carer.id,
+            amount_hkd=150,
+            fund_category="Family support",
+            status="active",
+            cadence="monthly",
+        )
+        db.add(carer_commitment)
+        db.flush()
+        db.add(
+            models.DonationReceipt(
+                commitment_id=carer_commitment.id,
+                amount_hkd=150,
+                paid_at=datetime.utcnow() - timedelta(days=12),
+                story_back="A family-support gift recorded for the multi-role demo.",
+            )
+        )
+    db.flush()
+
+    jamie_gifts = [
+        (datetime(2026, 4, 1), 200, "Jamie helped fund bilingual family materials."),
+        (datetime(2026, 5, 1), 250, "Jamie supported a family nutrition workshop."),
+        (datetime(2026, 6, 1), 300, "Jamie helped cover inclusive sports equipment."),
+        (datetime(2026, 8, 1), 500, "Jamie supported the summer family programme."),
+    ]
+    existing_jamie_months = {
+        receipt.paid_at.strftime("%Y-%m")
+        for receipt in db.query(models.DonationReceipt)
+        .filter_by(commitment_id=carer_commitment.id)
+        .all()
+        if receipt.paid_at
+    }
+    for paid_at, amount, story in jamie_gifts:
+        if paid_at.strftime("%Y-%m") in existing_jamie_months:
+            continue
+        db.add(
+            models.DonationReceipt(
+                commitment_id=carer_commitment.id,
+                amount_hkd=amount,
+                paid_at=paid_at,
+                story_back=story,
+            )
+        )
+
+    jamie_claims = [
+        ("Family sports day welcome", "completed", 2.0, 50),
+        ("Open day photography", "completed", 4.0, 80),
+        ("Kitchen prep · Saturday", "claimed", 1.5, 0),
+    ]
+    for title, claim_status, hours, points in jamie_claims:
+        shift = db.query(models.VolunteerShift).filter_by(title=title).first()
+        if not shift:
+            continue
+        existing_claim = (
+            db.query(models.VolunteerShiftClaim)
+            .filter_by(shift_id=shift.id, volunteer_profile_id=carer_profile.id)
+            .first()
+        )
+        if existing_claim:
+            continue
+        completed_at = None
+        claimed_at = datetime.utcnow() - timedelta(days=2)
+        if claim_status == "completed":
+            completed_at = datetime.combine(
+                shift.scheduled_date or today, datetime.min.time()
+            )
+            claimed_at = completed_at - timedelta(days=7)
+        db.add(
+            models.VolunteerShiftClaim(
+                shift_id=shift.id,
+                volunteer_profile_id=carer_profile.id,
+                status=claim_status,
+                hours=hours,
+                reflection=(
+                    "Jamie completed this shift while supporting the family programme."
+                    if claim_status == "completed"
+                    else None
+                ),
+                claimed_at=claimed_at,
+                completed_at=completed_at,
+                points_awarded=points,
+            )
+        )
+
+    db.flush()
+    jamie_completed_hours = sum(
+        float(claim.hours or 0)
+        for claim in db.query(models.VolunteerShiftClaim)
+        .filter_by(volunteer_profile_id=carer_profile.id, status="completed")
+        .all()
+    )
+    carer_profile.hours_logged = max(
+        float(carer_profile.hours_logged or 0), jamie_completed_hours
+    )
+    dad_commitment = (
+        db.query(models.DonationCommitment).filter_by(supporter_person_id=dad.id).first()
+    )
+    if not dad_commitment:
+        dad_commitment = models.DonationCommitment(
+            supporter_person_id=dad.id,
+            amount_hkd=200,
+            fund_category="Family support",
+            status="active",
+            cadence="monthly",
+        )
+        db.add(dad_commitment)
+        db.flush()
+        db.add(
+            models.DonationReceipt(
+                commitment_id=dad_commitment.id,
+                amount_hkd=200,
+                paid_at=datetime.utcnow() - timedelta(days=25),
+                story_back="A family-support gift recorded for the parent demo.",
+            )
+        )
+    if carer.roles == "family":
+        carer.roles = "family,volunteer,donor"
+    if donor.roles == "donor" and donor_profile:
+        donor.roles = "donor,volunteer"
+    if volunteer.roles == "volunteer" and volunteer_commitment:
+        volunteer.roles = "volunteer,donor"
+
     db.commit()
 
 

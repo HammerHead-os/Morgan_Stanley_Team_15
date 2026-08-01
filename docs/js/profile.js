@@ -276,14 +276,21 @@
     }
     for (let day = 1; day <= daysInMonth; day++) {
       const evs = byDay[day] || [];
-      const kinds = evs
-        .map(function (e) {
-          return e.kind;
-        })
-        .join(" ");
+      const kinds = Array.from(
+        new Set(
+          evs.map(function (e) {
+            return e.kind;
+          })
+        )
+      );
+      const colourClass = evs.length
+        ? kinds.length > 1
+          ? " cal-mixed"
+          : " cal-" + kinds[0]
+        : "";
       html +=
         '<button type="button" class="cal-cell' +
-        (evs.length ? " has-event" : "") +
+        (evs.length ? " has-event" + colourClass : "") +
         '" data-cal-day="' +
         day +
         '"' +
@@ -292,7 +299,7 @@
             escapeHtml(
               evs
                 .map(function (e) {
-                  return e.title;
+                  return (e.person_name ? e.person_name + ": " : "") + e.title;
                 })
                 .join(", ")
             ) +
@@ -302,7 +309,30 @@
         day +
         "</span>";
       if (evs.length) {
-        html += '<span class="cal-marks ' + escapeHtml(kinds) + '"></span>';
+        html +=
+          '<span class="cal-cell-events">' +
+          evs
+            .slice(0, 2)
+            .map(function (e) {
+              const personName =
+                e.person_name ||
+                String(e.detail || "").split(" · ")[0] ||
+                "Household";
+              return (
+                '<span class="cal-cell-event">' +
+                '<strong class="cal-event-person">' +
+                escapeHtml(personName) +
+                "</strong>" +
+                '<span class="cal-event-title">' +
+                escapeHtml(e.title) +
+                "</span></span>"
+              );
+            })
+            .join("") +
+          (evs.length > 2
+            ? '<span class="cal-event-more">+' + (evs.length - 2) + " more</span>"
+            : "") +
+          "</span>";
         html +=
           '<span class="cal-hover" role="tooltip">' +
           evs
@@ -328,7 +358,7 @@
       const evs = byDay[day] || [];
       if (!evs.length) {
         dayList.innerHTML =
-          '<li class="muted">No classes or in-person shifts on this day.</li>';
+          '<li class="muted">No classes, volunteer work, or donations on this day.</li>';
         return;
       }
       dayList.innerHTML = evs
@@ -370,11 +400,9 @@
       if (firstEventDay) showDay(firstEventDay);
       else if (dayList) {
         dayList.innerHTML =
-          '<li class="muted">Tap a day to see classes and in-person shifts.</li>';
+          '<li class="muted">Tap a day to see classes, volunteer work, and donations.</li>';
       }
     }
-
-    renderAsyncTasks(data);
   }
 
   function feedItem(dateIso, title, body, tag) {
@@ -565,6 +593,10 @@
       roleEl.textContent = bits.join(" · ");
     }
     if (codeEl) codeEl.textContent = p.profile_code || data.profile_code || "";
+
+    if (window.Love21Passports && window.Love21Passports.update) {
+      window.Love21Passports.update(data);
+    }
 
     if (data.prefs) {
       ["email_on", "sms_on", "whatsapp_on"].forEach(function (key) {
@@ -908,6 +940,9 @@
     if (loginBtn) loginBtn.hidden = false;
     const logoutBtn = document.querySelector("[data-logout]");
     if (logoutBtn) logoutBtn.hidden = true;
+    if (window.Love21Passports && window.Love21Passports.update) {
+      window.Love21Passports.update(null);
+    }
   }
 
   document.addEventListener("click", function (e) {
@@ -946,6 +981,11 @@
         sessionStorage.removeItem("love21_flash");
       }
     } catch (err) {
+      if (err && err.status === 401) {
+        L.clearSession();
+        showLoggedOutState();
+        return;
+      }
       const flashEl = document.querySelector("[data-profile-flash]");
       if (flashEl) {
         flashEl.hidden = false;

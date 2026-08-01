@@ -1,3 +1,5 @@
+from collections import Counter, defaultdict
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -11,6 +13,8 @@ from .volunteers import _claim_out, _ensure_profile
 from ..points import REWARDS
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
+
+FAMILY_ACTIVITY_STATUSES = {"registered", "attended"}
 
 
 def _person_out(p: models.Person) -> schemas.PersonOut:
@@ -67,6 +71,132 @@ def _commitment_out(c: models.DonationCommitment) -> schemas.CommitmentOut:
         office_perk_unlocked=bool(c.office_perk_unlocked),
         started_at=c.started_at,
         updated_at=c.updated_at,
+    )
+
+
+def _badge(icon: str, title: str, description: str) -> schemas.RuleBadgeOut:
+    return schemas.RuleBadgeOut(icon=icon, title=title, description=description)
+
+
+def _family_metrics(
+    registrations: list[models.Registration], child_members: list[models.Person]
+) -> schemas.FamilyMetricsOut:
+    child_ids = {child.id for child in child_members}
+    eligible = [
+        registration
+        for registration in registrations
+        if registration.member_person_id in child_ids
+        and registration.status in FAMILY_ACTIVITY_STATUSES
+    ]
+    goals = {
+        registration.activity.goal
+        for registration in eligible
+        if registration.activity and registration.activity.goal
+    }
+    titles = Counter(
+        registration.activity.title
+        for registration in eligible
+        if registration.activity and registration.activity.title
+    )
+    favourite = None
+    if titles:
+        favourite = sorted(titles.items(), key=lambda item: (-item[1], item[0]))[0][0]
+
+    joined = len(eligible)
+    programmes = len(goals)
+    badges = []
+    if joined >= 1:
+        badges.append(_badge("1", "First step", "Joined a first Love 21 activity"))
+    if joined >= 3:
+        badges.append(_badge("3", "Active family", "3 confirmed or attended activities"))
+    if joined >= 5:
+        badges.append(_badge("5", "Community regular", "5 confirmed or attended activities"))
+    if programmes >= 3:
+        badges.append(_badge("3", "Programme explorer", "Joined activities across 3 programme areas"))
+
+    return schemas.FamilyMetricsOut(
+        child_names=[child.name for child in child_members],
+        activities_joined=joined,
+        programmes_explored=programmes,
+        favourite_programme=favourite,
+        badges=badges,
+    )
+
+
+def _impact_metrics(
+    commitments: list[models.DonationCommitment],
+    receipts: list[models.DonationReceipt],
+) -> schemas.ImpactMetricsOut:
+    total = sum(float(receipt.amount_hkd or 0) for receipt in receipts)
+    occasions = len(
+        {
+            receipt.paid_at.strftime("%Y-%m")
+            for receipt in receipts
+            if receipt.paid_at
+        }
+    )
+    fund_totals: dict[str, float] = defaultdict(float)
+    commitment_by_id = {commitment.id: commitment for commitment in commitments}
+    for receipt in receipts:
+        commitment = commitment_by_id.get(receipt.commitment_id)
+        if commitment and commitment.fund_category:
+            fund_totals[commitment.fund_category] += float(receipt.amount_hkd or 0)
+
+    primary_fund = None
+    if fund_totals:
+        primary_fund = sorted(
+            fund_totals.items(), key=lambda item: (-item[1], item[0])
+        )[0][0]
+    elif commitments:
+        active = [commitment for commitment in commitments if commitment.status == "active"]
+        candidates = active or commitments
+        primary_fund = max(candidates, key=lambda item: item.updated_at).fund_category
+
+    gift_count = len(receipts)
+    badges = []
+    if gift_count >= 1:
+        badges.append(_badge("1", "First gift", "Made a first recorded donation"))
+    if total >= 1000:
+        badges.append(_badge("1k", "Impact maker", "Donated HKD 1,000 in total"))
+    if occasions >= 3:
+        badges.append(_badge("3", "Regular supporter", "Gave in 3 different months"))
+    if total >= 5000:
+        badges.append(_badge("5k", "Community champion", "Donated HKD 5,000 in total"))
+
+    return schemas.ImpactMetricsOut(
+        total_donated=total,
+        gift_count=gift_count,
+        giving_occasions=occasions,
+        primary_fund=primary_fund,
+        badges=badges,
+    )
+
+
+def _volunteer_metrics(
+    profile: models.VolunteerProfile | None,
+    claims: list[models.VolunteerShiftClaim],
+) -> schemas.VolunteerMetricsOut:
+    completed = [claim for claim in claims if claim.status == "completed"]
+    days = {
+        claim.shift.scheduled_date
+        for claim in completed
+        if claim.shift and not claim.shift.remote and claim.shift.scheduled_date
+    }
+    hours = float(profile.hours_logged or 0) if profile else 0
+    badges = []
+    if hours >= 1:
+        badges.append(_badge("1h", "Helping hand", "Contributed 1 volunteer hour"))
+    if hours >= 5:
+        badges.append(_badge("5h", "Time giver", "Contributed 5 volunteer hours"))
+    if len(completed) >= 3:
+        badges.append(_badge("3", "Reliable teammate", "Completed 3 volunteer shifts"))
+    if len(days) >= 3:
+        badges.append(_badge("3d", "Community regular", "Volunteered in person on 3 days"))
+
+    return schemas.VolunteerMetricsOut(
+        completed_shifts=len(completed),
+        days_volunteered=len(days),
+        badges=badges,
     )
 
 
@@ -170,6 +300,9 @@ def get_profile(
     )
 
     family = None
+    members = []
+    regs = []
+    child_members = []
     if person.household_id:
         household = db.get(models.Household, person.household_id)
         members = (
@@ -183,48 +316,46 @@ def get_profile(
             .order_by(models.Registration.created_at.desc())
             .all()
         )
+        child_members = [
+            member
+            for member in members
+            if member.household_role == "child" or member.role_primary == "member"
+        ]
         family = schemas.FamilyProfileOut(
             household_name=household.name if household else "Household",
             members=[_person_out(m) for m in members],
             registrations=[_registration_out(r) for r in regs],
+            metrics=_family_metrics(regs, child_members),
         )
 
-    ach_member = person
     is_familyish = has_role(person, "family") or has_role(person, "member") or bool(
         person.household_id
     )
-    if is_familyish and person.household_id:
-        kid = (
-            db.query(models.Person)
-            .filter(
-                models.Person.household_id == person.household_id,
-                models.Person.role_primary == "member",
-            )
-            .first()
-        )
-        if kid:
-            ach_member = kid
+    achievement_members = child_members or ([person] if is_familyish else [])
+    achievement_member_ids = [member.id for member in achievement_members]
+    ach_member = achievement_members[0] if achievement_members else person
 
     achievements = (
         db.query(models.Achievement)
-        .filter(models.Achievement.member_person_id == ach_member.id)
+        .filter(models.Achievement.member_person_id.in_(achievement_member_ids))
         .order_by(models.Achievement.created_at.desc())
         .all()
-        if is_familyish
+        if achievement_member_ids
         else []
     )
     goals = (
         db.query(models.Goal)
-        .filter(models.Goal.member_person_id == ach_member.id)
+        .filter(models.Goal.member_person_id.in_(achievement_member_ids))
         .order_by(models.Goal.created_at.desc())
         .all()
-        if is_familyish
+        if achievement_member_ids
         else []
     )
     achievement = None
     if is_familyish:
         achievement = schemas.AchievementProfileOut(
             member=_person_out(ach_member),
+            members=[_person_out(member) for member in achievement_members],
             achievements=[_achievement_out(a) for a in achievements],
             goals=[_goal_out(g) for g in goals],
         )
@@ -251,6 +382,7 @@ def get_profile(
         commitments=[_commitment_out(c) for c in commitments],
         receipts=[schemas.ReceiptOut.model_validate(r) for r in receipts],
         badges=[schemas.ImpactBadgeOut.model_validate(b) for b in badges],
+        metrics=_impact_metrics(commitments, receipts),
     )
 
     profile = (
@@ -283,6 +415,7 @@ def get_profile(
         points_balance=(profile.points_balance or 0) if profile else 0,
         points_spent=(profile.points_spent or 0) if profile else 0,
         rewards=[schemas.RewardOut(**r) for r in REWARDS],
+        metrics=_volunteer_metrics(profile, claims),
     )
 
     events = (
@@ -323,23 +456,99 @@ def get_profile(
                     title=r.activity_title or "Class",
                     date=r.session_date,
                     kind="class",
+                    person_name=r.member_name or "",
                     detail=r.member_name or "",
                     status=r.status_label or r.status,
                 )
             )
-    for c in claims:
-        shift = db.get(models.VolunteerShift, c.shift_id)
-        # Calendar is for dated in-person work only; remote tasks are async
-        if not shift or shift.remote or not shift.scheduled_date:
+    calendar_people = members or [person]
+    calendar_person_by_id = {calendar_person.id: calendar_person for calendar_person in calendar_people}
+    calendar_person_ids = list(calendar_person_by_id)
+
+    calendar_profiles = (
+        db.query(models.VolunteerProfile)
+        .filter(models.VolunteerProfile.person_id.in_(calendar_person_ids))
+        .all()
+        if calendar_person_ids
+        else []
+    )
+    calendar_profile_by_id = {profile.id: profile for profile in calendar_profiles}
+    calendar_profile_ids = list(calendar_profile_by_id)
+    calendar_claims = (
+        db.query(models.VolunteerShiftClaim)
+        .filter(models.VolunteerShiftClaim.volunteer_profile_id.in_(calendar_profile_ids))
+        .all()
+        if calendar_profile_ids
+        else []
+    )
+    for claim in calendar_claims:
+        shift = claim.shift
+        if not shift:
             continue
+        if shift.remote:
+            if claim.status != "completed" or not claim.completed_at:
+                continue
+            event_date = claim.completed_at.date()
+            mode = "Remote"
+        else:
+            if not shift.scheduled_date:
+                continue
+            event_date = shift.scheduled_date
+            mode = "In person"
+        volunteer_profile = calendar_profile_by_id.get(claim.volunteer_profile_id)
+        volunteer_person = (
+            calendar_person_by_id.get(volunteer_profile.person_id)
+            if volunteer_profile
+            else None
+        )
+        volunteer_name = volunteer_person.name if volunteer_person else "Volunteer"
         calendar_events.append(
             schemas.CalendarEventOut(
-                id=f"vol-{c.id}",
+                id=f"vol-{claim.id}",
                 title=shift.title,
-                date=shift.scheduled_date,
+                date=event_date,
                 kind="volunteer",
-                detail=f"In person · {shift.duration_min} min",
-                status=status_label(c.status),
+                person_name=volunteer_name,
+                detail=f"{volunteer_name} · {mode} · {shift.duration_min} min",
+                status=status_label(claim.status),
+            )
+        )
+
+    calendar_commitments = (
+        db.query(models.DonationCommitment)
+        .filter(models.DonationCommitment.supporter_person_id.in_(calendar_person_ids))
+        .all()
+        if calendar_person_ids
+        else []
+    )
+    calendar_commitment_by_id = {
+        commitment.id: commitment for commitment in calendar_commitments
+    }
+    calendar_commitment_ids = list(calendar_commitment_by_id)
+    calendar_receipts = (
+        db.query(models.DonationReceipt)
+        .filter(models.DonationReceipt.commitment_id.in_(calendar_commitment_ids))
+        .all()
+        if calendar_commitment_ids
+        else []
+    )
+    for receipt in calendar_receipts:
+        if not receipt.paid_at:
+            continue
+        commitment = calendar_commitment_by_id.get(receipt.commitment_id)
+        if not commitment:
+            continue
+        supporter = calendar_person_by_id.get(commitment.supporter_person_id)
+        supporter_name = supporter.name if supporter else "Supporter"
+        calendar_events.append(
+            schemas.CalendarEventOut(
+                id=f"donation-{receipt.id}",
+                title=f"Donation · HKD {receipt.amount_hkd:,.0f}",
+                date=receipt.paid_at.date(),
+                kind="donation",
+                person_name=supporter_name,
+                detail=f"{supporter_name} · {commitment.fund_category}",
+                status="Paid",
             )
         )
     for h in hires:
@@ -347,7 +556,6 @@ def get_profile(
         pass
     calendar_events.sort(key=lambda e: e.date)
 
-    roles = parse_roles(person)
     tabs = _visible_tabs(person.role_primary)
     home_tab = _home_tab(person.role_primary)
     next_action = _next_action(

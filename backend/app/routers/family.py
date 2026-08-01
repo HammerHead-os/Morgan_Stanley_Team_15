@@ -32,6 +32,7 @@ def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
         feedback=reg.feedback,
         activity_title=reg.activity.title if reg.activity else None,
         activity_location=reg.activity.location if reg.activity else None,
+        activity_goal=reg.activity.goal if reg.activity else None,
         member_name=reg.member.name if reg.member else None,
     )
 
