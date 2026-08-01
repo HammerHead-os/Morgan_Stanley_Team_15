@@ -254,7 +254,7 @@
   window.Love21.api("/api/instagram/posts")
     .then(function (feed) {
       if (!feed || !feed.connected) return;
-      if (feed.pinned && feed.pinned.length === 3) {
+      if (feed.pinned && feed.pinned.length) {
         renderRow("pinned", feed.pinned);
       }
       renderRow("recent", feed.recent);
