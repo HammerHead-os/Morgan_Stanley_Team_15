@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">Board member portrait placeholder</title>
+  <desc id="desc">Simple person silhouette</desc>
+  <rect width="320" height="320" fill="#eef3f1"/>
+  <circle cx="160" cy="115" r="58" fill="#0d7c6b" opacity=".22"/>
+  <path d="M57 287c8-69 47-108 103-108s95 39 103 108" fill="#0d7c6b" opacity=".22"/>
+</svg>

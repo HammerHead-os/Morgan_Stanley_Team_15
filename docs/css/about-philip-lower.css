@@ -1,0 +1,595 @@
+/* About us detail page (ported from team15-philip). */
+.page-about-v2 .editorial-hero { padding: clamp(3.5rem, 8vw, 7rem) 0; background: #fff; }
+.page-about-v2 .editorial-hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr); gap: clamp(2rem, 6vw, 6rem); align-items: center; }
+.page-about-v2 .editorial-hero figure, .page-about-v2 .organisation-chart, .page-about-v2 .finance-figure { margin: 0; }
+.page-about-v2 .editorial-hero img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius); }
+.page-about-v2 .hero-copy { max-width: 42rem; font-size: 1.14rem; }
+.page-about-v2 .section-index { position: sticky; top: var(--nav-h); z-index: 10; background: rgba(255,255,255,.96); border-block: 1px solid var(--line); }
+.page-about-v2 .section-index .container { display: flex; gap: 1.35rem; overflow-x: auto; padding-block: .9rem; white-space: nowrap; }
+.page-about-v2 .section-index a { color: var(--ink-soft); font-size: .84rem; }
+.page-about-v2 .detail-section { padding: clamp(4rem, 9vw, 7.5rem) 0; }
+.page-about-v2 .detail-section-muted { background: var(--paper-deep); }
+.page-about-v2 .detail-split { display: grid; grid-template-columns: minmax(160px, .28fr) minmax(0, 1fr); gap: clamp(2rem, 7vw, 8rem); }
+.page-about-v2 .detail-label { font-size: .85rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .08em; }
+.page-about-v2 .detail-label span { display: block; margin-bottom: .4rem; color: var(--teal); font-weight: 700; }
+.page-about-v2 .detail-label p { margin: 0; }
+.page-about-v2 .detail-lead { margin-top: 0; color: var(--ink); font-size: clamp(1.25rem, 2.2vw, 1.8rem); line-height: 1.35; }
+.page-about-v2 .prose-columns { columns: 2; column-gap: 2.5rem; }
+.page-about-v2 .prose-columns p { break-inside: avoid; }
+.page-about-v2 .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 2.5rem 0; background: var(--line); border: 1px solid var(--line); }
+.page-about-v2 .stat-row > div { padding: 1.2rem; background: #fff; }
+.page-about-v2 .stat-row strong, .page-about-v2 .stat-row span { display: block; }
+.page-about-v2 .stat-row strong { color: var(--ink); font-size: 1.5rem; }
+.page-about-v2 .stat-row span { color: var(--ink-soft); font-size: .82rem; }
+.page-about-v2 .financial-dashboard { display: grid; gap: 1.25rem; margin: 2rem 0; padding: clamp(1.25rem, 3vw, 2.5rem); background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+.page-about-v2 .financial-dashboard-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: end; }
+.page-about-v2 .financial-dashboard-heading h3 { margin: .25rem 0 0; }
+.page-about-v2 .financial-dashboard-heading p { max-width: 16rem; margin: 0; font-size: .83rem; }
+.page-about-v2 .finance-chart-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+.page-about-v2 .finance-figure { padding: 1rem; border: 1px solid var(--line); }
+.page-about-v2 canvas { width: 100%; display: block; }
+.page-about-v2 .finance-legend { display: grid; gap: .35rem; padding: 0; margin: .8rem 0 0; list-style: none; color: var(--ink-soft); font-size: .82rem; }
+.page-about-v2 .finance-legend i { display: inline-block; width: .65rem; height: .65rem; margin-right: .4rem; background: var(--teal); }
+.page-about-v2 .finance-legend .legend-yellow { background: var(--gold); }
+.page-about-v2 .finance-legend .legend-red { background: var(--coral); }
+.page-about-v2 .finance-comparison { padding: 1rem; margin: 0; border: 1px solid var(--line); }
+.page-about-v2 .finance-comparison figcaption { color: var(--ink-soft); font-size: .8rem; }
+.page-about-v2 .report-table { display: grid; gap: 1px; margin-block: 1.5rem; background: var(--line); border: 1px solid var(--line); }
+.page-about-v2 .report-table a { display: grid; grid-template-columns: 1fr auto auto; gap: 1rem; padding: 1rem 1.25rem; color: var(--ink); background: #fff; }
+.page-about-v2 .report-table small { color: var(--ink-soft); }
+.page-about-v2 .inline-note { margin-top: 1.5rem; padding: 1.25rem; border-left: 3px solid var(--teal); background: #fff; }
+.page-about-v2 .inline-note p { margin: .35rem 0; }
+.page-about-v2 .programme-list { display: grid; gap: 1rem; }
+.page-about-v2 .programme-list article { display: grid; grid-template-columns: 12rem 1fr; gap: 1.5rem; padding: 1rem; border: 1px solid var(--line); background: #fff; }
+.page-about-v2 .programme-list img { width: 100%; height: 100%; min-height: 11rem; object-fit: cover; }
+.page-about-v2 .programme-list h3 { margin: .35rem 0; }
+.page-about-v2 .staff-layout, .page-about-v2 .board-layout { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+.page-about-v2 .staff-layout img, .page-about-v2 .organisation-chart img { width: 100%; border-radius: var(--radius); }
+.page-about-v2 .board-grid, .page-about-v2 .social-wall { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+.page-about-v2 .board-grid a, .page-about-v2 .social-wall a { color: var(--ink); font-size: .82rem; }
+.page-about-v2 .board-grid img, .page-about-v2 .social-wall img { display: block; width: 100%; aspect-ratio: 1; margin-bottom: .45rem; object-fit: cover; border-radius: var(--radius); }
+.page-about-v2 .social-wall img { aspect-ratio: 4 / 3; }
+.page-about-v2 .source-note { margin-top: 1.5rem; font-size: .8rem; }
+@media (max-width: 760px) {
+  .page-about-v2 .editorial-hero-grid, .page-about-v2 .detail-split, .page-about-v2 .staff-layout, .page-about-v2 .board-layout { grid-template-columns: 1fr; }
+  .page-about-v2 .detail-label { display: flex; gap: .6rem; align-items: center; }
+  .page-about-v2 .detail-label span { margin: 0; }
+  .page-about-v2 .prose-columns { columns: 1; }
+  .page-about-v2 .stat-row { grid-template-columns: repeat(2, 1fr); }
+  .page-about-v2 .finance-chart-grid { grid-template-columns: 1fr; }
+  .page-about-v2 .programme-list article { grid-template-columns: 1fr; }
+  .page-about-v2 .programme-list img { height: 13rem; }
+  .page-about-v2 .report-table a { grid-template-columns: 1fr; gap: .25rem; }
+}
+
+/* About us: use the same quiet, line-led system as Contact. */
+.page-about-v2,
+.page-about-v2 .editorial-hero,
+.page-about-v2 .detail-section,
+.page-about-v2 .detail-section-muted {
+  background: var(--paper);
+}
+
+.page-about-v2 .editorial-hero {
+  padding: 3rem 0 2.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.page-about-v2 .editorial-hero-grid {
+  grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.75fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.page-about-v2 .editorial-hero img {
+  border-radius: var(--radius);
+}
+
+.page-about-v2 .section-index {
+  background: var(--paper);
+  border-top: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Keep the visual sequence aligned with the section index. */
+.page-about-v2.about-lower-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-about-v2 .section-index { order: 0; }
+.page-about-v2 #story { order: 1; }
+.page-about-v2 #programmes { order: 2; }
+.page-about-v2 #reports { order: 3; }
+.page-about-v2 #team { order: 4; }
+.page-about-v2 #instagram { order: 5; }
+
+.page-about-v2 .detail-section {
+  padding: clamp(3rem, 7vw, 5rem) 0;
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: calc(var(--nav-h) + 3.2rem);
+}
+
+.page-about-v2 .detail-split {
+  gap: clamp(1.5rem, 5vw, 4rem);
+}
+
+.page-about-v2 .detail-lead {
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+}
+
+.page-about-v2 .stat-row,
+.page-about-v2 .report-table {
+  gap: 1rem;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.page-about-v2 .stat-row > div,
+.page-about-v2 .report-table a {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(20, 35, 31, 0.06);
+}
+
+.page-about-v2 .stat-row > div + div,
+.page-about-v2 .report-table a + a {
+  border-left: 1px solid var(--line);
+}
+
+.page-about-v2 .report-table {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.page-about-v2 .report-table .report-link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 8.5rem;
+  color: var(--ink);
+}
+
+.page-about-v2 .report-link small {
+  margin-top: auto;
+}
+
+.page-about-v2 .report-link::after {
+  content: "Open PDF ↗";
+  margin-top: 0.8rem;
+  color: var(--teal-deep);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.page-about-v2 .financial-dashboard,
+.page-about-v2 .finance-figure,
+.page-about-v2 .finance-comparison,
+.page-about-v2 .inline-note,
+.page-about-v2 .programme-list article,
+.page-about-v2 .team-staff-layout,
+.page-about-v2 .board-directory,
+.page-about-v2 .board-portrait-grid a,
+.page-about-v2 .organisation-chart,
+.page-about-v2 .social-wall a {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: 0 8px 24px rgba(20, 35, 31, 0.06);
+}
+
+.page-about-v2 .programme-list article,
+.page-about-v2 .team-staff-layout {
+  overflow: hidden;
+}
+
+.page-about-v2 .programme-list article {
+  padding: 1rem;
+}
+
+.page-about-v2 .programme-list img {
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.page-about-v2 .text-link {
+  color: var(--teal-deep);
+  font-weight: 700;
+}
+
+.page-about-v2 .team-staff-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(230px, 0.9fr);
+  gap: 1.5rem;
+  padding: 1.4rem;
+}
+
+.page-about-v2 .team-staff-layout > img {
+  width: 100%;
+  height: 100%;
+  min-height: 15rem;
+  object-fit: cover;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.page-about-v2 .team-governance {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.page-about-v2 .board-directory {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 1.5rem 0;
+  padding: 1rem;
+}
+
+.page-about-v2 .board-directory a {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+}
+
+.page-about-v2 .board-portrait-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.page-about-v2 .board-subtitle,
+.page-about-v2 .instagram-row-title {
+  margin: 1.5rem 0 0.75rem;
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.page-about-v2 .board-portrait-grid a {
+  display: block;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.page-about-v2 .board-portrait-grid img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-bottom: 1px solid var(--line);
+}
+
+.page-about-v2 .board-portrait-grid span {
+  display: block;
+  padding: 0.7rem 0.8rem;
+}
+
+.page-about-v2 .organisation-chart {
+  margin-top: 1.5rem;
+  padding: 1rem;
+}
+
+.page-about-v2 .organisation-chart img {
+  display: block;
+  width: 100%;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.page-about-v2 .organisation-chart figcaption {
+  padding-top: 0.75rem;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+.page-about-v2 .social-wall {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.page-about-v2 .instagram-row + .instagram-row {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.page-about-v2 .social-wall a {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.page-about-v2 .social-wall img {
+  border-radius: 0;
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.page-about-v2 .social-wall span {
+  display: block;
+  padding: 0.75rem 0.8rem;
+}
+
+/* Instagram post anatomy, adapted to the Love 21 card system. */
+.page-about-v2 .social-wall .instagram-post-card {
+  display: block;
+  border-color: rgba(20, 35, 31, 0.14);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(20, 35, 31, 0.08);
+  transition: transform var(--ease), box-shadow var(--ease);
+}
+
+.page-about-v2 .social-wall .instagram-post-card:hover,
+.page-about-v2 .social-wall .instagram-post-card:focus-visible {
+  color: var(--ink);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(20, 35, 31, 0.13);
+}
+
+.page-about-v2 .instagram-post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 3.8rem;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.page-about-v2 .social-wall .instagram-avatar {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  margin: 0;
+  padding: 0.16rem;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border: 2px solid #e85d4c;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.page-about-v2 .instagram-account {
+  min-width: 0;
+  margin-right: auto;
+  line-height: 1.15;
+}
+
+.page-about-v2 .instagram-account strong,
+.page-about-v2 .instagram-account span {
+  display: block;
+  padding: 0;
+}
+
+.page-about-v2 .instagram-account strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+}
+
+.page-about-v2 .instagram-account span {
+  margin-top: 0.2rem;
+  color: var(--ink-soft);
+  font-size: 0.64rem;
+  font-weight: 500;
+}
+
+.page-about-v2 .social-wall .instagram-post-media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  margin: 0;
+  object-fit: cover;
+  border: 0;
+  border-radius: 0;
+}
+
+.page-about-v2 .instagram-post-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.75rem 0.3rem;
+}
+
+.page-about-v2 .instagram-post-actions > div {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.page-about-v2 .social-wall .instagram-ui-icon {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  padding: 0;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.page-about-v2 .instagram-post-header > .instagram-ui-icon {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.58;
+}
+
+.page-about-v2 .instagram-post-copy {
+  padding: 0.2rem 0.75rem 0.85rem;
+}
+
+.page-about-v2 .instagram-post-copy .instagram-post-meta {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0;
+  color: var(--ink);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.page-about-v2 .instagram-post-copy p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.page-about-v2 .instagram-post-copy strong {
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .page-about-v2 .stat-row > div + div {
+    border-left: 1px solid var(--line);
+  }
+  .page-about-v2 .report-table {
+    grid-template-columns: 1fr;
+  }
+  .page-about-v2 .team-staff-layout,
+  .page-about-v2 .board-portrait-grid,
+  .page-about-v2 .social-wall {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .page-about-v2 .team-staff-layout > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .page-about-v2 .social-wall {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Place the 01 heading inside the first story panel instead of above it. */
+.about-page-content .story-section-label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(20, 35, 31, 0.12);
+}
+
+.about-page-content .story-section-label > span {
+  color: var(--teal);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.about-page-content .story-section-title {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about-page-content .about-story-intro {
+  margin: 0.45rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.about-page-content #pixel-story > .story-beat {
+  align-items: flex-start;
+  padding-top: clamp(1rem, 3vh, 1.75rem);
+}
+
+.about-page-content #pixel-story > .story-beat .story-copy {
+  opacity: 1;
+  transform: none;
+}
+
+.about-top-photo {
+  flex: 0 1 340px;
+  width: min(34vw, 340px);
+  margin: 0;
+}
+
+.about-top-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.about-top-inner {
+  align-items: center;
+}
+
+.section-index {
+  background: rgba(247, 250, 248, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.about-page-content .about-sensory-section .sim-launch-wide {
+  max-width: none;
+}
+
+/* Use the header's single 1px rule above the secondary navigation. */
+.about-story-progress {
+  display: none;
+}
+
+/* Neutralize the old alternating-card rules that conflict with this layout. */
+.page-about-v2 .programme-list article,
+.page-about-v2 .programme-list article:nth-child(even) {
+  grid-template-columns: minmax(210px, 0.72fr) minmax(0, 1.28fr);
+  gap: 0;
+  padding: 0;
+}
+
+.page-about-v2 .programme-list article:nth-child(even) img {
+  order: 0;
+}
+
+.page-about-v2 .programme-list article > div {
+  padding: clamp(1.4rem, 3vw, 2.4rem);
+}
+
+.page-about-v2 .programme-list img {
+  min-height: 230px;
+  border-radius: 0;
+}
+
+@media (max-width: 860px) {
+  .about-top-inner {
+    align-items: flex-start;
+  }
+
+  .about-top-photo {
+    width: 100%;
+    max-width: 34rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-about-v2 .programme-list article,
+  .page-about-v2 .programme-list article:nth-child(even) {
+    grid-template-columns: 1fr;
+  }
+
+  .page-about-v2 .programme-list img {
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+}
