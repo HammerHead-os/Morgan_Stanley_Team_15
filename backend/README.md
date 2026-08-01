@@ -33,3 +33,6 @@ Login: `POST /api/auth/demo-login` `{ "email": "..." }` → send `X-Demo-Token: 
 - `PATCH /api/impact/commitments/{id}` — pause / change / renew
 - `GET /api/volunteers/shifts` · `POST /api/volunteers/claims`
 - `PATCH /api/prefs` · `POST /api/prefs/opt-out/{token}`
+- `GET /api/instagram/posts` — cached Instagram cards for the About Us page
+
+Instagram account setup: see [INSTAGRAM_API_SETUP.md](INSTAGRAM_API_SETUP.md).
