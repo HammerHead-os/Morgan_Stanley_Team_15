@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Love 21 Profile</title>
-    <link rel="stylesheet" href="../css/styles.css?v=points2" />
+    <link rel="stylesheet" href="../css/styles.css?v=passport1" />
   </head>
   <body data-hub="profile">
     <nav class="site-nav" aria-label="Primary">
@@ -141,8 +141,64 @@
 
     <main class="section section-tight" data-profile-root>
       <div class="container profile-layout">
+        <section class="passport-selector-section" aria-labelledby="passport-selector-title">
+          <div class="passport-section-heading">
+            <div>
+              <p class="eyebrow">My passports</p>
+              <h2 id="passport-selector-title">Choose your journey</h2>
+            </div>
+            <p class="muted">
+              Each passport keeps a separate record of your activities and achievements.
+            </p>
+          </div>
+          <nav class="passport-selector" aria-label="Choose a passport" role="tablist">
+            <button class="passport-selector-button active" type="button" role="tab" aria-selected="true" data-role-passport="family">
+              <span class="passport-selector-mark" aria-hidden="true">F</span>
+              <span><strong>Family</strong><small>18 activities</small></span>
+              <span class="passport-selector-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="passport-selector-button" type="button" role="tab" aria-selected="false" data-role-passport="volunteer">
+              <span class="passport-selector-mark" aria-hidden="true">V</span>
+              <span><strong>Volunteer</strong><small>42 hours given</small></span>
+              <span class="passport-selector-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="passport-selector-button" type="button" role="tab" aria-selected="false" data-role-passport="donor">
+              <span class="passport-selector-mark" aria-hidden="true">D</span>
+              <span><strong>Donor</strong><small>HKD 6,800 donated</small></span>
+              <span class="passport-selector-arrow" aria-hidden="true">↗</span>
+            </button>
+          </nav>
+        </section>
+
+        <section class="passport-reader" aria-live="polite">
+          <div class="passport-reader-heading">
+            <div>
+              <p class="eyebrow" data-book-kicker>Family journal</p>
+              <h2 data-book-title>Our journey together</h2>
+            </div>
+            <p class="muted" data-book-description>
+              Family activities, programmes, and milestones in one place.
+            </p>
+          </div>
+          <div class="passport-book-stage" data-book-stage data-role="family">
+            <div class="passport-book-cover" aria-hidden="true"></div>
+            <div class="passport-book" data-book-spread></div>
+            <button class="passport-page-arrow passport-page-arrow-prev" type="button" data-page-prev aria-label="Previous passport pages">
+              <span aria-hidden="true">←</span>
+            </button>
+            <button class="passport-page-arrow passport-page-arrow-next" type="button" data-page-next aria-label="Next passport pages">
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+          <div class="passport-reader-controls">
+            <span data-page-label>Pages 01–02 of 04</span>
+            <div class="passport-page-dots" data-page-dots aria-hidden="true"></div>
+            <p>Use the arrows to turn the pages</p>
+          </div>
+        </section>
+
         <section
-          class="panel-soft"
+          class="panel-soft mt-2"
           data-actions-panel
           data-tour
           data-tour-title="Quick actions"
@@ -338,6 +394,7 @@
 
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/journal.js"></script>
     <script src="../js/profile.js?v=points2"></script>
     <script src="../js/hub-demo.js"></script>
   </body>
