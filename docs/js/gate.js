@@ -82,25 +82,51 @@
     if (e.key === "Escape" && overlay && !overlay.hidden) closeIam();
   });
 
-  const panel = document.querySelector(".iam-panel");
-  if (panel) {
-    panel.addEventListener("click", function (e) {
-      const backBtn = e.target.closest("[data-iam-sub-back]");
-      if (backBtn) {
-        showMainStep();
-        return;
-      }
-      const stepBtn = e.target.closest("[data-role-step]");
-      if (stepBtn) {
-        showSubStep(stepBtn.getAttribute("data-role-step"));
-        return;
-      }
-      const roleBtn = e.target.closest("[data-role]");
-      if (!roleBtn) return;
-      const role = roleBtn.getAttribute("data-role");
-      if (!ROLE_PAGES[role]) return;
-      localStorage.setItem(ROLE_KEY, role);
-      window.location.href = ROLE_PAGES[role];
+  document.addEventListener("click", function (e) {
+    const backBtn = e.target.closest("[data-iam-sub-back]");
+    if (backBtn) {
+      showMainStep();
+      return;
+    }
+    const stepBtn = e.target.closest("[data-role-step]");
+    if (stepBtn) {
+      showSubStep(stepBtn.getAttribute("data-role-step"));
+      return;
+    }
+    const roleBtn = e.target.closest("[data-role]");
+    if (!roleBtn) return;
+    const role = roleBtn.getAttribute("data-role");
+    if (!ROLE_PAGES[role]) return;
+    localStorage.setItem(ROLE_KEY, role);
+    window.location.href = ROLE_PAGES[role];
+  });
+
+  const homeDropdown = document.querySelector("[data-home-dropdown]");
+  const homeDropdownToggle = document.querySelector("[data-home-dropdown-toggle]");
+  const homeDropdownMenu = document.querySelector("[data-home-dropdown-menu]");
+
+  function closeHomeDropdown() {
+    if (!homeDropdown || !homeDropdownMenu) return;
+    homeDropdownMenu.hidden = true;
+    homeDropdown.classList.remove("open");
+    if (homeDropdownToggle) homeDropdownToggle.setAttribute("aria-expanded", "false");
+  }
+
+  if (homeDropdown && homeDropdownToggle && homeDropdownMenu) {
+    homeDropdownToggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const willOpen = homeDropdownMenu.hidden;
+      homeDropdownMenu.hidden = !willOpen;
+      homeDropdown.classList.toggle("open", willOpen);
+      homeDropdownToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    });
+
+    document.addEventListener("click", function (e) {
+      if (!homeDropdown.contains(e.target)) closeHomeDropdown();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeHomeDropdown();
     });
   }
 
