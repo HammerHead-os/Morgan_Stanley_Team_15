@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person, optional_person
+from ..posthog_client import get_posthog_client
 
 router = APIRouter(prefix="/api/hire", tags=["hire"])
 
@@ -41,6 +42,12 @@ def hire_creator(
         )
     db.commit()
     db.refresh(enquiry)
+    client = get_posthog_client()
+    if client:
+        client.capture(
+            "hire_enquiry_submitted",
+            properties={"has_preferred_date": bool(enquiry.preferred_date)},
+        )
     return enquiry
 
 

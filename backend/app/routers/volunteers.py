@@ -7,6 +7,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
 from ..points import REWARDS, points_for_minutes, reward_by_id
+from ..posthog_client import get_posthog_client
 
 router = APIRouter(prefix="/api/volunteers", tags=["volunteers"])
 
@@ -109,6 +110,9 @@ def onboard(
     )
     db.commit()
     db.refresh(profile)
+    client = get_posthog_client()
+    if client:
+        client.capture("volunteer_onboarded")
     return profile
 
 
@@ -159,6 +163,12 @@ def claim_shift(
     db.commit()
     db.refresh(claim)
     claim.shift = shift
+    client = get_posthog_client()
+    if client:
+        client.capture(
+            "volunteer_shift_claimed",
+            properties={"is_remote": bool(shift.remote), "duration_min": shift.duration_min},
+        )
     return _claim_out(claim)
 
 
@@ -216,6 +226,12 @@ def complete_claim(
     db.commit()
     db.refresh(claim)
     claim.shift = shift
+    client = get_posthog_client()
+    if client:
+        client.capture(
+            "volunteer_shift_completed",
+            properties={"hours_logged": hours, "points_awarded": pts},
+        )
     return _claim_out(claim)
 
 
@@ -248,6 +264,9 @@ def redeem_reward(
     )
     db.commit()
     db.refresh(profile)
+    client = get_posthog_client()
+    if client:
+        client.capture("reward_redeemed", properties={"points_cost": reward["cost"]})
     return schemas.RedeemOut(
         ok=True,
         reward_id=reward["id"],

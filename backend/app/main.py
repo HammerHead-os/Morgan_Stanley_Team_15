@@ -1,7 +1,10 @@
+from contextlib import asynccontextmanager, nullcontext
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
+from sqlalchemy.orm import Session
 
 
 class NoCacheStaticFiles(StaticFiles):
@@ -28,13 +31,65 @@ from .routers import (
     prefs,
     volunteers,
 )
+from .database import SessionLocal
+from .posthog_client import get_posthog_client, init_posthog, shutdown_posthog
 from .seed import init_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize shared services before serving requests and flush on shutdown."""
+    init_posthog()
+    init_db()
+    yield
+    shutdown_posthog()
+
+
+class PostHogRequestContextMiddleware:
+    """Bind the authenticated person to the shared PostHog client for each request."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        client = get_posthog_client()
+        person_id = self._authenticated_person_id(scope)
+        context = client.new_context(fresh=True) if client else nullcontext()
+        with context:
+            if client and person_id is not None:
+                client.identify_context(str(person_id))
+            await self.app(scope, receive, send)
+
+    @staticmethod
+    def _authenticated_person_id(scope) -> int | None:
+        headers = dict(scope.get("headers", []))
+        token = headers.get(b"x-demo-token", b"").decode("utf-8")
+        try:
+            person_id = int(token)
+        except (TypeError, ValueError):
+            return None
+
+        db: Session = SessionLocal()
+        try:
+            from .models import Person
+
+            return person_id if db.get(Person, person_id) else None
+        finally:
+            db.close()
+
 
 app = FastAPI(
     title="Love 21 API",
     description="Part 2 — Disconnected Journeys / Love 21 Profile",
     version="0.2.0",
+    lifespan=lifespan,
 )
+
+app.add_middleware(PostHogRequestContextMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -53,11 +108,6 @@ app.include_router(volunteers.router)
 app.include_router(prefs.router)
 app.include_router(profile.router)
 app.include_router(hire.router)
-
-
-@app.on_event("startup")
-def on_startup():
-    init_db()
 
 
 @app.get("/api/health")

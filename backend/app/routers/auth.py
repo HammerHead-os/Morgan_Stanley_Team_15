@@ -4,9 +4,30 @@ from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..database import get_db
+from ..posthog_client import get_posthog_client
 from ..security import hash_password, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+
+def identify_person(person: models.Person) -> None:
+    """Set safe person properties when authentication establishes an identity."""
+    client = get_posthog_client()
+    if client is None:
+        return
+
+    client.identify_context(str(person.id))
+    client.set(
+        distinct_id=str(person.id),
+        properties={
+            "email": person.email,
+            "name": person.name,
+            "role_primary": person.role_primary,
+            "roles": person.roles,
+            "language": person.language,
+        },
+    )
+
 
 DEMO_ACCOUNTS = {
     "carer@chen.demo": "Jamie · Mom (family + volunteer + donor)",
@@ -29,6 +50,10 @@ def demo_login(body: schemas.DemoLoginIn, db: Session = Depends(get_db)):
     person = db.query(models.Person).filter(models.Person.email == body.email).first()
     if not person:
         raise HTTPException(status_code=404, detail="Demo account not found")
+    identify_person(person)
+    client = get_posthog_client()
+    if client:
+        client.capture("demo_login_completed", properties={"login_method": "demo_account"})
     return schemas.DemoLoginOut(
         person=schemas.PersonOut.model_validate(person),
         token=str(person.id),
@@ -62,6 +87,10 @@ def signup(body: schemas.SignupIn, db: Session = Depends(get_db)):
     person.profile_code = f"L21-{person.id:05d}"
     db.commit()
     db.refresh(person)
+    identify_person(person)
+    client = get_posthog_client()
+    if client:
+        client.capture("account_created", properties={"signup_method": "password"})
 
     return schemas.DemoLoginOut(
         person=schemas.PersonOut.model_validate(person),
@@ -79,6 +108,10 @@ def login(body: schemas.LoginIn, db: Session = Depends(get_db)):
     )
     if not person or not verify_password(body.password, person.password_hash):
         raise HTTPException(status_code=401, detail="Wrong email/phone or password")
+    identify_person(person)
+    client = get_posthog_client()
+    if client:
+        client.capture("login_completed", properties={"login_method": "password"})
     return schemas.DemoLoginOut(
         person=schemas.PersonOut.model_validate(person),
         token=str(person.id),

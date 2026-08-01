@@ -7,6 +7,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
 from ..labels import status_label
+from ..posthog_client import get_posthog_client
 
 router = APIRouter(prefix="/api/impact", tags=["impact"])
 
@@ -102,6 +103,16 @@ def start_commitment(
     )
     db.commit()
     db.refresh(commitment)
+    client = get_posthog_client()
+    if client:
+        client.capture(
+            "donation_commitment_started",
+            properties={
+                "amount_hkd": commitment.amount_hkd,
+                "fund_category": commitment.fund_category,
+                "cadence": commitment.cadence,
+            },
+        )
     return _commitment_out(commitment)
 
 
@@ -134,6 +145,12 @@ def update_commitment(
     )
     db.commit()
     db.refresh(commitment)
+    client = get_posthog_client()
+    if client:
+        client.capture(
+            "donation_commitment_updated",
+            properties={"status": commitment.status, "cadence": commitment.cadence},
+        )
     return _commitment_out(commitment)
 
 

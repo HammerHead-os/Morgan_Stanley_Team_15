@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
+from ..posthog_client import get_posthog_client
 
 router = APIRouter(prefix="/api/prefs", tags=["prefs"])
 
@@ -43,6 +44,16 @@ def update_prefs(
         prefs.email_on = True
     db.commit()
     db.refresh(prefs)
+    client = get_posthog_client()
+    if client:
+        client.capture(
+            "communication_preferences_updated",
+            properties={
+                "email_enabled": prefs.email_on,
+                "sms_enabled": prefs.sms_on,
+                "whatsapp_enabled": prefs.whatsapp_on,
+            },
+        )
     return schemas.PrefsOut(
         email_on=prefs.email_on,
         sms_on=prefs.sms_on,

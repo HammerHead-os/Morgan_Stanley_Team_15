@@ -7,6 +7,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
 from ..labels import status_label
+from ..posthog_client import get_posthog_client
 
 router = APIRouter(prefix="/api/achievements", tags=["achievements"])
 
@@ -88,6 +89,9 @@ def create_goal(
     )
     db.commit()
     db.refresh(goal)
+    client = get_posthog_client()
+    if client:
+        client.capture("goal_created", properties={"has_target_date": bool(goal.target_date)})
     return _goal_out(goal)
 
 
@@ -134,6 +138,12 @@ def update_consent(
         ach.status = "coach_approved"
     db.commit()
     db.refresh(ach)
+    client = get_posthog_client()
+    if client:
+        client.capture(
+            "achievement_share_consent_updated",
+            properties={"share_consent": ach.share_consent, "achievement_status": ach.status},
+        )
     return _achievement_out(ach)
 
 
@@ -159,4 +169,7 @@ def coach_approve(
     )
     db.commit()
     db.refresh(ach)
+    client = get_posthog_client()
+    if client:
+        client.capture("achievement_coach_approved", properties={"achievement_status": ach.status})
     return _achievement_out(ach)
