@@ -64,6 +64,58 @@
     ensureLink("Contact", pagePrefix + "contact.html");
   }
 
+  function paintSharedSubpageFooter() {
+    if (!window.location.pathname.includes("/pages/")) return;
+    const footer = qs(".site-footer");
+    if (!footer) return;
+
+    footer.innerHTML =
+      '<div class="footer-grid">' +
+      '<div class="footer-belief-block">' +
+      '<div class="footer-brand">Love 21 Foundation</div>' +
+      '<p class="footer-belief">We believe that every neurodiverse individual deserves an opportunity to reach their highest potential.</p>' +
+      "</div>" +
+      "<div>" +
+      "<h4>Explore</h4>" +
+      '<ul class="footer-links">' +
+      '<li><a href="../index.html">Home</a></li>' +
+      '<li><a href="about.html">About</a></li>' +
+      '<li><a href="contact.html">Contact</a></li>' +
+      '<li><a href="impact.html">Donations</a></li>' +
+      '<li><a href="profile.html">Profile</a></li>' +
+      "</ul>" +
+      "</div>" +
+      "<div>" +
+      "<h4>Visit</h4>" +
+      '<p class="footer-contact">Love 21 Space · 2/F, Trium Lab<br />' +
+      "21 Luk Hop Street, San Po Kong<br />" +
+      '<a href="tel:+85223222121">+852 2322 2121</a><br />' +
+      '<a href="mailto:info@love21foundation.com">info@love21foundation.com</a></p>' +
+      '<div class="footer-social-links" aria-label="Love 21 social media">' +
+      '<a class="footer-social-link" href="https://www.instagram.com/love21foundation/" target="_blank" rel="noopener" aria-label="Love 21 on Instagram">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle class="social-icon-fill" cx="17.5" cy="6.5" r="1"></circle></svg>' +
+      "</a>" +
+      '<a class="footer-social-link" href="https://www.facebook.com/love21foundation/" target="_blank" rel="noopener" aria-label="Love 21 on Facebook">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="social-icon-fill" d="M13.7 21v-8h2.8l.4-3h-3.2V8.1c0-.9.3-1.5 1.6-1.5H17V4a22 22 0 0 0-2.4-.1c-2.4 0-4.1 1.5-4.1 4.2V10H8v3h2.5v8h3.2Z"></path></svg>' +
+      "</a>" +
+      "</div>" +
+      "</div>" +
+      "</div>" +
+      '<div class="footer-bottom">' +
+      "<span>© Love 21 Foundation · Hackathon demo for Code to Give 2026</span>" +
+      '<a href="../index.html">← Home</a>' +
+      "</div>";
+
+    const currentPage = window.location.pathname.split("/").pop();
+    footer.querySelectorAll(".footer-links a").forEach(function (link) {
+      if (link.getAttribute("href") === currentPage) {
+        link.setAttribute("aria-current", "page");
+      }
+    });
+  }
+
+  paintSharedSubpageFooter();
+
   const brandLogo = qs(".site-nav .brand-logo");
   if (brandLogo) {
     const inPagesDirectory = window.location.pathname.includes("/pages/");

@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Contact us | Love 21</title>
-    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/styles.css?v=contact-layout2" />
     <!-- PostHog Analytics -->
     <script src="../js/posthog.js"></script>
   </head>
-  <body>
+  <body class="contact-page">
     <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
@@ -69,7 +69,7 @@
     </header>
 
     <main>
-      <section class="section section-tight" id="message">
+      <section class="section section-tight contact-main-section" id="message">
         <div class="container contact-layout">
           <div class="panel-soft stack">
             <h2>Send a message</h2>
@@ -121,24 +121,24 @@
                 >
               </p>
             </div>
-            <div class="panel-soft">
+            <div class="panel-soft contact-quick-panel">
               <h3>Quick links</h3>
-              <ul class="footer-links">
-                <li><a href="activity-finder.html">Find a class</a></li>
-                <li><a href="volunteer.html">Volunteer shifts</a></li>
-                <li><a href="impact.html">Give monthly</a></li>
-                <li><a href="opportunity.html">Current needs</a></li>
-                <li><a href="profile.html">Open Profile</a></li>
+              <ul class="contact-quick-links">
+                <li><a href="activity-finder.html"><span>Find a class</span><span aria-hidden="true">→</span></a></li>
+                <li><a href="volunteer.html"><span>Volunteer shifts</span><span aria-hidden="true">→</span></a></li>
+                <li><a href="impact.html"><span>Give monthly</span><span aria-hidden="true">→</span></a></li>
+                <li><a href="opportunity.html"><span>Current needs</span><span aria-hidden="true">→</span></a></li>
+                <li><a href="profile.html"><span>Open Profile</span><span aria-hidden="true">→</span></a></li>
               </ul>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section section-tight" id="visit">
+      <section class="section section-tight contact-visit-section" id="visit">
         <div class="container">
-          <div class="section-head">
-            <h2>Visit &amp; contact</h2>
+          <div class="section-head contact-section-head">
+            <h2>Visit us</h2>
             <p class="muted">
               Love 21 Space and the office share Trium Lab on Luk Hop Street.
             </p>
@@ -156,6 +156,7 @@
             </div>
 
             <div class="contact-visit-card">
+              <h3 class="contact-location-title">Location</h3>
               <dl class="contact-visit-list">
                 <div>
                   <dt>Love 21 Space</dt>
@@ -169,39 +170,7 @@
                   <dt>Office</dt>
                   <dd>1102, 11/F, same building</dd>
                 </div>
-                <div>
-                  <dt>Phone</dt>
-                  <dd>
-                    <a href="tel:+85223222121">+852 2322 2121</a>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Email</dt>
-                  <dd>
-                    <a href="mailto:info@love21foundation.com"
-                      >info@love21foundation.com</a
-                    >
-                  </dd>
-                </div>
               </dl>
-
-              <div class="contact-visit-actions">
-                <a class="btn btn-primary" href="#message">Send a message</a>
-                <a
-                  class="btn"
-                  href="https://love21foundation.com/"
-                  target="_blank"
-                  rel="noopener"
-                  >love21foundation.com</a
-                >
-                <a
-                  class="btn"
-                  href="https://www.instagram.com/love21foundation/"
-                  target="_blank"
-                  rel="noopener"
-                  >Instagram</a
-                >
-              </div>
             </div>
           </div>
         </div>
@@ -214,7 +183,7 @@
         <div>
           <div class="footer-brand">Love 21 Foundation</div>
           <p>
-            Sport, nutrition, and support for Hong Kongâ€™s Down syndrome,
+            Sport, nutrition, and support for Hong Kong’s Down syndrome,
             autistic, and neurodiverse community.
           </p>
         </div>
@@ -241,13 +210,13 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>Â© Love 21 Foundation · Hackathon demo for Code to Give 2026</span>
-        <a href="../index.html">â† Home</a>
+        <span>© Love 21 Foundation · Hackathon demo for Code to Give 2026</span>
+        <a href="../index.html">← Home</a>
       </div>
     </footer>
 
     <script src="../js/api.js"></script>
-    <script src="../js/app.js"></script>
+    <script src="../js/app.js?v=footer2"></script>
     <script src="../js/gate.js"></script>
     <script>
       (function () {
