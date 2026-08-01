@@ -35,6 +35,15 @@ class Person(Base):
     household_role: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    # Login Tracking Aggregates
+    login_count: Mapped[int] = mapped_column(Integer, default=0)
+    failed_login_count: Mapped[int] = mapped_column(Integer, default=0)
+    last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    current_login_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, nullable=True
+    )
+    last_login_ip: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    locked_until: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     household_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("households.id"), nullable=True

@@ -30,6 +30,10 @@ def seed(db: Session) -> None:
         household_role="mom",
         password_hash=demo_hash,
         profile_code="L21-HK-1001",
+        login_count=18,
+        last_login_at=datetime.utcnow() - timedelta(days=2),
+        current_login_at=datetime.utcnow(),
+        last_login_ip="202.82.1.15",
     )
     member = models.Person(
         email="alex@chen.demo",
@@ -41,6 +45,10 @@ def seed(db: Session) -> None:
         household_role="child",
         password_hash=demo_hash,
         profile_code="L21-HK-1002",
+        login_count=30,
+        last_login_at=datetime.utcnow() - timedelta(hours=3),
+        current_login_at=datetime.utcnow(),
+        last_login_ip="218.102.0.8",
     )
     dad = models.Person(
         email="dad@chen.demo",
@@ -52,6 +60,10 @@ def seed(db: Session) -> None:
         household_role="dad",
         password_hash=demo_hash,
         profile_code="L21-HK-1003",
+        login_count=30,
+        last_login_at=datetime.utcnow() - timedelta(hours=3),
+        current_login_at=datetime.utcnow(),
+        last_login_ip="218.102.0.8",
     )
     donor = models.Person(
         email="donor@demo.love21",
@@ -79,6 +91,10 @@ def seed(db: Session) -> None:
         language="en",
         password_hash=demo_hash,
         profile_code="L21-HK-9001",
+        login_count=20,
+        last_login_at=datetime.utcnow() - timedelta(hours=3),
+        current_login_at=datetime.utcnow(),
+        last_login_ip="14.0.128.42",
     )
     db.add_all([carer, member, dad, donor, volunteer, admin])
     db.flush()
@@ -481,6 +497,13 @@ def _migrate_sqlite_columns() -> None:
         ("volunteer_profiles", "points_balance", "INTEGER DEFAULT 0"),
         ("volunteer_profiles", "points_spent", "INTEGER DEFAULT 0"),
         ("volunteer_shift_claims", "points_awarded", "INTEGER DEFAULT 0"),
+
+        ("people", "login_count", "INTEGER DEFAULT 0"),
+        ("people", "failed_login_count", "INTEGER DEFAULT 0"),
+        ("people", "last_login_at", "DATETIME"),
+        ("people", "current_login_at", "DATETIME"),
+        ("people", "last_login_ip", "VARCHAR(45)"),
+        ("people", "locked_until", "DATETIME"),
     ]
     with engine.begin() as conn:
         for table, col, decl in alters:

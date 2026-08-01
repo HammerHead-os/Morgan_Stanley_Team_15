@@ -1,6 +1,8 @@
 from datetime import datetime
+import secrets
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
@@ -34,7 +36,9 @@ def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
     )
 
 
-def _log_journey(db: Session, person_id: int, event_type: str, channel: str, payload: str):
+def _log_journey(
+    db: Session, person_id: int, event_type: str, channel: str, payload: str
+):
     db.add(
         models.JourneyEvent(
             person_id=person_id,
@@ -62,25 +66,29 @@ def register_for_activity(
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
+    # 1. Check if member already has ANY record in the database for this activity
     existing = (
         db.query(models.Registration)
         .filter(
             models.Registration.activity_id == body.activity_id,
             models.Registration.member_person_id == body.member_person_id,
-            models.Registration.status.in_(["registered", "waitlist"]),
         )
         .first()
     )
     if existing:
-        raise HTTPException(status_code=409, detail="Already registered or on waitlist")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This family member is already registered or on the waitlist for this activity.",
+        )
 
+    # 2. Assign registration or waitlist status
     if activity.spots_left > 0:
-        status = "registered"
+        reg_status = "registered"
         waitlist_position = None
         activity.spots_left -= 1
         event = "registration_confirmed"
     else:
-        status = "waitlist"
+        reg_status = "waitlist"
         waiting = (
             db.query(models.Registration)
             .filter(
@@ -92,7 +100,11 @@ def register_for_activity(
         waitlist_position = waiting + 1
         event = "waitlist_joined"
 
-    channel = body.reminder_channel if body.reminder_channel in ("email", "sms", "whatsapp") else "email"
+    channel = (
+        body.reminder_channel
+        if body.reminder_channel in ("email", "sms", "whatsapp")
+        else "email"
+    )
     prefs = person.prefs
     if channel == "sms" and prefs and not prefs.sms_on:
         channel = "email"
@@ -103,9 +115,10 @@ def register_for_activity(
         activity_id=activity.id,
         household_id=person.household_id,
         member_person_id=member.id,
-        status=status,
+        status=reg_status,
         waitlist_position=waitlist_position,
         reminder_channel=channel,
+        created_at=datetime.utcnow(),
     )
     db.add(reg)
     _log_journey(
@@ -113,18 +126,34 @@ def register_for_activity(
         person.id,
         event,
         channel,
-        f"activity={activity.id};member={member.id};status={status}",
+        f"activity={activity.id};member={member.id};status={reg_status}",
     )
-    db.commit()
+
+    # 3. Safely commit with exception handling for database integrity constraints
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This family member is already registered for this activity.",
+        )
+
     db.refresh(reg)
     reg.activity = activity
     reg.member = member
+
     client = get_posthog_client()
     if client:
         client.capture(
-            "activity_registration_completed" if status == "registered" else "activity_waitlist_joined",
+            (
+                "activity_registration_completed"
+                if reg_status == "registered"
+                else "activity_waitlist_joined"
+            ),
             properties={"reminder_channel": channel},
         )
+
     return _registration_out(reg)
 
 
@@ -144,7 +173,9 @@ def list_registrations(
     return [_registration_out(r) for r in regs]
 
 
-@router.post("/registrations/{registration_id}/feedback", response_model=schemas.RegistrationOut)
+@router.post(
+    "/registrations/{registration_id}/feedback", response_model=schemas.RegistrationOut
+)
 def post_feedback(
     registration_id: int,
     body: schemas.FeedbackIn,
@@ -154,6 +185,7 @@ def post_feedback(
     reg = db.get(models.Registration, registration_id)
     if not reg or reg.household_id != person.household_id:
         raise HTTPException(status_code=404, detail="Registration not found")
+
     reg.feedback = body.feedback
     reg.feedback_at = datetime.utcnow()
     _log_journey(
@@ -165,9 +197,11 @@ def post_feedback(
     )
     db.commit()
     db.refresh(reg)
+
     client = get_posthog_client()
     if client:
         client.capture("session_feedback_submitted")
+
     return _registration_out(reg)
 
 
@@ -195,8 +229,6 @@ def add_family_member(
             status_code=400,
             detail="Role must be mom, dad, caregiver, helper, or child",
         )
-
-    import secrets
 
     email = (body.email or "").strip().lower()
     if not email:
@@ -239,9 +271,14 @@ def add_family_member(
     )
     db.commit()
     db.refresh(new_person)
+
     client = get_posthog_client()
     if client:
-        client.capture("family_member_added", properties={"household_role": role, "is_child": is_child})
+        client.capture(
+            "family_member_added",
+            properties={"household_role": role, "is_child": is_child},
+        )
+
     return schemas.PersonOut(
         id=new_person.id,
         email=new_person.email,

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime, timezone, timedelta
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -8,6 +10,52 @@ from ..posthog_client import get_posthog_client
 from ..security import hash_password, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+# --- Helper Functions for Login Tracking ---
+
+
+def get_client_ip(request: Request) -> Optional[str]:
+    """Extract client IP, preferring reverse proxy headers if available."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else None
+
+
+def handle_successful_login(
+    person: models.Person, db: Session, client_ip: Optional[str]
+) -> None:
+    """Updates counters and login timestamps on successful authentication."""
+    now = datetime.now(timezone.utc)
+
+    # Cycle current -> last login timestamp
+    person.last_login_at = person.current_login_at or now
+    person.current_login_at = now
+
+    # Increment counter & reset failures/locks
+    person.login_count = (person.login_count or 0) + 1
+    person.failed_login_count = 0
+    person.locked_until = None
+    person.last_login_ip = client_ip
+
+    print(person.login_count)
+
+    db.commit()
+
+
+def handle_failed_login(person: Optional[models.Person], db: Session) -> None:
+    """Increments failed attempt counters and locks account if threshold is met."""
+    if not person:
+        return
+
+    now = datetime.now(timezone.utc)
+    person.failed_login_count = (person.failed_login_count or 0) + 1
+
+    # Lock account for 15 minutes after 5 consecutive failures
+    if person.failed_login_count >= 5:
+        person.locked_until = now + timedelta(minutes=15)
+
+    db.commit()
 
 
 def identify_person(person: models.Person) -> None:
@@ -40,20 +88,28 @@ DEMO_ACCOUNTS = {
 
 @router.get("/demo-accounts")
 def list_demo_accounts():
-    return [
-        {"email": email, "label": label} for email, label in DEMO_ACCOUNTS.items()
-    ]
+    return [{"email": email, "label": label} for email, label in DEMO_ACCOUNTS.items()]
 
 
 @router.post("/demo-login", response_model=schemas.DemoLoginOut)
-def demo_login(body: schemas.DemoLoginIn, db: Session = Depends(get_db)):
+def demo_login(
+    body: schemas.DemoLoginIn, request: Request, db: Session = Depends(get_db)
+):
     person = db.query(models.Person).filter(models.Person.email == body.email).first()
     if not person:
         raise HTTPException(status_code=404, detail="Demo account not found")
+
+    # Track login data
+    client_ip = get_client_ip(request)
+    handle_successful_login(person, db, client_ip)
+
     identify_person(person)
     client = get_posthog_client()
     if client:
-        client.capture("demo_login_completed", properties={"login_method": "demo_account"})
+        client.capture(
+            "demo_login_completed", properties={"login_method": "demo_account"}
+        )
+
     return schemas.DemoLoginOut(
         person=schemas.PersonOut.model_validate(person),
         token=str(person.id),
@@ -61,7 +117,7 @@ def demo_login(body: schemas.DemoLoginIn, db: Session = Depends(get_db)):
 
 
 @router.post("/signup", response_model=schemas.DemoLoginOut)
-def signup(body: schemas.SignupIn, db: Session = Depends(get_db)):
+def signup(body: schemas.SignupIn, request: Request, db: Session = Depends(get_db)):
     email = (body.email or "").strip().lower() or None
     phone = (body.phone or "").strip() or None
 
@@ -71,7 +127,12 @@ def signup(body: schemas.SignupIn, db: Session = Depends(get_db)):
     if not existing and phone:
         existing = db.query(models.Person).filter(models.Person.phone == phone).first()
     if existing:
-        raise HTTPException(status_code=409, detail="An account with that email or phone already exists")
+        raise HTTPException(
+            status_code=409, detail="An account with that email or phone already exists"
+        )
+
+    now = datetime.now(timezone.utc)
+    client_ip = get_client_ip(request)
 
     person = models.Person(
         email=email,
@@ -81,12 +142,19 @@ def signup(body: schemas.SignupIn, db: Session = Depends(get_db)):
         roles="family",
         password_hash=hash_password(body.password),
         profile_code="PENDING",
+        # Initialize login tracking metrics on account creation
+        login_count=1,
+        failed_login_count=0,
+        current_login_at=now,
+        last_login_at=now,
+        last_login_ip=client_ip,
     )
     db.add(person)
     db.flush()
     person.profile_code = f"L21-{person.id:05d}"
     db.commit()
     db.refresh(person)
+
     identify_person(person)
     client = get_posthog_client()
     if client:
@@ -99,19 +167,41 @@ def signup(body: schemas.SignupIn, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=schemas.DemoLoginOut)
-def login(body: schemas.LoginIn, db: Session = Depends(get_db)):
+def login(body: schemas.LoginIn, request: Request, db: Session = Depends(get_db)):
     identifier = body.identifier.strip().lower()
     person = (
         db.query(models.Person)
-        .filter(or_(models.Person.email == identifier, models.Person.phone == body.identifier.strip()))
+        .filter(
+            or_(
+                models.Person.email == identifier,
+                models.Person.phone == body.identifier.strip(),
+            )
+        )
         .first()
     )
+
+    # 1. Check if account is currently locked out
+    now = datetime.now(timezone.utc)
+    if person and person.locked_until and person.locked_until > now:
+        raise HTTPException(
+            status_code=403,
+            detail="Account temporarily locked due to multiple failed login attempts. Please try again later.",
+        )
+
+    # 2. Verify password credentials
     if not person or not verify_password(body.password, person.password_hash):
+        handle_failed_login(person, db)
         raise HTTPException(status_code=401, detail="Wrong email/phone or password")
+
+    # 3. Successful login
+    client_ip = get_client_ip(request)
+    handle_successful_login(person, db, client_ip)
+
     identify_person(person)
     client = get_posthog_client()
     if client:
         client.capture("login_completed", properties={"login_method": "password"})
+
     return schemas.DemoLoginOut(
         person=schemas.PersonOut.model_validate(person),
         token=str(person.id),

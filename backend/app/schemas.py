@@ -371,6 +371,12 @@ class ProfileOut(BaseModel):
     journey_events: list[JourneyEventOut] = []
     hire_enquiries: list[HireOut] = []
     calendar_events: list[CalendarEventOut] = []
+    login_count: int = 0
+    failed_login_count: int = 0
+    last_login_at: Optional[datetime] = None
+    current_login_at: Optional[datetime] = None
+    last_login_ip: Optional[str] = None
+    locked_until: Optional[datetime] = None
 
 
 class InstagramPostOut(BaseModel):
