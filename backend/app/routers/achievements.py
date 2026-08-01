@@ -50,7 +50,9 @@ def list_achievements(
     target = db.get(models.Person, member_id)
     if not target:
         raise HTTPException(status_code=404, detail="Member not found")
-    if target.id != person.id and target.household_id != person.household_id:
+    if target.id != person.id and (
+        not person.household_id or target.household_id != person.household_id
+    ):
         raise HTTPException(status_code=403, detail="Not allowed")
     rows = (
         db.query(models.Achievement)
@@ -70,7 +72,9 @@ def create_goal(
     member = db.get(models.Person, body.member_person_id)
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
-    if member.id != person.id and member.household_id != person.household_id:
+    if member.id != person.id and (
+        not person.household_id or member.household_id != person.household_id
+    ):
         raise HTTPException(status_code=403, detail="Not allowed")
     goal = models.Goal(
         member_person_id=member.id,
@@ -105,7 +109,9 @@ def list_goals(
     target = db.get(models.Person, member_id)
     if not target:
         raise HTTPException(status_code=404, detail="Member not found")
-    if target.id != person.id and target.household_id != person.household_id:
+    if target.id != person.id and (
+        not person.household_id or target.household_id != person.household_id
+    ):
         raise HTTPException(status_code=403, detail="Not allowed")
     rows = (
         db.query(models.Goal)
@@ -128,7 +134,8 @@ def update_consent(
         raise HTTPException(status_code=404, detail="Achievement not found")
     member = db.get(models.Person, ach.member_person_id)
     if not member or (
-        member.id != person.id and member.household_id != person.household_id
+        member.id != person.id
+        and (not person.household_id or member.household_id != person.household_id)
     ):
         raise HTTPException(status_code=403, detail="Not allowed")
     ach.share_consent = body.share_consent

@@ -300,6 +300,10 @@ def get_profile(
         opt_out_token=prefs.opt_out_token if prefs else None,
     )
 
+    is_familyish = has_role(person, "family") or has_role(person, "member") or bool(
+        person.household_id
+    )
+
     family = None
     members = []
     regs = []
@@ -328,10 +332,26 @@ def get_profile(
             registrations=[_registration_out(r) for r in regs],
             metrics=_family_metrics(regs, child_members),
         )
+    else:
+        # No household — still surface this person's own direct
+        # registrations (they may be the participant themselves, not a
+        # carer registering a separate dependent).
+        regs = (
+            db.query(models.Registration)
+            .filter(models.Registration.member_person_id == person.id)
+            .order_by(models.Registration.created_at.desc())
+            .all()
+        )
+        if is_familyish or regs:
+            members = [person]
+            child_members = [person]
+            family = schemas.FamilyProfileOut(
+                household_name=f"{person.name}'s registrations",
+                members=[_person_out(m) for m in members],
+                registrations=[_registration_out(r) for r in regs],
+                metrics=_family_metrics(regs, child_members),
+            )
 
-    is_familyish = has_role(person, "family") or has_role(person, "member") or bool(
-        person.household_id
-    )
     achievement_members = child_members or ([person] if is_familyish else [])
     achievement_member_ids = [member.id for member in achievement_members]
     ach_member = achievement_members[0] if achievement_members else person

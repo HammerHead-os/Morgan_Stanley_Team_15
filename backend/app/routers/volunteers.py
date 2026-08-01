@@ -41,6 +41,7 @@ def _claim_out(claim: models.VolunteerShiftClaim) -> schemas.ClaimOut:
         volunteer_profile_id=claim.volunteer_profile_id,
         status=claim.status,
         status_label=status_label(claim.status),
+        party_size=claim.party_size,
         hours=claim.hours,
         reflection=claim.reflection,
         claimed_at=claim.claimed_at,
@@ -51,6 +52,7 @@ def _claim_out(claim: models.VolunteerShiftClaim) -> schemas.ClaimOut:
         duration_min=duration,
         remote=remote,
         scheduled_date=scheduled,
+        attendees=[schemas.AttendeeOut.model_validate(a) for a in claim.attendees],
     )
 
 
@@ -126,8 +128,11 @@ def claim_shift(
     shift = db.get(models.VolunteerShift, body.shift_id)
     if not shift:
         raise HTTPException(status_code=404, detail="Shift not found")
-    if shift.spots_left <= 0:
-        raise HTTPException(status_code=409, detail="No spots left")
+    party_size = 1 + len(body.attendees)
+    if shift.spots_left < party_size:
+        raise HTTPException(
+            status_code=409, detail="Not enough spots left for your party"
+        )
     if shift.requires_onboarding and not profile.onboarded:
         raise HTTPException(status_code=400, detail="Complete onboarding first")
 
@@ -147,17 +152,30 @@ def claim_shift(
         shift_id=shift.id,
         volunteer_profile_id=profile.id,
         status="claimed",
+        party_size=party_size,
         hours=shift.duration_min / 60.0,
         points_awarded=0,
     )
-    shift.spots_left -= 1
+    shift.spots_left -= party_size
     db.add(claim)
+    db.flush()
+    for a in body.attendees:
+        db.add(
+            models.VolunteerClaimAttendee(
+                claim_id=claim.id,
+                full_name=a.full_name,
+                phone=a.phone,
+                email=a.email,
+                age=a.age,
+                role=a.role,
+            )
+        )
     db.add(
         models.JourneyEvent(
             person_id=person.id,
             event_type="shift_claimed",
             channel="email",
-            payload=f"shift={shift.id}",
+            payload=f"shift={shift.id};party={party_size}",
         )
     )
     db.commit()

@@ -2,6 +2,7 @@ from datetime import datetime
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -58,23 +59,31 @@ def register_for_activity(
     person: models.Person = Depends(get_current_person),
     db: Session = Depends(get_db),
 ):
-    if not person.household_id:
-        raise HTTPException(status_code=400, detail="Person has no household")
-
-    member = db.get(models.Person, body.member_person_id)
-    if not member or member.household_id != person.household_id:
-        raise HTTPException(status_code=403, detail="Member not in your household")
+    # Registering yourself needs no household at all — the registrant may be
+    # the person with support needs, not necessarily a carer booking a
+    # separate dependent. Registering someone else still requires that
+    # person to be an existing member of your own household.
+    target_id = body.member_person_id or person.id
+    member = db.get(models.Person, target_id)
+    if not member:
+        raise HTTPException(status_code=404, detail="Person not found")
+    if member.id != person.id:
+        if not person.household_id or member.household_id != person.household_id:
+            raise HTTPException(status_code=403, detail="Member not in your household")
 
     activity = db.get(models.Activity, body.activity_id)
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
 
-    # 1. Check if member already has ANY record in the database for this activity
+    # 1. Check if member already has an ACTIVE record for this activity —
+    # a cancelled registration doesn't block rebooking (see the partial
+    # unique index on Registration for the DB-level half of this).
     existing = (
         db.query(models.Registration)
         .filter(
             models.Registration.activity_id == body.activity_id,
-            models.Registration.member_person_id == body.member_person_id,
+            models.Registration.member_person_id == target_id,
+            models.Registration.status != "cancelled",
         )
         .first()
     )
@@ -136,6 +145,7 @@ def register_for_activity(
                 phone=a.phone,
                 email=a.email,
                 age=a.age,
+                role=a.role,
             )
         )
     _log_journey(
@@ -174,16 +184,23 @@ def register_for_activity(
     return _registration_out(reg)
 
 
+def _owns_registration(person: models.Person, reg: models.Registration) -> bool:
+    if reg.member_person_id == person.id:
+        return True
+    return bool(person.household_id) and reg.household_id == person.household_id
+
+
 @router.get("/registrations", response_model=list[schemas.RegistrationOut])
 def list_registrations(
     person: models.Person = Depends(get_current_person),
     db: Session = Depends(get_db),
 ):
-    if not person.household_id:
-        return []
+    conditions = [models.Registration.member_person_id == person.id]
+    if person.household_id:
+        conditions.append(models.Registration.household_id == person.household_id)
     regs = (
         db.query(models.Registration)
-        .filter(models.Registration.household_id == person.household_id)
+        .filter(or_(*conditions))
         .order_by(models.Registration.created_at.desc())
         .all()
     )
@@ -200,7 +217,7 @@ def post_feedback(
     db: Session = Depends(get_db),
 ):
     reg = db.get(models.Registration, registration_id)
-    if not reg or reg.household_id != person.household_id:
+    if not reg or not _owns_registration(person, reg):
         raise HTTPException(status_code=404, detail="Registration not found")
 
     reg.feedback = body.feedback
@@ -218,6 +235,91 @@ def post_feedback(
     client = get_posthog_client()
     if client:
         client.capture("session_feedback_submitted")
+
+    return _registration_out(reg)
+
+
+@router.post(
+    "/registrations/{registration_id}/cancel", response_model=schemas.RegistrationOut
+)
+def cancel_registration(
+    registration_id: int,
+    person: models.Person = Depends(get_current_person),
+    db: Session = Depends(get_db),
+):
+    reg = db.get(models.Registration, registration_id)
+    if not reg or not _owns_registration(person, reg):
+        raise HTTPException(status_code=404, detail="Registration not found")
+    if reg.status == "cancelled":
+        raise HTTPException(status_code=409, detail="Already cancelled")
+    if reg.status == "attended":
+        raise HTTPException(status_code=409, detail="Can't cancel a completed session")
+
+    was_registered = reg.status == "registered"
+    freed_position = reg.waitlist_position
+    reg.status = "cancelled"
+    reg.waitlist_position = None
+
+    activity = db.get(models.Activity, reg.activity_id)
+    if was_registered and activity:
+        activity.spots_left += reg.party_size
+        waiting = (
+            db.query(models.Registration)
+            .filter(
+                models.Registration.activity_id == activity.id,
+                models.Registration.status == "waitlist",
+            )
+            .order_by(models.Registration.waitlist_position)
+            .all()
+        )
+        for candidate in waiting:
+            if activity.spots_left >= candidate.party_size:
+                candidate.status = "registered"
+                candidate.waitlist_position = None
+                activity.spots_left -= candidate.party_size
+                _log_journey(
+                    db,
+                    candidate.member_person_id,
+                    "registration_promoted",
+                    candidate.reminder_channel,
+                    f"activity={activity.id};registration={candidate.id}",
+                )
+        # Close any gaps left by out-of-order promotion so positions stay
+        # a clean 1..N for whoever's still waiting.
+        still_waiting = [c for c in waiting if c.status == "waitlist"]
+        for i, candidate in enumerate(still_waiting, start=1):
+            candidate.waitlist_position = i
+    elif freed_position:
+        (
+            db.query(models.Registration)
+            .filter(
+                models.Registration.activity_id == reg.activity_id,
+                models.Registration.status == "waitlist",
+                models.Registration.waitlist_position > freed_position,
+            )
+            .update(
+                {
+                    models.Registration.waitlist_position: models.Registration.waitlist_position
+                    - 1
+                }
+            )
+        )
+
+    _log_journey(
+        db,
+        person.id,
+        "registration_cancelled",
+        reg.reminder_channel,
+        f"registration={reg.id}",
+    )
+    db.commit()
+    db.refresh(reg)
+    if activity:
+        reg.activity = activity
+
+    client = get_posthog_client()
+    if client:
+        client.capture("activity_registration_cancelled")
 
     return _registration_out(reg)
 

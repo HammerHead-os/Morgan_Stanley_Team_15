@@ -7,10 +7,12 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -117,12 +119,22 @@ class Activity(Base):
 class Registration(Base):
     __tablename__ = "registrations"
     __table_args__ = (
-        UniqueConstraint("activity_id", "member_person_id", name="uq_reg_activity_member"),
+        # Only one *active* (non-cancelled) registration per activity+member —
+        # a cancelled row must not block rebooking the same activity later.
+        Index(
+            "uq_reg_activity_member_active",
+            "activity_id",
+            "member_person_id",
+            unique=True,
+            sqlite_where=text("status != 'cancelled'"),
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     activity_id: Mapped[int] = mapped_column(ForeignKey("activities.id"))
-    household_id: Mapped[int] = mapped_column(ForeignKey("households.id"))
+    household_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("households.id"), nullable=True
+    )
     member_person_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
     party_size: Mapped[int] = mapped_column(Integer, default=1)
     status: Mapped[str] = mapped_column(String(40), default="registered")
@@ -135,7 +147,7 @@ class Registration(Base):
     feedback_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     activity: Mapped[Activity] = relationship(back_populates="registrations")
-    household: Mapped[Household] = relationship(back_populates="registrations")
+    household: Mapped[Optional[Household]] = relationship(back_populates="registrations")
     member: Mapped[Person] = relationship(foreign_keys=[member_person_id])
     attendees: Mapped[list["RegistrationAttendee"]] = relationship(
         back_populates="registration", cascade="all, delete-orphan"
@@ -151,6 +163,8 @@ class RegistrationAttendee(Base):
     phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     age: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    role: Mapped[str] = mapped_column(String(20), default="participant")
+    # guardian | participant
 
     registration: Mapped[Registration] = relationship(back_populates="attendees")
 
@@ -297,6 +311,7 @@ class VolunteerShiftClaim(Base):
     )
     status: Mapped[str] = mapped_column(String(40), default="claimed")
     # claimed | completed | cancelled
+    party_size: Mapped[int] = mapped_column(Integer, default=1)
     hours: Mapped[float] = mapped_column(Float, default=0.0)
     reflection: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     claimed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -305,6 +320,24 @@ class VolunteerShiftClaim(Base):
 
     shift: Mapped[VolunteerShift] = relationship(back_populates="claims")
     volunteer: Mapped[VolunteerProfile] = relationship(back_populates="shifts")
+    attendees: Mapped[list["VolunteerClaimAttendee"]] = relationship(
+        back_populates="claim", cascade="all, delete-orphan"
+    )
+
+
+class VolunteerClaimAttendee(Base):
+    __tablename__ = "volunteer_claim_attendees"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    claim_id: Mapped[int] = mapped_column(ForeignKey("volunteer_shift_claims.id"))
+    full_name: Mapped[str] = mapped_column(String(120))
+    phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    age: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    role: Mapped[str] = mapped_column(String(20), default="participant")
+    # guardian | participant
+
+    claim: Mapped[VolunteerShiftClaim] = relationship(back_populates="attendees")
 
 
 class JourneyEvent(Base):

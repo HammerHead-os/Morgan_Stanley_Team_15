@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -92,11 +92,12 @@ class AttendeeIn(BaseModel):
     phone: Optional[str] = Field(default=None, max_length=40)
     email: Optional[str] = Field(default=None, max_length=255)
     age: Optional[int] = Field(default=None, ge=0, le=120)
+    role: Literal["guardian", "participant"] = "participant"
 
 
 class RegisterIn(BaseModel):
     activity_id: int
-    member_person_id: int
+    member_person_id: Optional[int] = None  # None => registering myself
     reminder_channel: str = "email"
     attendees: list[AttendeeIn] = Field(default_factory=list)
 
@@ -107,12 +108,13 @@ class AttendeeOut(OrmModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     age: Optional[int] = None
+    role: str = "participant"
 
 
 class RegistrationOut(OrmModel):
     id: int
     activity_id: int
-    household_id: int
+    household_id: Optional[int] = None
     member_person_id: int
     party_size: int = 1
     status: str
@@ -234,6 +236,7 @@ class VolunteerShiftOut(OrmModel):
 
 class ClaimShiftIn(BaseModel):
     shift_id: int
+    attendees: list[AttendeeIn] = Field(default_factory=list)
 
 
 class ClaimOut(OrmModel):
@@ -242,6 +245,7 @@ class ClaimOut(OrmModel):
     volunteer_profile_id: int
     status: str
     status_label: str = ""
+    party_size: int = 1
     hours: float
     reflection: Optional[str] = None
     claimed_at: datetime
@@ -252,6 +256,7 @@ class ClaimOut(OrmModel):
     duration_min: Optional[int] = None
     remote: bool = True
     scheduled_date: Optional[date] = None
+    attendees: list[AttendeeOut] = []
 
 
 class ReflectionIn(BaseModel):
@@ -309,7 +314,7 @@ class HireIn(BaseModel):
     requester_name: str = Field(min_length=1, max_length=120)
     company_name: str = Field(default="", max_length=160)
     event_description: str = Field(default="", max_length=2000)
-    contact_email: Optional[str] = Field(default=None, max_length=255)
+    contact_email: str = Field(min_length=3, max_length=255)
     contact_phone: Optional[str] = Field(default=None, max_length=40)
 
 
