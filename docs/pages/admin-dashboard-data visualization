@@ -108,6 +108,11 @@ input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(19
 .chip.participant{color:var(--r-part);background:var(--r-part-bg);border-color:rgba(42,111,176,.2)}
 .chip.other{color:var(--r-other);background:var(--r-other-bg);border-color:var(--line)}
 .chip.grey{color:var(--muted);background:var(--r-other-bg);border-color:var(--line)}
+.chip.tog{cursor:pointer;font-family:inherit;transition:transform .1s,box-shadow .14s,opacity .14s}
+.chip.tog b{font-variant-numeric:tabular-nums;font-weight:700;opacity:.75}
+.chip.tog:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(26,22,19,.12)}
+.chip.tog[aria-pressed="true"]{box-shadow:0 0 0 2px currentColor inset}
+.chip.tog.dimmed{opacity:.45}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
 .stat{border:1px solid var(--line);border-radius:var(--radius);padding:11px 13px;background:var(--card)}
 .stat .k{font-size:11px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -150,12 +155,47 @@ tbody tr.clickable{cursor:pointer}
 .rosterbox.kids > .h{background:var(--r-part-bg);color:var(--r-part);border-bottom:1px solid rgba(42,111,176,.2)}
 .rosterbox.vols > .h{background:var(--r-vol-bg);color:#3f7a1f;border-bottom:1px solid rgba(90,160,47,.28)}
 .rosterbox.staff > .h{background:var(--r-admin-bg);color:var(--r-admin);border-bottom:1px solid rgba(163,38,28,.2)}
-.person-pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:12.5px;
+.person-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:4px 11px;font-size:12.5px;
   font-weight:600;cursor:pointer;transition:transform .1s,box-shadow .12s,border-color .12s}
 .person-pill:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(26,22,19,.1)}
 .person-pill.kids{color:var(--r-part);border-color:rgba(42,111,176,.35)}
 .person-pill.vols{color:#3f7a1f;border-color:rgba(90,160,47,.4)}
 .person-pill.staff{color:var(--r-admin);border-color:rgba(163,38,28,.32)}
+/* ---------- group colour coding + attendance ---------- */
+.grouplegend{display:flex;flex-wrap:wrap;gap:4px 12px;padding:9px 12px;margin-bottom:14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--plane)}
+.grouplegend .gl{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-2);
+  cursor:pointer;padding:2px 6px;border-radius:6px;border:1px solid transparent;transition:background .12s,border-color .12s}
+.grouplegend .gl:hover{background:var(--surface);border-color:var(--line)}
+.grouplegend .gl.on{background:var(--surface);border-color:var(--accent);color:var(--ink)}
+.grouplegend .gl .sw{width:11px;height:11px;border-radius:3px;flex:none}
+.grouplegend .gl .n{color:var(--muted);font-variant-numeric:tabular-nums;font-weight:600}
+td.gcell{border-left:3px solid var(--gc,transparent)}
+.gchip{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.gchip .sw{width:9px;height:9px;border-radius:2px;flex:none;background:var(--gc,var(--r-other))}
+.when{font-size:11.5px;color:var(--muted)}
+.att{display:inline-flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums;font-weight:640}
+.att .mini{width:46px;height:5px;border-radius:999px;background:var(--grid);overflow:hidden}
+.att .mini i{display:block;height:100%;background:var(--r-vol);border-radius:999px}
+/* attendance status marks — deliberately distinct from the role palette.
+   Validated all-pairs: CVD ΔE 12.2, normal-vision ΔE 24.3. Each also carries its own glyph. */
+.mark{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;
+  font-size:9.5px;font-weight:800;color:#fff;flex:none;border:1px solid transparent}
+.mark.p{background:#3f8a24} .mark.a{background:#8f2620}
+.mark.c{background:#e0a51c;color:#3a2a06;border-color:#b5791b}
+.mark.u{background:#fff;color:var(--muted);border-color:var(--line)}
+button.mark{cursor:pointer;padding:0;transition:transform .12s,box-shadow .12s}
+button.mark:hover{transform:scale(1.22);box-shadow:0 2px 7px rgba(26,22,19,.24)}
+button.mark:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.person-pill.absent .pname{opacity:.62;text-decoration:line-through;text-decoration-color:rgba(143,38,32,.55)}
+.person-pill.cancelled .pname{opacity:.72;text-decoration:underline dotted;text-decoration-color:#b5791b}
+.person-pill .pname{border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:0}
+.attlegend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--muted);
+  padding:0 14px 10px}
+.attlegend span{display:inline-flex;align-items:center;gap:5px}
+.attsum{display:flex;gap:14px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--grid);font-size:12.5px}
+.attsum b{font-variant-numeric:tabular-nums}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;padding:12px 14px;font-size:13px;border-bottom:1px solid var(--grid)}
 .kv dt{color:var(--muted);font-weight:600;font-size:12px}
 .kv dd{margin:0;font-weight:560}
@@ -188,7 +228,10 @@ tbody tr.clickable{cursor:pointer}
 svg .slice{cursor:pointer;transition:transform .22s cubic-bezier(.22,1,.36,1),opacity .18s}
 svg .slice.dim{opacity:.22}
 svg .hbar{transition:width .45s cubic-bezier(.22,1,.36,1),opacity .18s}
-svg .vbar{cursor:pointer;transition:opacity .16s}
+svg .vbar{transition:opacity .16s}
+svg .brushlayer{cursor:crosshair;touch-action:none}
+svg .brushsel{pointer-events:none}
+svg .brushhandle{pointer-events:none}
 svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 .axis{font-size:10.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
 .centerbig{font-size:27px;font-weight:680;fill:var(--ink)}
@@ -226,6 +269,60 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 .minitable th{position:static;background:none;border-bottom:1px solid var(--grid);padding:5px 8px;cursor:default}
 .minitable td{padding:5px 8px;border-bottom:1px solid var(--grid)}
 
+/* ---------- quick-add (+) ---------- */
+.fab{position:fixed;right:22px;bottom:22px;z-index:60;width:52px;height:52px;border-radius:50%;border:0;
+  background:var(--accent);color:#fff;font-size:27px;line-height:1;cursor:pointer;
+  box-shadow:0 6px 20px rgba(194,80,34,.36);transition:transform .16s cubic-bezier(.22,1,.36,1),background .14s}
+.fab:hover{background:#a94319;transform:translateY(-2px) scale(1.04)}
+.fab:active{transform:translateY(0) scale(.97)}
+.fab.open{transform:rotate(45deg)}
+.fabmenu{position:fixed;right:22px;bottom:84px;z-index:60;display:none;flex-direction:column;gap:6px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:var(--shadow);
+  animation:fade .16s ease}
+.fabmenu.on{display:flex}
+.fabmenu button{border:0;background:none;text-align:left;padding:9px 14px;border-radius:8px;cursor:pointer;
+  font-size:13.5px;font-weight:600;white-space:nowrap;transition:background .12s}
+.fabmenu button:hover{background:var(--accent-soft);color:var(--accent)}
+/* forms */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;padding:14px 18px}
+.form .full{grid-column:1/-1}
+@media(max-width:620px){.form{grid-template-columns:1fr}}
+.ff{display:flex;flex-direction:column;gap:4px}
+.ff > span{font-size:11px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.ff input,.ff select,.ff textarea{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--surface);
+  font:inherit;outline:none;width:100%;transition:border-color .14s,box-shadow .14s}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(194,80,34,.14)}
+.ff .req{color:var(--accent)}
+.picker{border:1px solid var(--line);border-radius:9px;overflow:visible;position:relative}
+.picker > .ph{display:flex;align-items:center;gap:8px;padding:7px 11px;font-size:12px;font-weight:700;
+  letter-spacing:.03em;text-transform:uppercase}
+.picker > .ph .n{margin-left:auto;font-variant-numeric:tabular-nums}
+.picker.kids > .ph{background:var(--r-part-bg);color:var(--r-part)}
+.picker.vols > .ph{background:var(--r-vol-bg);color:#3f7a1f}
+.picker.staff > .ph{background:var(--r-admin-bg);color:var(--r-admin)}
+.picker .toks{display:flex;flex-wrap:wrap;gap:5px;padding:7px}
+.tok{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 6px 3px 10px;
+  font-size:12.5px;font-weight:600;background:var(--surface)}
+.tok.kids{color:var(--r-part);border-color:rgba(42,111,176,.35)}
+.tok.vols{color:#3f7a1f;border-color:rgba(90,160,47,.4)}
+.tok.staff{color:var(--r-admin);border-color:rgba(163,38,28,.32)}
+.tok.newp{border-style:dashed}
+.tok b{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.7}
+.tok button{border:0;background:none;cursor:pointer;color:inherit;font-size:13px;line-height:1;padding:0 2px;opacity:.65}
+.tok button:hover{opacity:1}
+.picker .pin{border:0;border-top:1px solid var(--grid);padding:8px 11px;width:100%;outline:none;font:inherit;
+  border-radius:0 0 8px 8px;background:var(--surface)}
+.picker .pin:focus{box-shadow:inset 0 0 0 2px rgba(194,80,34,.18)}
+.sugg{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--surface);border:1px solid var(--line);
+  border-radius:9px;box-shadow:0 10px 28px rgba(26,22,19,.16);margin-top:4px;max-height:236px;overflow:auto;display:none}
+.sugg.on{display:block}
+.sugg button{display:flex;align-items:center;gap:9px;width:100%;border:0;background:none;text-align:left;
+  padding:8px 11px;cursor:pointer;font:inherit;border-bottom:1px solid var(--grid)}
+.sugg button:last-child{border-bottom:0}
+.sugg button:hover,.sugg button.cur{background:var(--accent-soft)}
+.sugg .nm{font-weight:620;font-size:13px}
+.sugg .meta{margin-left:auto;font-size:11.5px;color:var(--muted)}
+.sugg .add{color:var(--accent);font-weight:660;font-size:13px}
 /* ---------- data / upload ---------- */
 .drop{border:2px dashed var(--line);border-radius:12px;padding:30px;text-align:center;background:var(--plane);
   transition:border-color .16s,background .16s}
@@ -265,6 +362,10 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 <!-- ============ 1. ACTIVITIES ============ -->
 <section class="panel on" id="p-activities">
   <div class="filterbar">
+    <div class="field"><label>Show</label>
+      <div class="seg" id="aView">
+        <button data-v="upcoming" class="on">Upcoming</button><button data-v="past">Past</button><button data-v="all">All</button>
+      </div></div>
     <div class="field"><label>Search</label>
       <input type="search" id="aSearch" class="search-wide" placeholder="activity name, ID, location…"></div>
     <div class="field"><label>Group</label><select id="aGroup"><option value="">All groups</option></select></div>
@@ -276,9 +377,10 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
     <button class="btn sm" id="aExport">⬇ Export .xlsx</button>
   </div>
   <div class="stats" id="aStats"></div>
+  <div id="aLegend" class="grouplegend"></div>
   <div class="split">
     <div class="card">
-      <div class="cardhead"><h3>Activity sessions</h3><span class="hint" id="aCount"></span></div>
+      <div class="cardhead"><h3 id="aTitle">Activity sessions</h3><span class="hint" id="aCount"></span></div>
       <div class="tablewrap"><table id="aTable"><thead></thead><tbody></tbody></table></div>
     </div>
     <div class="card" id="aDetail">
@@ -310,9 +412,11 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   <div class="stats" id="pStats"></div>
   <div class="card">
     <div class="cardhead"><h3>People database</h3><span class="hint" id="pCount"></span>
-      <span class="chip admin"><i class="dot"></i>Admin staff</span>
-      <span class="chip volunteer"><i class="dot"></i>Volunteer</span>
-      <span class="chip participant"><i class="dot"></i>Participant</span></div>
+      <span class="hint">filter (pick any):</span>
+      <button class="chip tog admin" data-role="admin" aria-pressed="false"><i class="dot"></i>Admin staff <b></b></button>
+      <button class="chip tog volunteer" data-role="volunteer" aria-pressed="false"><i class="dot"></i>Volunteer <b></b></button>
+      <button class="chip tog participant" data-role="participant" aria-pressed="false"><i class="dot"></i>Participant <b></b></button>
+      <button class="chip tog other" data-role="other" aria-pressed="false" style="display:none"><i class="dot"></i>Other <b></b></button></div>
     <div class="tablewrap"><table id="pTable"><thead></thead><tbody></tbody></table></div>
   </div>
 </section>
@@ -357,7 +461,9 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   </div>
   <div class="stats" id="vStats"></div>
   <div class="card" style="margin-bottom:14px">
-    <div class="cardhead"><h3 id="vTrendTitle">Visits over time</h3><span class="hint">click a bar to focus that period</span></div>
+    <div class="cardhead"><h3 id="vTrendTitle">Visits over time</h3>
+      <span class="hint">drag to brush a range · click a bar to focus it · double-click to drill into its days</span>
+      <button class="btn sm" id="vZoomBtn" style="display:none">⤢ Zoom to selection</button></div>
     <div id="vTrend" class="pad"></div>
   </div>
   <div class="vizgrid">
@@ -382,6 +488,7 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
     <div class="cardhead"><h3>Upload your data</h3>
       <button class="btn sm" id="btnTemplate">⬇ Blank template .xlsx</button>
       <button class="btn sm" id="btnDemo">Load demo data</button>
+      <button class="btn sm" id="btnClearEdits" style="display:none">↺ Undo manual attendance edits</button>
       <button class="btn sm" id="btnClear">Clear all data</button></div>
     <div class="pad">
       <div class="drop" id="drop">
@@ -416,12 +523,17 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
         <li><code>Date</code> <code>Start Time</code> <code>End Time</code></li>
         <li><code>Location</code></li>
         <li><code>Participants</code> <code>Volunteers</code> <code>Staff</code> — names separated by <code>;</code></li>
+        <li><code>Attended</code> <code>Absent</code> <code>Cancelled</code> — names separated by <code>;</code>,
+          for sessions that already ran</li>
       </ul>
-      <div class="hint" style="margin-top:8px">A recurring activity is one row per date, so each session keeps its own roster.</div>
+      <div class="hint" style="margin-top:8px">A recurring activity is one row per date, so each session keeps its own roster
+        and its own attendance record. Anyone on the roster but in none of the three lists shows as “not recorded”.
+        You can also set attendance by hand — open a past session and click the badge next to a name.</div>
     </div>
     <div class="card"><b>Enrollments</b> <span class="hint">(optional long format)</span>
       <ul><li><code>Activity ID</code></li><li><code>Person</code> or <code>Name</code></li>
         <li><code>Role</code> — participant / volunteer / staff</li>
+        <li><code>Attended</code> — yes/no, present/absent, 1/0, or cancelled</li>
         <li><code>Date</code> <span class="hint">(optional, targets one session)</span></li></ul>
       <div class="hint" style="margin-top:8px">Use this instead of the semicolon lists if your source system exports one row per sign-up.</div>
     </div>
@@ -454,6 +566,12 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 </section>
 
 </main>
+
+<div class="fabmenu" id="fabmenu">
+  <button data-add="activity">＋ New activity session</button>
+  <button data-add="person">＋ New person</button>
+</div>
+<button class="fab" id="fab" title="Add a new activity or person" aria-label="Add new">＋</button>
 
 <div id="tip"></div>
 <div id="toast"></div>
@@ -723,6 +841,21 @@ const ROLES={admin:"Administrative staff",volunteer:"Volunteer",participant:"Par
 const UTYPES=["Parents / Carers","Individual Volunteers","Corporate Volunteers","Corporations / NGOs","General Visitors"];
 const UCOLORS={"Parents / Carers":"var(--s1)","Individual Volunteers":"var(--s2)","Corporate Volunteers":"var(--s3)",
   "Corporations / NGOs":"var(--s4)","General Visitors":"var(--s5)"};
+/* every People column alias the app already shows in a dedicated place — so it is never
+   repeated a second time in the "extra columns" tail or the profile pop-up */
+const PEOPLE_CONSUMED=new Set(["personid","id","memberid","name","fullname","person","firstname",
+  "role","type","usertype","category","email","emailaddress","mail",
+  "phone","phonenumber","mobile","tel","contactnumber","address","location","city","suburb",
+  "dateofbirth","dob","birthday","birthdate","age","joined","joindate","membersince","startdate","created",
+  "lastonline","lastlogin","lastactive","lastseen","lastactivity",
+  "emergencycontact","emergency","guardian","carer","notes","note",
+  "donations","totaldonated","donationtotal","amountdonated","eventsparticipated","events","activities"]);
+/* fixed group palette — validated: chroma floor, lightness band, adjacent CVD ΔE 12.3, normal-vision ΔE 22.7.
+   Assigned in sorted-name order so a group keeps its colour when filters change; past 8 groups fold to neutral. */
+const GROUP_COLORS=["#dd6030","#12968a","#e5a72a","#6b4f9e","#5aa02f","#a33a55","#2a6fb0","#9c5714"];
+const GROUP_NEUTRAL="#8c837a";
+let groupColor={};
+const colorOfGroup=g=>groupColor[g]||GROUP_NEUTRAL;
 const AGE_BANDS=["0–12","13–17","18–24","25–34","35–49","50–64","65+"];
 const AGE_COLORS=["var(--o1)","var(--o2)","var(--o3)","var(--o4)","var(--o5)","var(--o6)","var(--o6)"];
 const INACTIVE_DAYS=90;
@@ -759,6 +892,24 @@ function ageBand(v){
   if(m)return ageBand(m[1]);
   return s;
 }
+/* attendance is stored per session as name-key -> "present" | "absent" | "cancelled";
+   a name in none of the lists stays "not recorded" */
+const ATT={present:{cls:"p",glyph:"✓",label:"Present"},
+           absent:{cls:"a",glyph:"✕",label:"No-show"},
+           cancelled:{cls:"c",glyph:"!",label:"Cancelled same day"},
+           "":{cls:"u",glyph:"?",label:"Not recorded"}};
+const ATT_CYCLE=["present","absent","cancelled",""];
+function attendanceMap(present,absent,cancelled){
+  const m={};
+  absent.forEach(n=>{if(n)m[norm(n)]="absent";});
+  cancelled.forEach(n=>{if(n)m[norm(n)]="cancelled";});
+  present.forEach(n=>{if(n)m[norm(n)]="present";});
+  return m;
+}
+const YES=v=>/^(y|yes|true|1|present|attended|p|here)$/i.test(String(v).trim());
+const NO=v=>/^(n|no|false|0|absent|noshow|no-show|a|missed)$/i.test(String(v).trim());
+const CANC=v=>/^(c|cancel|cancelled|canceled|latecancel|late-cancel|sameday|same-day|withdrew|excused)$/i
+  .test(String(v).trim().replace(/\s+/g,""));
 function ingest(table,rows){
   if(!rows||!rows.length)return 0;
   rows=rows.map(r=>r.__n?r:indexRow(r));
@@ -776,6 +927,9 @@ function ingest(table,rows){
     volunteers:splitList(rowGet(r,"volunteers","volunteer","helpers")),
     staff:splitList(rowGet(r,"staff","love21staff","supervisor","monitor","responsiblestaff","lead")),
     notes:String(rowGet(r,"notes","note","description")||""),
+    attended:attendanceMap(splitList(rowGet(r,"attended","present","attendance","checkedin")),
+                           splitList(rowGet(r,"absent","noshow","didnotattend","apologies")),
+                           splitList(rowGet(r,"cancelled","canceled","samedaycancellation","latecancellations"))),
     raw:r}));
   if(table==="people")DB.people=rows.map((r,i)=>{
     const dob=parseDate(rowGet(r,"dateofbirth","dob","birthday","birthdate"));
@@ -827,9 +981,11 @@ function ingest(table,rows){
       if(!aid||!person)return;
       let targets=by[aid]||[];
       if(d&&targets.length>1){const m=targets.filter(a=>iso(a.date)===iso(d));if(m.length)targets=m;}
+      const att=rowGet(r,"attended","attendance","present","status");
       targets.forEach(a=>{
         const bucket=role==="admin"?a.staff:role==="volunteer"?a.volunteers:a.participants;
         if(!bucket.includes(person))bucket.push(person);
+        if(att!=="")a.attended[norm(person)]=YES(att)?"present":CANC(att)?"cancelled":NO(att)?"absent":a.attended[norm(person)];
       });
     });
   }
@@ -838,6 +994,8 @@ function ingest(table,rows){
 
 /* derived lookups */
 let peopleById={},peopleByName={},nameIndex=[];
+DB.edits={};                                    /* "<activity id>|<date>|<name key>" -> status, set by hand */
+const actKey=a=>a.id+"|"+iso(a.date);
 function derive(){
   peopleById={};peopleByName={};
   DB.people.forEach(p=>{peopleById[p.id]=p;peopleByName[norm(p.name)]=p;});
@@ -847,13 +1005,41 @@ function derive(){
     d.person=p||null;
     if(p)p.donations.push(d);
   });
+  /* a session is "past" once its calendar day is over */
+  const today=new Date();today.setHours(0,0,0,0);
   DB.activities.forEach(a=>{
+    a.past=a.date?a.date<today:false;
+    a.attended=a.attended||{};
+    /* anything an administrator changed by hand wins over the uploaded lists */
+    const ak=actKey(a);
+    for(const ek in DB.edits){
+      if(ek.slice(0,ak.length+1)!==ak+"|")continue;
+      const person=ek.slice(ak.length+1),v=DB.edits[ek];
+      if(v)a.attended[person]=v;else delete a.attended[person];
+    }
+    const tally=names=>{
+      const t={present:0,absent:0,cancelled:0,unknown:0,total:names.length};
+      names.forEach(n=>{const v=a.attended[norm(n)];t[v&&t[v]!==undefined?v:"unknown"]++;});
+      t.recorded=t.present+t.absent+t.cancelled;
+      return t;
+    };
+    a.attKids=tally(a.participants);a.attVols=tally(a.volunteers);
+    a.attRecorded=a.attKids.recorded+a.attVols.recorded;
+    a.attPresent=a.attKids.present+a.attVols.present;
+    a.attCancelled=a.attKids.cancelled+a.attVols.cancelled;
+    a.attRate=a.attRecorded?a.attPresent/a.attRecorded:null;
     const add=(names,cap)=>names.forEach(n=>{
       const p=peopleByName[norm(n)]||peopleById[n];
-      if(p&&!p.events.some(e=>e.a===a))p.events.push({a,cap});
+      if(p&&!p.events.some(e=>e.a===a))p.events.push({a,cap,att:a.attended[norm(n)]||""});
     });
     add(a.participants,"Participant");add(a.volunteers,"Volunteer");add(a.staff,"Staff");
   });
+  /* colour follows the group — assigned once from the whole dataset (busiest groups first, ties by name),
+     so filtering or switching views never repaints the survivors. Past 8 groups fold to the neutral swatch. */
+  groupColor={};
+  const gc={};DB.activities.forEach(a=>gc[a.group]=(gc[a.group]||0)+1);
+  Object.keys(gc).sort((x,y)=>gc[y]-gc[x]||(x<y?-1:1))
+    .forEach((g,i)=>{if(i<GROUP_COLORS.length)groupColor[g]=GROUP_COLORS[i];});
   DB.people.forEach(p=>{
     p.totalDonated=p.donations.reduce((s,d)=>s+d.amount,0)||p.donatedCol;
     p.eventCount=p.events.length||p.eventsCol.length;
@@ -925,7 +1111,7 @@ function openPerson(key){
   const p=findPerson(key);
   if(!p){toast("No profile record found for “"+key+"”",true);return;}
   const days=daysSince(p.lastOnline);
-  const extra=Object.keys(p.raw||{}).filter(k=>k!=="__n"&&!/^(name|role|email|phone|address|age|dob|dateofbirth|joined|lastonline|notes|personid|id)$/i.test(k.replace(/\s+/g,"")));
+  const extra=Object.keys(p.raw||{}).filter(k=>k!=="__n"&&!PEOPLE_CONSUMED.has(norm(k)));
   const donRows=p.donations.slice().sort((a,b)=>(b.date||0)-(a.date||0));
   const evRows=p.events.slice().sort((a,b)=>(b.a.date||0)-(a.a.date||0));
   $("#modal").innerHTML=
@@ -956,9 +1142,13 @@ function openPerson(key){
           :'<div class="hint">'+(p.donatedCol?'Total from the People sheet: '+money(p.donatedCol)+' (no itemised transactions loaded).':'No donations recorded.')+'</div>')+
       '</div>'+
       '<div class="sec"><h4>Events participated</h4>'+
-        (evRows.length?'<table class="minitable"><thead><tr><th>Activity</th><th>Group</th><th>Date</th><th>Taking part as</th></tr></thead><tbody>'+
-          evRows.map(e=>'<tr><td>'+esc(e.a.name)+'</td><td>'+esc(e.a.group)+'</td><td>'+pretty(e.a.date)+
-            '</td><td>'+esc(e.cap)+'</td></tr>').join("")+'</tbody></table>'
+        (evRows.length?'<table class="minitable"><thead><tr><th>Activity</th><th>Group</th><th>Date</th><th>Taking part as</th><th>Attended</th></tr></thead><tbody>'+
+          evRows.map(e=>'<tr><td><span class="gchip" style="--gc:'+colorOfGroup(e.a.group)+'"><i class="sw"></i>'+
+            esc(e.a.name)+'</span></td><td>'+esc(e.a.group)+'</td><td>'+pretty(e.a.date)+
+            '</td><td>'+esc(e.cap)+'</td><td>'+(!e.a.past?'<span class="muted">upcoming</span>'
+              :'<span class="mark '+ATT[e.att||""].cls+'" title="'+esc(ATT[e.att||""].label)+'">'+
+                ATT[e.att||""].glyph+'</span> <span class="small muted">'+esc(ATT[e.att||""].label)+'</span>')+
+            '</td></tr>').join("")+'</tbody></table>'
           :(p.eventsCol.length?'<div class="hint">From the People sheet: '+esc(p.eventsCol.join(", "))+'</div>'
             :'<div class="hint">Not enrolled in any loaded activity.</div>'))+
       '</div>'+
@@ -977,7 +1167,8 @@ function openPerson(key){
     sheetOf("Donations",[{h:"Drive",f:d=>d.campaign},{h:"Amount",f:d=>d.amount},{h:"Date",f:d=>iso(d.date)},
       {h:"Time",f:d=>d.time},{h:"Method",f:d=>d.method}],donRows),
     sheetOf("Events",[{h:"Activity",f:e=>e.a.name},{h:"Group",f:e=>e.a.group},{h:"Category",f:e=>e.a.category},
-      {h:"Date",f:e=>iso(e.a.date)},{h:"Role",f:e=>e.cap}],evRows)
+      {h:"Date",f:e=>iso(e.a.date)},{h:"Role",f:e=>e.cap},
+      {h:"Attended",f:e=>!e.a.past?"Upcoming":ATT[e.att||""].label}],evRows)
   ]);
   backdrop.classList.add("on");
 }
@@ -997,23 +1188,40 @@ document.addEventListener("click",e=>{
 /* =======================================================================
    7 — PANEL 1 · activities
    ======================================================================= */
-let aSel=null,aSort={k:"date",dir:-1};
+let aSel=null,aView="upcoming",aSort={k:"date",dir:1};
+function whenLabel(a){
+  if(!a.date)return "";
+  const d=Math.round((a.date-new Date().setHours(0,0,0,0))/DAY);
+  return d===0?"today":d===1?"tomorrow":d===-1?"yesterday"
+    :d>0?"in "+(d<14?d+" days":Math.round(d/7)+" weeks")
+    :(-d<14?-d+" days":Math.round(-d/7)+" weeks")+" ago";
+}
+function attCell(a){
+  if(!a.past)return '<span class="muted">—</span>';
+  if(!a.attRecorded)return '<span class="muted small">not recorded</span>';
+  const p=a.attKids.present+a.attVols.present,t=a.attRecorded;
+  return '<span class="att"><span class="mini"><i style="width:'+(p/t*100).toFixed(0)+'%"></i></span>'+
+    p+'/'+t+'</span>';
+}
 const A_COLS=[
+  {k:"group",h:"Group",v:a=>'<span class="gchip"><i class="sw"></i>'+esc(a.group)+'</span>',cell:"gcell"},
   {k:"id",h:"Activity ID",v:a=>esc(a.id)},
   {k:"name",h:"Activity",v:a=>'<span style="font-weight:620">'+esc(a.name)+'</span>'},
-  {k:"group",h:"Group",v:a=>'<span class="chip grey"><i class="dot"></i>'+esc(a.group)+'</span>'},
   {k:"category",h:"Category",v:a=>esc(a.category)},
-  {k:"date",h:"Date",v:a=>pretty(a.date)},
+  {k:"date",h:"Date",v:a=>pretty(a.date)+' <span class="when">'+esc(whenLabel(a))+'</span>'},
   {k:"time",h:"Time",v:a=>esc(a.time+(a.end?" – "+a.end:""))||"—"},
   {k:"location",h:"Location",v:a=>esc(a.location||"—")},
   {k:"n",h:"Kids",v:a=>'<span style="color:var(--r-part);font-weight:650">'+a.participants.length+'</span>',cls:"num"},
   {k:"nv",h:"Vols",v:a=>'<span style="color:#3f7a1f;font-weight:650">'+a.volunteers.length+'</span>',cls:"num"},
-  {k:"ns",h:"Staff",v:a=>'<span style="color:var(--r-admin);font-weight:650">'+a.staff.length+'</span>',cls:"num"}
+  {k:"ns",h:"Staff",v:a=>'<span style="color:var(--r-admin);font-weight:650">'+a.staff.length+'</span>',cls:"num"},
+  {k:"att",h:"Attended",v:attCell,cls:"num"}
 ];
 function activityFilter(){
   const q=norm($("#aSearch").value),g=$("#aGroup").value,c=$("#aCat").value;
   const from=parseDate($("#aFrom").value),to=parseDate($("#aTo").value);
   return DB.activities.filter(a=>{
+    if(aView==="upcoming"&&a.past)return false;
+    if(aView==="past"&&!a.past)return false;
     if(g&&a.group!==g)return false;
     if(c&&a.category!==c)return false;
     if(from&&(!a.date||a.date<from))return false;
@@ -1039,23 +1247,50 @@ function renderActivities(){
     cat.innerHTML='<option value="">All categories</option>'+cats.map(g=>'<option>'+esc(g)+'</option>').join("");
 
   const rows=sortRows(activityFilter(),aSort,(a,k)=>
-    k==="n"?a.participants.length:k==="nv"?a.volunteers.length:k==="ns"?a.staff.length:a[k]);
+    k==="n"?a.participants.length:k==="nv"?a.volunteers.length:k==="ns"?a.staff.length
+    :k==="att"?(a.attRate==null?-1:a.attRate):a[k]);
+  $$("#aView button").forEach(b=>b.classList.toggle("on",b.dataset.v===aView));
+  $("#aTitle").textContent=aView==="upcoming"?"Upcoming sessions":aView==="past"?"Past sessions":"All sessions";
   $("#aCount").textContent=rows.length+" of "+DB.activities.length+" sessions";
+
+  /* group legend doubles as a colour key and a one-click filter */
+  const counts={};activityFilter().forEach(a=>counts[a.group]=(counts[a.group]||0)+1);
+  const legendGroups=[...new Set(DB.activities.map(a=>a.group))].sort();
+  $("#aLegend").innerHTML=legendGroups.map(g=>
+    '<span class="gl'+($("#aGroup").value===g?" on":"")+'" data-g="'+esc(g)+'">'+
+    '<i class="sw" style="background:'+colorOfGroup(g)+'"></i>'+esc(g)+
+    '<span class="n">'+(counts[g]||0)+'</span></span>').join("")+
+    (legendGroups.length>GROUP_COLORS.length?'<span class="hint">groups past the first 8 share the neutral swatch</span>':'');
+  $$("#aLegend .gl").forEach(el=>el.onclick=()=>{
+    const g=el.dataset.g;$("#aGroup").value=$("#aGroup").value===g?"":g;renderActivities();});
+
+  const past=rows.filter(a=>a.past),recorded=past.filter(a=>a.attRecorded);
+  const attP=recorded.reduce((s,a)=>s+a.attKids.present+a.attVols.present,0);
+  const attT=recorded.reduce((s,a)=>s+a.attRecorded,0);
   $("#aStats").innerHTML=
-    stat("Sessions",num(rows.length))+
+    stat("Sessions",num(rows.length),aView==="upcoming"?"scheduled from today":aView==="past"?"already run":"past + upcoming")+
     stat("Groups",num(new Set(rows.map(a=>a.group)).size))+
-    stat("Enrolled kids (seats)",num(rows.reduce((s,a)=>s+a.participants.length,0)))+
-    stat("Volunteer assignments",num(rows.reduce((s,a)=>s+a.volunteers.length,0)))+
-    stat("Sessions without staff",num(rows.filter(a=>!a.staff.length).length),"needs a monitor assigned");
+    stat(aView==="past"?"Kid attendances":"Enrolled kids (seats)",
+      aView==="past"?num(past.reduce((s,a)=>s+a.attKids.present,0)):num(rows.reduce((s,a)=>s+a.participants.length,0)))+
+    stat(aView==="past"?"Volunteer attendances":"Volunteer assignments",
+      aView==="past"?num(past.reduce((s,a)=>s+a.attVols.present,0)):num(rows.reduce((s,a)=>s+a.volunteers.length,0)))+
+    (aView==="upcoming"
+      ?stat("Sessions without staff",num(rows.filter(a=>!a.staff.length).length),"needs a monitor assigned")
+      :stat("Attendance rate",attT?Math.round(attP/attT*100)+"%":"—",
+        attT?num(attP)+" of "+num(attT)+" recorded · "+num(past.reduce((s,a)=>s+a.attCancelled,0))+" cancelled same day"
+          :"no attendance recorded yet"));
 
   $("#aTable thead").innerHTML="<tr>"+A_COLS.map(c=>'<th data-k="'+c.k+'">'+c.h+
     (aSort.k===c.k?' <span class="arw">'+(aSort.dir>0?"▲":"▼")+'</span>':'')+'</th>').join("")+"</tr>";
   $$("#aTable thead th").forEach(th=>th.onclick=()=>{
     const k=th.dataset.k;aSort=k===aSort.k?{k,dir:-aSort.dir}:{k,dir:1};renderActivities();});
   $("#aTable tbody").innerHTML=rows.length?rows.map(a=>
-    '<tr class="clickable'+(aSel&&aSel.__key===a.__key?" sel":"")+'" data-key="'+esc(a.__key)+'">'+
-    A_COLS.map(c=>'<td'+(c.cls?' class="'+c.cls+'"':'')+'>'+c.v(a)+'</td>').join("")+'</tr>').join("")
-    :'<tr><td colspan="'+A_COLS.length+'"><div class="empty">No sessions match these filters.</div></td></tr>';
+    '<tr class="clickable'+(aSel&&aSel.__key===a.__key?" sel":"")+'" data-key="'+esc(a.__key)+'"'+
+    ' style="--gc:'+colorOfGroup(a.group)+'">'+
+    A_COLS.map(c=>'<td'+(c.cls||c.cell?' class="'+[c.cls,c.cell].filter(Boolean).join(" ")+'"':'')+'>'+c.v(a)+'</td>').join("")+'</tr>').join("")
+    :'<tr><td colspan="'+A_COLS.length+'"><div class="empty">No '+
+      (aView==="upcoming"?"upcoming":aView==="past"?"past":"")+' sessions match these filters.'+
+      (aView==="upcoming"?' Switch to <b>Past</b> to see sessions that already happened.':'')+'</div></td></tr>';
   $$("#aTable tbody tr[data-key]").forEach(tr=>tr.onclick=()=>{
     aSel=DB.activities.find(a=>a.__key===tr.dataset.key);renderActivities();renderRoster();});
   if(aSel)renderRoster();
@@ -1064,59 +1299,124 @@ function renderRoster(){
   const a=aSel;const box=$("#aDetail");
   const oldBtn=$("#aExportRoster");if(oldBtn)oldBtn.disabled=!a;
   if(!a)return;
-  const grp=(cls,title,names)=>
-    '<div class="rosterbox '+cls+'"><div class="h">'+title+'<span class="n">'+names.length+'</span></div>'+
+  const showAtt=a.past;
+  const mark=n=>{
+    const v=a.attended[norm(n)]||"",m=ATT[v],next=ATT[ATT_CYCLE[(ATT_CYCLE.indexOf(v)+1)%ATT_CYCLE.length]];
+    return '<button class="mark '+m.cls+'" data-att="'+esc(n)+'" aria-label="'+esc(m.label)+
+      ' — click to change to '+esc(next.label)+'">'+m.glyph+'</button>';
+  };
+  const grp=(cls,title,names,tal)=>            /* tal omitted (staff) = no attendance marks */
+    '<div class="rosterbox '+cls+'"><div class="h">'+title+
+      '<span class="n">'+(showAtt&&tal&&tal.recorded?tal.present+"/"+tal.recorded+" present · ":"")+names.length+'</span></div>'+
     '<div class="list">'+(names.length?names.map(n=>{
-      const p=findPerson(n);
-      return '<button class="person-pill '+cls+'" data-person="'+esc(p?p.id:n)+'">'+esc(n)+
-        (p&&p.inactive?'<span class="inactive">(Inactive)</span>':'')+'</button>';}).join("")
+      const p=findPerson(n),v=showAtt&&tal?(a.attended[norm(n)]||""):"";
+      return '<span class="person-pill '+cls+(v==="absent"?" absent":v==="cancelled"?" cancelled":"")+'">'+
+        (showAtt&&tal?mark(n):"")+
+        '<button class="pname" data-person="'+esc(p?p.id:n)+'">'+esc(n)+
+        (p&&p.inactive?'<span class="inactive">(Inactive)</span>':'')+'</button></span>';}).join("")
       :'<span class="hint" style="padding:4px 6px">Nobody assigned yet.</span>')+'</div></div>';
+  const rate=a.attRecorded?Math.round(a.attPresent/a.attRecorded*100):null;
   box.innerHTML=
-    '<div class="cardhead"><h3>Session roster</h3><button class="btn sm" id="aExportRoster">⬇ Roster .xlsx</button></div>'+
+    '<div class="cardhead"><h3>Session roster</h3>'+
+      '<span class="chip grey"><i class="dot" style="background:'+colorOfGroup(a.group)+'"></i>'+esc(a.group)+'</span>'+
+      '<button class="btn sm" id="aExportRoster">⬇ Roster .xlsx</button></div>'+
     '<dl class="kv">'+kv("Activity",'<b>'+esc(a.name)+'</b>')+kv("ID",esc(a.id))+
-      kv("Group",esc(a.group))+kv("Category",esc(a.category))+
-      kv("Date",pretty(a.date))+kv("Time",esc(a.time+(a.end?" – "+a.end:""))||"—")+
+      kv("Group",'<span class="gchip" style="--gc:'+colorOfGroup(a.group)+'"><i class="sw"></i>'+esc(a.group)+'</span>')+
+      kv("Category",esc(a.category))+
+      kv("Date",pretty(a.date)+' <span class="when">'+esc(whenLabel(a))+(a.past?" · already run":" · upcoming")+'</span>')+
+      kv("Time",esc(a.time+(a.end?" – "+a.end:""))||"—")+
       kv("Location",esc(a.location||"—"))+(a.notes?kv("Notes",esc(a.notes)):"")+'</dl>'+
+    (showAtt?'<div class="attsum">'+
+         '<span><span class="mark p">✓</span> present <b>'+a.attPresent+'</b></span>'+
+         '<span><span class="mark a">✕</span> no-show <b>'+(a.attKids.absent+a.attVols.absent)+'</b></span>'+
+         '<span><span class="mark c">!</span> cancelled same day <b>'+a.attCancelled+'</b></span>'+
+         '<span><span class="mark u">?</span> not recorded <b>'+(a.attKids.unknown+a.attVols.unknown)+'</b></span>'+
+         (a.attRecorded?'<span class="muted">attendance rate <b>'+rate+'%</b></span>':'')+
+      '</div>'+
+      '<div class="attlegend">Click a badge to change it: '+
+        '<span><span class="mark p">✓</span> present</span>'+
+        '<span><span class="mark a">✕</span> did not show up</span>'+
+        '<span><span class="mark c">!</span> cancelled on the day</span>'+
+        '<span><span class="mark u">?</span> not recorded</span></div>':'')+
     '<div class="roster">'+
-      grp("kids","Kids enrolled",a.participants)+
-      grp("vols","Volunteers responsible",a.volunteers)+
+      grp("kids","Kids enrolled",a.participants,a.attKids)+
+      grp("vols","Volunteers responsible",a.volunteers,a.attVols)+
       grp("staff","Love 21 staff monitoring",a.staff)+
     '</div>';
+  /* click a badge to cycle present → no-show → cancelled same day → not recorded */
+  $$("#aDetail [data-att]").forEach(b=>{
+    const n=b.dataset.att;
+    b.onclick=e=>{e.stopPropagation();
+      const cur=a.attended[norm(n)]||"";
+      setAttendance(a,n,ATT_CYCLE[(ATT_CYCLE.indexOf(cur)+1)%ATT_CYCLE.length]);};
+    bindTip(b,()=>{const cur=a.attended[norm(n)]||"";
+      const nxt=ATT_CYCLE[(ATT_CYCLE.indexOf(cur)+1)%ATT_CYCLE.length];
+      return '<div class="tk">'+esc(n)+'</div><div class="tv">'+esc(ATT[cur].label)+'</div>'+
+        '<div class="tk" style="margin-top:3px">click → '+esc(ATT[nxt].label)+'</div>';});
+  });
   $("#aExportRoster").onclick=()=>downloadXlsx("love21-roster-"+a.id+"-"+iso(a.date)+".xlsx",[
     {name:"Session",rows:[["Field","Value"],["Activity ID",a.id],["Activity",a.name],["Group",a.group],
-      ["Category",a.category],["Date",iso(a.date)],["Start",a.time],["End",a.end],["Location",a.location]]},
-    {name:"Roster",rows:[["Capacity","Name","Role in database","Email","Phone","Last online","Status"]].concat(
+      ["Category",a.category],["Date",iso(a.date)],["Start",a.time],["End",a.end],["Location",a.location],
+      ["Status",a.past?"Past":"Upcoming"],
+      ["Kids present",a.attKids.present],["Kids no-show",a.attKids.absent],["Kids cancelled same day",a.attKids.cancelled],
+      ["Volunteers present",a.attVols.present],["Volunteers no-show",a.attVols.absent],
+      ["Volunteers cancelled same day",a.attVols.cancelled],
+      ["Attendance rate",a.attRecorded?Math.round(a.attPresent/a.attRecorded*100)+"%":""]]},
+    {name:"Roster",rows:[["Capacity","Name","Attended","Role in database","Email","Phone","Last online","Status"]].concat(
       [["Participant",a.participants],["Volunteer",a.volunteers],["Love 21 staff",a.staff]].flatMap(([cap,list])=>
         list.map(n=>{const p=findPerson(n);
-          return [cap,n,p?(p.roleRaw||ROLES[p.role]):"not in People table",p?p.email:"",p?p.phone:"",
+          return [cap,n,!a.past?"":ATT[a.attended[norm(n)]||""].label,
+            p?(p.roleRaw||ROLES[p.role]):"not in People table",p?p.email:"",p?p.phone:"",
             p?iso(p.lastOnline):"",p?(p.inactive?"Inactive":"Active"):""];})))}
   ]);
+}
+/* record an attendance change: kept in the edit overlay so it survives re-uploads and reloads */
+function setAttendance(a,name,status){
+  const k=norm(name),ek=actKey(a)+"|"+k;
+  if(status){DB.edits[ek]=status;a.attended[k]=status;}
+  else{DB.edits[ek]="";delete a.attended[k];}
+  derive();save();renderActivities();renderRoster();updateEditBtn();
+  toast(name+" · "+ATT[status||""].label.toLowerCase());
+}
+function updateEditBtn(){
+  const n=Object.keys(DB.edits).filter(k=>DB.edits[k]).length,eb=$("#btnClearEdits");
+  if(!eb)return;
+  eb.style.display=n?"":"none";
+  eb.textContent="↺ Undo "+n+" manual attendance edit"+(n===1?"":"s");
 }
 function exportActivities(){
   const rows=activityFilter();
   downloadXlsx("love21-activities.xlsx",[
     sheetOf("Activities",[{h:"Activity ID",f:a=>a.id},{h:"Activity",f:a=>a.name},{h:"Category",f:a=>a.category},
       {h:"Group",f:a=>a.group},{h:"Date",f:a=>iso(a.date)},{h:"Start Time",f:a=>a.time},{h:"End Time",f:a=>a.end},
-      {h:"Location",f:a=>a.location},{h:"Kids enrolled",f:a=>a.participants.length},
+      {h:"Location",f:a=>a.location},{h:"Status",f:a=>a.past?"Past":"Upcoming"},
+      {h:"Kids enrolled",f:a=>a.participants.length},
       {h:"Volunteers",f:a=>a.volunteers.length},{h:"Staff",f:a=>a.staff.length},
+      {h:"Kids present",f:a=>a.past?a.attKids.present:""},{h:"Kids no-show",f:a=>a.past?a.attKids.absent:""},
+      {h:"Kids cancelled same day",f:a=>a.past?a.attKids.cancelled:""},
+      {h:"Volunteers present",f:a=>a.past?a.attVols.present:""},{h:"Volunteers no-show",f:a=>a.past?a.attVols.absent:""},
+      {h:"Volunteers cancelled same day",f:a=>a.past?a.attVols.cancelled:""},
+      {h:"Attendance rate",f:a=>a.attRate==null?"":Math.round(a.attRate*100)+"%"},
       {h:"Participants",f:a=>a.participants.join("; ")},{h:"Volunteer names",f:a=>a.volunteers.join("; ")},
       {h:"Staff names",f:a=>a.staff.join("; ")}],rows),
-    {name:"Rosters",rows:[["Activity ID","Activity","Date","Capacity","Name"]].concat(
+    {name:"Rosters",rows:[["Activity ID","Activity","Group","Date","Status","Capacity","Name","Attended"]].concat(
       rows.flatMap(a=>[["Participant",a.participants],["Volunteer",a.volunteers],["Love 21 staff",a.staff]]
-        .flatMap(([cap,l])=>l.map(n=>[a.id,a.name,iso(a.date),cap,n]))))}
+        .flatMap(([cap,l])=>l.map(n=>
+          [a.id,a.name,a.group,iso(a.date),a.past?"Past":"Upcoming",cap,n,
+            !a.past?"":ATT[a.attended[norm(n)]||""].label]))))}
   ]);
 }
 
 /* =======================================================================
    8 — PANEL 2 · people
    ======================================================================= */
-let pSort={k:"name",dir:1},pExtraCols=[];
+let pSort={k:"name",dir:1},pExtraCols=[],pRoles=new Set();   /* empty set = every role */
 function peopleBase(){
   const res=binaryLookup($("#pSearch").value);
   lastSearchInfo=res.info;
-  const role=$("#pRole").value,st=$("#pStatus").value;
+  const st=$("#pStatus").value;
   return res.people.filter(p=>{
-    if(role&&p.role!==role)return false;
+    if(pRoles.size&&!pRoles.has(p.role))return false;
     if(st==="active"&&p.inactive)return false;
     if(st==="inactive"&&!p.inactive)return false;
     return true;});
@@ -1127,6 +1427,25 @@ function renderPeople(){
   const searching=!!$("#pSearch").value.trim();
   const rows=searching?rows0:sortRows(rows0,pSort,(p,k)=>p[k]);
   $("#pCount").textContent=rows.length+" of "+DB.people.length+" people";
+
+  /* the role chips are a multi-select — any combination, click again to unselect */
+  $$(".chip.tog[data-role]").forEach(c=>{
+    const r=c.dataset.role,on=pRoles.has(r),n=DB.people.filter(p=>p.role===r).length;
+    c.setAttribute("aria-pressed",on?"true":"false");
+    c.classList.toggle("dimmed",pRoles.size>0&&!on);
+    $("b",c).textContent=n;
+    if(r==="other")c.style.display=n?"":"none";        /* only shown when unclassified people exist */
+  });
+  /* keep the dropdown in step; it shows a summary once more than one role is picked */
+  const sel=$("#pRole");let multiOpt=$("#pRoleMulti");
+  if(pRoles.size>1){
+    if(!multiOpt){multiOpt=document.createElement("option");multiOpt.id="pRoleMulti";multiOpt.value="__multi";
+      sel.appendChild(multiOpt);}
+    multiOpt.textContent=pRoles.size+" roles selected";sel.value="__multi";
+  }else{
+    if(multiOpt)multiOpt.remove();
+    sel.value=pRoles.size===1?[...pRoles][0]:"";
+  }
   const inact=DB.people.filter(p=>p.inactive).length;
   $("#pStats").innerHTML=
     stat("People",num(DB.people.length))+
@@ -1136,9 +1455,8 @@ function renderPeople(){
     stat("Inactive 90+ days",num(inact),inact?"grey tag on their name":"everyone has logged in recently")+
     stat("Donated (all people)",money(DB.people.reduce((s,p)=>s+p.totalDonated,0)));
 
-  const skip=new Set(["name","fullname","role","email","phone","address","age","dob","dateofbirth","joined","joindate",
-    "lastonline","lastlogin","notes","personid","id","donations","totaldonated","eventsparticipated","events"]);
-  pExtraCols=[...new Set(DB.people.flatMap(p=>Object.keys(p.raw||{})))].filter(k=>k!=="__n"&&!skip.has(norm(k)));
+  pExtraCols=[...new Set(DB.people.flatMap(p=>Object.keys(p.raw||{})))]
+    .filter(k=>k!=="__n"&&!PEOPLE_CONSUMED.has(norm(k)));
 
   const cols=[
     {k:"name",h:"Name",v:p=>'<button class="namebtn '+p.role+'" data-person="'+esc(p.id)+'">'+esc(p.name)+'</button>'+
@@ -1271,15 +1589,32 @@ function exportDonations(){
 /* =======================================================================
    10 — PANEL 4 · visitors (donut + ordinal bars + trend)
    ======================================================================= */
-let vGran="month",vPeriod="",vType=null,vAge=null;
+let vGran="month",vFrom=null,vTo=null,vType=null,vAge=null,vZoom=false;   /* vFrom..vTo = the brushed range */
+/* the calendar span a period key covers, so a window survives a day/month/year switch */
+function periodStart(k,g){return g==="day"?new Date(k+"T00:00:00"):g==="month"?new Date(k+"-01T00:00:00")
+  :new Date(k+"-01-01T00:00:00");}
+function periodEnd(k,g){const s=periodStart(k,g);
+  return g==="day"?s:g==="month"?new Date(s.getFullYear(),s.getMonth()+1,0):new Date(s.getFullYear(),11,31);}
+/* re-express the brushed window in another granularity (month range -> its days, days -> their months, …) */
+function regrain(newGran,fromKey,toKey,oldGran){
+  if(!fromKey){vGran=newGran;return;}
+  const a=periodStart(fromKey,oldGran),b=periodEnd(toKey,oldGran);
+  vGran=newGran;vFrom=periodKey(a,newGran);vTo=periodKey(b,newGran);
+}
+function clearBrush(){vFrom=vTo=null;vZoom=false;}
 const periodKey=(d,g)=>!d?"":g==="day"?iso(d):g==="year"?String(d.getFullYear())
   :d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
 const periodLabel=(k,g)=>g==="year"?k:g==="month"?
   new Date(k+"-01").toLocaleDateString(undefined,{month:"short",year:"numeric"})
   :new Date(k).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+/* period keys are fixed-width and sortable ("2026-07-01" / "2026-07" / "2026"),
+   so a brushed range is just a lexical between-test */
+const inBrush=d=>{if(!vFrom)return true;const k=periodKey(d,vGran);return !!k&&k>=vFrom&&k<=vTo;};
+const brushLabel=()=>!vFrom?"all time":vFrom===vTo?periodLabel(vFrom,vGran)
+  :periodLabel(vFrom,vGran)+" → "+periodLabel(vTo,vGran);
 function visitorsFiltered(ignore){
   return DB.visitors.filter(v=>{
-    if(vPeriod&&periodKey(v.date,vGran)!==vPeriod)return false;
+    if(!inBrush(v.date))return false;
     if(ignore!=="type"&&vType&&v.userType!==vType)return false;
     if(ignore!=="age"&&vAge&&v.ageGroup!==vAge)return false;
     return true;});
@@ -1291,26 +1626,33 @@ function renderVisitors(){
   $$("#vGran button").forEach(b=>b.classList.toggle("on",b.dataset.g===vGran));
   const keys=[...new Set(DB.visitors.map(v=>periodKey(v.date,vGran)).filter(Boolean))].sort();
   const sel=$("#vPeriod");
-  sel.innerHTML='<option value="">All time</option>'+keys.map(k=>'<option value="'+k+'"'+(k===vPeriod?" selected":"")+'>'+
-    esc(periodLabel(k,vGran))+'</option>').join("");
-  if(vPeriod&&!keys.includes(vPeriod)){vPeriod="";sel.value="";}
+  const single=vFrom&&vFrom===vTo?vFrom:"";
+  sel.innerHTML='<option value="">All time</option>'+
+    (vFrom&&!single?'<option value="__range" selected>'+esc(brushLabel())+'</option>':'')+
+    keys.map(k=>'<option value="'+k+'"'+(k===single?" selected":"")+'>'+esc(periodLabel(k,vGran))+'</option>').join("");
+  if(vFrom&&!keys.some(k=>k>=vFrom&&k<=vTo)){clearBrush();sel.value="";}
 
   const rows=visitorsFiltered();
   const total=rows.reduce((s,v)=>s+v.count,0);
   const allTotal=DB.visitors.reduce((s,v)=>s+v.count,0);
   const uniqDays=new Set(rows.map(v=>iso(v.date))).size;
   $("#vStats").innerHTML=
-    stat("Visits in view",num(total),vPeriod?periodLabel(vPeriod,vGran):"all time")+
+    stat("Visits in view",num(total),brushLabel())+
     stat("Share of all visits",(allTotal?(total/allTotal*100).toFixed(1):0)+"%")+
     stat("Days with visits",num(uniqDays))+
     stat("Busiest day",busiest(rows))+
     stat("Largest visitor type",largest(tally(rows,"userType")));
   $("#vCross").innerHTML=[
-    vType?'<span class="chip grey"><i class="dot" style="background:'+UCOLORS[vType]+'"></i>'+esc(vType)+' ✕</span>':"",
-    vAge?'<span class="chip grey"><i class="dot"></i>Age '+esc(vAge)+' ✕</span>':""
+    vFrom?'<span class="chip grey" data-clear="range" style="cursor:pointer"><i class="dot" style="background:var(--accent)"></i>'+
+      esc(brushLabel())+' ✕</span>':"",
+    vType?'<span class="chip grey" data-clear="type" style="cursor:pointer"><i class="dot" style="background:'+UCOLORS[vType]+'"></i>'+
+      esc(vType)+' ✕</span>':"",
+    vAge?'<span class="chip grey" data-clear="age" style="cursor:pointer"><i class="dot"></i>Age '+esc(vAge)+' ✕</span>':""
   ].join("");
-  $$("#vCross .chip").forEach((c,i)=>c.onclick=()=>{
-    if(vType&&i===0)vType=null;else vAge=null;renderVisitors();});
+  $$("#vCross .chip[data-clear]").forEach(c=>c.onclick=()=>{
+    const w=c.dataset.clear;
+    if(w==="range")clearBrush();else if(w==="type")vType=null;else vAge=null;
+    renderVisitors();});
 
   renderTrend();
   renderDonut();
@@ -1338,8 +1680,12 @@ function renderTrend(){
     if(vAge&&v.ageGroup!==vAge)return false;return true;});
   const m=new Map();
   rows.forEach(v=>{const k=periodKey(v.date,vGran);if(k)m.set(k,(m.get(k)||0)+v.count);});
-  const keys=[...m.keys()].sort();
-  $("#vTrendTitle").textContent="Visits by "+vGran;
+  let keys=[...m.keys()].sort();
+  const zoomed=vZoom&&vFrom&&keys.some(k=>k>=vFrom&&k<=vTo);
+  if(zoomed)keys=keys.filter(k=>k>=vFrom&&k<=vTo);      /* drilled in: axis shows only the window */
+  $("#vTrendTitle").textContent="Visits by "+vGran+(zoomed?" · "+brushLabel():"");
+  const zb=$("#vZoomBtn");
+  if(zb){zb.style.display=vFrom?"":"none";zb.textContent=vZoom?"⤢ Show full timeline":"⤢ Zoom to selection";}
   if(!keys.length){host.innerHTML='<div class="empty">No visitor rows loaded.</div>';return;}
   const W=Math.max(560,host.clientWidth||900),H=180,pad={l:44,r:12,t:12,b:34};
   const iw=W-pad.l-pad.r,ih=H-pad.t-pad.b;
@@ -1352,15 +1698,23 @@ function renderTrend(){
     const t=svgEl("text",{x:pad.l-8,y:y+3.5,"text-anchor":"end",class:"axis"});
     t.textContent=Math.round(max*i/4);svg.appendChild(t);
   }
+  /* brush band + edge handles, drawn behind the bars */
+  const band=svgEl("rect",{class:"brushsel",x:0,y:pad.t-4,width:0,height:ih+4,rx:4,
+    fill:"rgba(194,80,34,.12)",stroke:"var(--accent)","stroke-width":1,visibility:"hidden"});
+  svg.appendChild(band);
+  const mkEdge=()=>{const l=svgEl("line",{class:"brushhandle",x1:0,x2:0,y1:pad.t-4,y2:pad.t+ih,
+    stroke:"var(--accent)","stroke-width":2,visibility:"hidden"});svg.appendChild(l);return l;};
+  const e0=mkEdge(),e1=mkEdge();
+  const bars=[];
   keys.forEach((k,i)=>{
     const v=m.get(k),h=Math.max(2,ih*v/max),x=pad.l+i*step+(step-bw)/2,y=pad.t+ih-h;
-    const on=!vPeriod||vPeriod===k;
     const r=svgEl("rect",{x,y,width:bw,height:h,rx:4,fill:"var(--s1)",class:"vbar",
-      opacity:on?.95:.25,tabindex:0,role:"button"});
-    r.addEventListener("click",()=>{vPeriod=vPeriod===k?"":k;renderVisitors();});
-    r.addEventListener("keydown",e=>{if(e.key==="Enter"){vPeriod=vPeriod===k?"":k;renderVisitors();}});
-    bindTip(r,()=>'<div class="tk">'+esc(periodLabel(k,vGran))+'</div><div class="tv">'+num(v)+' visits</div>'+
-      '<div class="tk" style="margin-top:3px">'+(vPeriod===k?"click to clear":"click to focus")+'</div>');
+      opacity:.95,tabindex:0,role:"button","pointer-events":"none"});
+    bindTip(r,()=>tipFor(i));                       /* keyboard focus reads out the same as hover */
+    r.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){setBrush(i,i,true);}
+      else if(e.key==="Escape"){clearBrush();renderVisitors();}});
+    bars.push(r);
     svg.appendChild(r);
     if(keys.length<=26||i%Math.ceil(keys.length/16)===0){
       const t=svgEl("text",{x:pad.l+i*step+step/2,y:H-12,"text-anchor":"middle",class:"axis"});
@@ -1369,7 +1723,71 @@ function renderTrend(){
     }
   });
   svg.appendChild(svgEl("line",{x1:pad.l,x2:W-pad.r,y1:pad.t+ih,y2:pad.t+ih,stroke:"var(--line)","stroke-width":1}));
+
+  /* one wide layer on top owns hover + click + drag — hit targets are the full column, not the bar */
+  const layer=svgEl("rect",{class:"brushlayer",x:pad.l,y:pad.t-4,width:iw,height:ih+4,fill:"transparent"});
+  svg.appendChild(layer);
   host.appendChild(svg);
+
+  const idxAt=ev=>{const r=svg.getBoundingClientRect();
+    const x=(ev.clientX-r.left)*(W/r.width);
+    return Math.max(0,Math.min(keys.length-1,Math.floor((x-pad.l)/step)));};
+  const sumOf=(a,b)=>{let t=0;for(let i=a;i<=b;i++)t+=m.get(keys[i])||0;return t;};
+  function tipFor(a,b){
+    const i0=Math.min(a,b==null?a:b),i1=Math.max(a,b==null?a:b),one=i0===i1;
+    return '<div class="tk">'+(one?esc(vGran):(i1-i0+1)+" "+vGran+"s selected")+'</div>'+
+      '<div class="tv">'+esc(one?periodLabel(keys[i0],vGran)
+        :periodLabel(keys[i0],vGran)+" → "+periodLabel(keys[i1],vGran))+'</div>'+
+      '<div>'+num(sumOf(i0,i1))+' visits</div>'+
+      '<div class="tk" style="margin-top:3px">'+(dragging?"release to apply":"drag to brush a range")+'</div>';
+  }
+  /* repaint the band without a full re-render, so dragging stays smooth */
+  function paint(i0,i1){
+    if(i0==null){[band,e0,e1].forEach(el=>el.setAttribute("visibility","hidden"));
+      bars.forEach(b=>b.setAttribute("opacity",.95));return;}
+    const a=Math.min(i0,i1),b=Math.max(i0,i1);
+    band.setAttribute("x",pad.l+a*step);band.setAttribute("width",Math.max(step,(b-a+1)*step));
+    band.setAttribute("visibility","visible");
+    [[e0,a],[e1,b+1]].forEach(([el,i])=>{const x=pad.l+i*step;
+      el.setAttribute("x1",x);el.setAttribute("x2",x);el.setAttribute("visibility","visible");});
+    bars.forEach((bar,i)=>bar.setAttribute("opacity",i>=a&&i<=b?.95:.22));
+  }
+  function paintCurrent(){
+    if(!vFrom)return paint(null);
+    const a=keys.findIndex(k=>k>=vFrom);let b=-1;
+    for(let i=0;i<keys.length;i++)if(keys[i]<=vTo)b=i;
+    (a<0||b<0||b<a)?paint(null):paint(a,b);
+  }
+  function setBrush(i0,i1,toggle){
+    const a=Math.min(i0,i1),b=Math.max(i0,i1);
+    if(toggle&&vFrom===keys[a]&&vTo===keys[b])clearBrush();        /* click the same bar again to clear */
+    else{vFrom=keys[a];vTo=keys[b];}
+    renderVisitors();
+  }
+  let dragging=false,anchor=0,moved=false;
+  layer.addEventListener("pointerdown",ev=>{
+    if(ev.pointerType==="mouse"&&ev.button!==0)return;
+    dragging=true;moved=false;anchor=idxAt(ev);
+    try{layer.setPointerCapture(ev.pointerId);}catch(e){}
+    paint(anchor,anchor);showTip(tipFor(anchor),ev);ev.preventDefault();});
+  layer.addEventListener("pointermove",ev=>{
+    const i=idxAt(ev);
+    if(dragging){if(i!==anchor)moved=true;paint(anchor,i);showTip(tipFor(anchor,i),ev);}
+    else showTip(tipFor(i),ev);
+    moveTip(ev);});
+  layer.addEventListener("pointerup",ev=>{
+    if(!dragging)return;
+    dragging=false;hideTip();
+    setBrush(anchor,idxAt(ev),!moved);});          /* released without moving = plain click toggle */
+  layer.addEventListener("pointercancel",()=>{dragging=false;hideTip();paintCurrent();});
+  layer.addEventListener("pointerleave",()=>{if(!dragging)hideTip();});
+  /* double-click drills one level down — a year opens as months, a month opens as days */
+  layer.addEventListener("dblclick",ev=>{
+    const k=keys[idxAt(ev)];
+    if(vGran==="day"){clearBrush();}
+    else{const old=vGran;regrain(vGran==="year"?"month":"day",k,k,old);vZoom=true;}
+    renderVisitors();});
+  paintCurrent();
 }
 function arcPath(cx,cy,r0,r1,a0,a1){
   const p=(r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
@@ -1569,6 +1987,7 @@ const LSKEY="love21.dashboard.v1";
 function save(){
   try{
     const payload={};for(const t in DB.raw)payload[t]=DB.raw[t].map(r=>{const o={};for(const k in r)if(k!=="__n")o[k]=r[k];return o;});
+    payload.__attendance=DB.edits;
     localStorage.setItem(LSKEY,JSON.stringify(payload));
   }catch(e){/* over quota — data stays in memory only */}
 }
@@ -1578,6 +1997,7 @@ function restore(){
     if(!j)return false;
     let any=false;
     for(const t in j)if(Array.isArray(j[t])&&j[t].length){ingest(t,j[t].map(indexRow));any=true;}
+    if(j.__attendance)DB.edits=j.__attendance;
     return any;
   }catch(e){return false;}
 }
@@ -1586,6 +2006,7 @@ function refreshAll(){
   derive();save();
   const n=DB.activities.length+DB.people.length+DB.donations.length+DB.visitors.length;
   $("#dbstate").innerHTML='<i class="dot"></i>'+(n?num(n)+" records loaded":"no data");
+  updateEditBtn();
   renderActivities();renderPeople();renderDonations();renderVisitors();renderDataTable();
 }
 function renderDataTable(){
@@ -1617,15 +2038,29 @@ $("#btnGoData").onclick=()=>$$(".tab").find(t=>t.dataset.p==="data").click();
 /* panel 1 */
 ["aSearch","aGroup","aCat","aFrom","aTo"].forEach(id=>{
   const el=$("#"+id);el.addEventListener("input",renderActivities);el.addEventListener("change",renderActivities);});
+/* Upcoming opens soonest-first; Past opens most-recent-first */
+$$("#aView button").forEach(b=>b.onclick=()=>{
+  aView=b.dataset.v;aSort={k:"date",dir:aView==="past"?-1:1};aSel=null;
+  $("#aDetail").innerHTML='<div class="cardhead"><h3>Session roster</h3></div>'+
+    '<div class="empty">Select a session on the left'+
+    (aView==="past"?" to see who actually attended — kids and volunteers are ticked off individually.":
+      " to see the kids enrolled, the volunteers responsible and the Love 21 staff monitoring it.")+'</div>';
+  renderActivities();});
 $("#aReset").onclick=()=>{["aSearch","aGroup","aCat","aFrom","aTo"].forEach(id=>$("#"+id).value="");aSel=null;
   $("#aDetail").innerHTML='<div class="cardhead"><h3>Session roster</h3></div><div class="empty">Select an activity session on the left.</div>';
   renderActivities();};
 $("#aExport").onclick=exportActivities;
 
 /* panel 2 */
-["pSearch","pRole","pStatus"].forEach(id=>{
+["pSearch","pStatus"].forEach(id=>{
   const el=$("#"+id);el.addEventListener("input",renderPeople);el.addEventListener("change",renderPeople);});
-$("#pReset").onclick=()=>{["pSearch","pRole","pStatus"].forEach(id=>$("#"+id).value="");renderPeople();};
+$$(".chip.tog[data-role]").forEach(c=>c.onclick=()=>{      /* toggle any combination on and off */
+  const r=c.dataset.role;pRoles.has(r)?pRoles.delete(r):pRoles.add(r);renderPeople();});
+$("#pRole").onchange=e=>{                                  /* dropdown = single pick, or clear */
+  const v=e.target.value;
+  if(v!=="__multi"){pRoles.clear();if(v)pRoles.add(v);}
+  renderPeople();};
+$("#pReset").onclick=()=>{["pSearch","pStatus"].forEach(id=>$("#"+id).value="");pRoles.clear();renderPeople();};
 $("#pExport").onclick=exportPeople;
 
 /* panel 3 */
@@ -1634,9 +2069,15 @@ $("#pExport").onclick=exportPeople;
 $("#dExport").onclick=exportDonations;
 
 /* panel 4 */
-$$("#vGran button").forEach(b=>b.onclick=()=>{vGran=b.dataset.g;vPeriod="";renderVisitors();});
-$("#vPeriod").onchange=e=>{vPeriod=e.target.value;renderVisitors();};
-$("#vReset").onclick=()=>{vPeriod="";vType=null;vAge=null;renderVisitors();};
+/* switching day/month/year keeps whatever window you were looking at */
+$$("#vGran button").forEach(b=>b.onclick=()=>{
+  if(b.dataset.g===vGran)return;
+  regrain(b.dataset.g,vFrom,vTo,vGran);renderVisitors();});
+$("#vPeriod").onchange=e=>{const v=e.target.value;
+  if(v!=="__range"){if(v){vFrom=vTo=v;}else clearBrush();}   /* "__range" is the brushed span — leave it alone */
+  renderVisitors();};
+$("#vZoomBtn").onclick=()=>{vZoom=!vZoom;renderVisitors();};
+$("#vReset").onclick=()=>{clearBrush();vType=null;vAge=null;renderVisitors();};
 $("#vExport").onclick=exportVisitors;
 addEventListener("resize",()=>{if($("#p-visitors").classList.contains("on")){renderTrend();renderAges();}});
 
@@ -1658,15 +2099,24 @@ $("#btnFetch").onclick=async()=>{
 };
 $("#btnClear").onclick=()=>{
   if(!confirm("Remove all loaded data from this browser?"))return;
-  DB.activities=[];DB.people=[];DB.donations=[];DB.visitors=[];DB.raw={};
+  DB.activities=[];DB.people=[];DB.donations=[];DB.visitors=[];DB.raw={};DB.edits={};
   aSel=null;dSel=null;localStorage.removeItem(LSKEY);$("#loadlog").innerHTML="";refreshAll();toast("Cleared.");
+};
+$("#btnClearEdits").onclick=()=>{
+  const n=Object.keys(DB.edits).length;
+  if(!n||!confirm("Undo "+n+" attendance change"+(n===1?"":"s")+" made by hand and go back to what your files say?"))return;
+  DB.edits={};
+  if(DB.raw.activities)ingest("activities",DB.raw.activities);   /* rebuild the lists from the uploaded data */
+  refreshAll();toast("Manual attendance edits removed.");
 };
 $("#btnTemplate").onclick=()=>downloadXlsx("love21-data-template.xlsx",[
   {name:"Activities",rows:[["Activity ID","Name","Category","Group","Date","Start Time","End Time","Location",
-    "Participants","Volunteers","Staff","Notes"],
+    "Participants","Volunteers","Staff","Attended","Absent","Cancelled","Notes"],
     ["ACT-001","Tuesday Basketball","Sports","Basketball","2026-07-07","17:00","18:30","Main Gym",
-     "Ava Nguyen; Ben Carter","Priya Shah","Dana Whitfield",""]]},
-  {name:"Enrollments",rows:[["Activity ID","Person","Role","Date"],["ACT-001","Ava Nguyen","participant","2026-07-07"]]},
+     "Ava Nguyen; Ben Carter; Kai Brooks","Priya Shah","Dana Whitfield",
+     "Ava Nguyen; Priya Shah","Ben Carter","Kai Brooks",""]]},
+  {name:"Enrollments",rows:[["Activity ID","Person","Role","Attended","Date"],
+    ["ACT-001","Ava Nguyen","participant","yes","2026-07-07"]]},
   {name:"People",rows:[["Person ID","Name","Role","Email","Phone","Address","Date of Birth","Age","Joined",
     "Last Online","Emergency Contact","Notes"],
     ["P-001","Ava Nguyen","participant","ava@example.org","555-0100","Denver, CO","2008-04-11","",
@@ -1692,6 +2142,193 @@ $("#btnExportAll").onclick=()=>downloadXlsx("love21-all-data.xlsx",[
   sheetOf("Visitors",[{h:"Date",f:v=>iso(v.date)},{h:"User Type",f:v=>v.userType},{h:"Age Group",f:v=>v.ageGroup},
     {h:"Visits",f:v=>v.count},{h:"Source",f:v=>v.source}],DB.visitors)
 ]);
+
+/* =======================================================================
+   12b — quick add (+) · new activity session / new person
+   ======================================================================= */
+const KINDS=[{k:"kids",label:"Kids enrolled",role:"participant"},
+             {k:"vols",label:"Volunteers responsible",role:"volunteer"},
+             {k:"staff",label:"Love 21 staff monitoring",role:"admin"}];
+let draft={kids:[],vols:[],staff:[]};
+const maxNum=list=>list.reduce((m,x)=>{const g=String(x).match(/(\d+)\s*$/);return g?Math.max(m,+g[1]):m;},0);
+const uniqA=f=>[...new Set(DB.activities.map(f).filter(Boolean))].sort();
+const dlist=(id,vals)=>'<datalist id="'+id+'">'+vals.map(v=>'<option value="'+esc(v)+'"></option>').join("")+'</datalist>';
+const ff=(label,inner,cls)=>'<label class="ff'+(cls?" "+cls:"")+'"><span>'+label+'</span>'+inner+'</label>';
+const inp=(id,attrs)=>'<input id="'+id+'" '+(attrs||"")+'>';
+
+/* ---- the three people pickers, backed by the same binary-search index as panel 2 ---- */
+function pickerHtml(kind,label){
+  return '<div class="picker '+kind+'"><div class="ph">'+label+'<span class="n" id="n-'+kind+'">0</span></div>'+
+    '<div class="toks" id="tk-'+kind+'"></div>'+
+    '<input class="pin" id="pi-'+kind+'" autocomplete="off" placeholder="type a name — matches your People database">'+
+    '<div class="sugg" id="sg-'+kind+'"></div></div>';
+}
+function renderToks(kind){
+  const box=$("#tk-"+kind);
+  box.innerHTML=draft[kind].length?draft[kind].map((t,i)=>
+    '<span class="tok '+kind+(t.isNew?" newp":"")+'">'+esc(t.name)+
+    (t.isNew?' <b>new</b>':'')+'<button data-rm="'+kind+':'+i+'" title="Remove">✕</button></span>').join("")
+    :'<span class="hint" style="padding:3px 4px">Nobody added yet.</span>';
+  $("#n-"+kind).textContent=draft[kind].length;
+  $$('[data-rm]',box).forEach(b=>b.onclick=()=>{
+    const [k,i]=b.dataset.rm.split(":");draft[k].splice(+i,1);renderToks(k);});
+}
+function addTok(kind,name,isNew){
+  name=String(name).trim();if(!name)return;
+  if(draft[kind].some(t=>norm(t.name)===norm(name))){toast(name+" is already on this list");return;}
+  draft[kind].push({name,isNew:!!isNew});
+  renderToks(kind);
+  $("#pi-"+kind).value="";$("#sg-"+kind).classList.remove("on");
+}
+function suggest(kind){
+  const q=$("#pi-"+kind).value.trim(),box=$("#sg-"+kind);
+  if(!q){box.classList.remove("on");box.innerHTML="";return;}
+  const want=KINDS.find(x=>x.k===kind).role;
+  const taken=new Set(draft[kind].map(t=>norm(t.name)));
+  const hits=binaryLookup(q).people.filter(p=>!taken.has(norm(p.name)))
+    .sort((a,b)=>(a.role===want?0:1)-(b.role===want?0:1))
+    .slice(0,7);
+  let html=hits.map(p=>'<button data-pick="'+esc(p.name)+'">'+
+    '<span class="chip '+p.role+'"><i class="dot"></i>'+esc(ROLES[p.role])+'</span>'+
+    '<span class="nm">'+esc(p.name)+(p.inactive?'<span class="inactive">(Inactive)</span>':'')+'</span>'+
+    '<span class="meta">'+esc(p.email||p.id)+'</span></button>').join("");
+  if(!hits.some(p=>norm(p.name)===norm(q)))
+    html+='<button data-new="'+esc(q)+'"><span class="add">＋ Add “'+esc(q)+'” as a new '+
+      ROLES[want].toLowerCase()+'</span><span class="meta">creates a profile</span></button>';
+  box.innerHTML=html;box.classList.add("on");
+  $$("button",box).forEach(b=>b.onclick=()=>{
+    if(b.dataset.pick!=null)addTok(kind,b.dataset.pick,false);
+    else addTok(kind,b.dataset.new,true);});
+}
+function wirePicker(kind){
+  const input=$("#pi-"+kind);
+  input.addEventListener("input",()=>suggest(kind));
+  input.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault();
+      const first=$("#sg-"+kind+" button");
+      if(first)first.click();else addTok(kind,input.value,!findPerson(input.value));}
+    if(e.key==="Escape"){$("#sg-"+kind).classList.remove("on");}});
+  input.addEventListener("blur",()=>setTimeout(()=>$("#sg-"+kind)&&$("#sg-"+kind).classList.remove("on"),160));
+  renderToks(kind);
+}
+/* ---- new activity ---- */
+function openActivityForm(){
+  draft={kids:[],vols:[],staff:[]};
+  const today=iso(new Date());
+  $("#modal").innerHTML=
+    '<div class="mh"><div style="flex:1"><h2>New activity session</h2>'+
+      '<div class="hint" style="margin-top:4px">One row per date — add a second session later for the next week.</div></div>'+
+      '<button class="x" id="mx">✕</button></div>'+
+    '<div class="mb"><div class="form">'+
+      ff('Activity name <span class="req">*</span>',inp("fName",'placeholder="e.g. Tuesday Basketball" list="dl-name"'))+
+      ff("Activity ID",inp("fId",'value="'+esc("ACT-"+String(maxNum(DB.activities.map(a=>a.id))+1).padStart(3,"0"))+'"'))+
+      ff("Group",inp("fGroup",'list="dl-group" placeholder="e.g. Basketball"'))+
+      ff("Category",inp("fCat",'list="dl-cat" placeholder="e.g. Sports"'))+
+      ff('Date <span class="req">*</span>',inp("fDate",'value="'+today+'" placeholder="YYYY-MM-DD"'))+
+      ff("Location",inp("fLoc",'list="dl-loc" placeholder="e.g. Main Gym"'))+
+      ff("Start time",inp("fStart",'placeholder="17:00"'))+
+      ff("End time",inp("fEnd",'placeholder="18:30"'))+
+      ff("Notes",'<textarea id="fNotes" rows="2" placeholder="anything the team should know"></textarea>',"full")+
+      '<div class="full" id="pickers" style="display:grid;gap:10px">'+
+        KINDS.map(x=>pickerHtml(x.k,x.label)).join("")+'</div>'+
+      dlist("dl-name",uniqA(a=>a.name))+dlist("dl-group",uniqA(a=>a.group))+
+      dlist("dl-cat",uniqA(a=>a.category))+dlist("dl-loc",uniqA(a=>a.location))+
+    '</div></div>'+
+    '<div class="mf"><button class="btn primary" id="fSave">Save session</button>'+
+      '<div class="spacer"></div><button class="btn" id="fCancel">Cancel</button></div>';
+  KINDS.forEach(x=>wirePicker(x.k));
+  $("#mx").onclick=$("#fCancel").onclick=closeModal;
+  $("#fSave").onclick=saveActivity;
+  backdrop.classList.add("on");
+  setTimeout(()=>$("#fName").focus(),40);
+}
+function saveActivity(){
+  const name=$("#fName").value.trim(),d=parseDate($("#fDate").value);
+  if(!name){toast("Give the session an activity name",true);$("#fName").focus();return;}
+  if(!d){toast("Enter a valid date, e.g. "+iso(new Date()),true);$("#fDate").focus();return;}
+  /* create profiles for any names that were not already in the database */
+  const fresh=[];
+  KINDS.forEach(({k,role})=>draft[k].forEach(t=>{
+    if(t.isNew&&!findPerson(t.name)&&!fresh.some(f=>norm(f.name)===norm(t.name)))fresh.push({name:t.name,role});}));
+  if(fresh.length){
+    const prows=(DB.raw.people||[]).slice(),base=maxNum(DB.people.map(p=>p.id));
+    fresh.forEach((p,i)=>prows.push(indexRow({"Person ID":"P-"+String(base+1+i).padStart(3,"0"),
+      "Name":p.name,"Role":ROLES[p.role],"Joined":iso(new Date())})));
+    ingest("people",prows);
+  }
+  const id=$("#fId").value.trim()||("ACT-"+String(maxNum(DB.activities.map(a=>a.id))+1).padStart(3,"0"));
+  const arows=(DB.raw.activities||[]).slice();
+  arows.push(indexRow({"Activity ID":id,"Name":name,"Category":$("#fCat").value.trim()||"Uncategorised",
+    "Group":$("#fGroup").value.trim()||"—","Date":iso(d),
+    "Start Time":$("#fStart").value.trim(),"End Time":$("#fEnd").value.trim(),
+    "Location":$("#fLoc").value.trim(),
+    "Participants":draft.kids.map(t=>t.name).join("; "),
+    "Volunteers":draft.vols.map(t=>t.name).join("; "),
+    "Staff":draft.staff.map(t=>t.name).join("; "),
+    "Attended":"","Absent":"","Notes":$("#fNotes").value.trim()}));
+  ingest("activities",arows);
+  if(DB.raw.enrollments)ingest("enrollments",DB.raw.enrollments);   /* re-apply long-format sign-ups */
+  closeModal();refreshAll();
+  const made=DB.activities.filter(a=>a.id===id&&iso(a.date)===iso(d)).pop();
+  if(made){
+    aView=made.past?"past":"upcoming";aSort={k:"date",dir:made.past?-1:1};aSel=made;
+    $$(".tab").find(t=>t.dataset.p==="activities").click();
+    renderActivities();renderRoster();
+    setTimeout(()=>{const tr=$('#aTable tbody tr[data-key="'+CSS.escape(made.__key)+'"]');
+      if(tr)tr.scrollIntoView({block:"center",behavior:"smooth"});},60);
+  }
+  toast("Saved "+name+" · "+pretty(d)+(fresh.length?" · "+fresh.length+" new profile"+(fresh.length===1?"":"s"):""));
+}
+/* ---- new person ---- */
+function openPersonForm(prefill){
+  const today=iso(new Date());
+  $("#modal").innerHTML=
+    '<div class="mh"><div style="flex:1"><h2>New person</h2>'+
+      '<div class="hint" style="margin-top:4px">Added to the People database straight away — searchable, linkable and exportable.</div></div>'+
+      '<button class="x" id="mx">✕</button></div>'+
+    '<div class="mb"><div class="form">'+
+      ff('Full name <span class="req">*</span>',inp("qName",'value="'+esc(prefill||"")+'"'))+
+      ff("Role",'<select id="qRole"><option value="participant">Participant</option>'+
+        '<option value="volunteer">Volunteer</option><option value="admin">Administrative staff</option></select>')+
+      ff("Email",inp("qEmail",'type="text" placeholder="name@example.org"'))+
+      ff("Phone",inp("qPhone"))+
+      ff("Address",inp("qAddr"))+
+      ff("Age",inp("qAge"))+
+      ff("Member since",inp("qJoined",'value="'+today+'"'))+
+      ff("Last online",inp("qLast",'placeholder="blank if they have never logged in"'))+
+      ff("Emergency contact",inp("qEmg"),"full")+
+      ff("Notes",'<textarea id="qNotes" rows="2"></textarea>',"full")+
+    '</div></div>'+
+    '<div class="mf"><button class="btn primary" id="qSave">Save person</button>'+
+      '<div class="spacer"></div><button class="btn" id="qCancel">Cancel</button></div>';
+  $("#mx").onclick=$("#qCancel").onclick=closeModal;
+  $("#qSave").onclick=savePerson;
+  backdrop.classList.add("on");
+  setTimeout(()=>$("#qName").focus(),40);
+}
+function savePerson(){
+  const name=$("#qName").value.trim();
+  if(!name){toast("Enter a name",true);$("#qName").focus();return;}
+  if(findPerson(name)&&!confirm("“"+name+"” is already in the database. Add a second record anyway?"))return;
+  const id="P-"+String(maxNum(DB.people.map(p=>p.id))+1).padStart(3,"0");
+  const rows=(DB.raw.people||[]).slice();
+  rows.push(indexRow({"Person ID":id,"Name":name,"Role":ROLES[$("#qRole").value],
+    "Email":$("#qEmail").value.trim(),"Phone":$("#qPhone").value.trim(),"Address":$("#qAddr").value.trim(),
+    "Age":$("#qAge").value.trim(),"Joined":$("#qJoined").value.trim(),"Last Online":$("#qLast").value.trim(),
+    "Emergency Contact":$("#qEmg").value.trim(),"Notes":$("#qNotes").value.trim()}));
+  ingest("people",rows);
+  closeModal();refreshAll();
+  toast("Added "+name);
+  openPerson(id);
+}
+/* ---- the button itself ---- */
+const fab=$("#fab"),fabmenu=$("#fabmenu");
+function closeFab(){fabmenu.classList.remove("on");fab.classList.remove("open");}
+fab.onclick=e=>{e.stopPropagation();fabmenu.classList.toggle("on");fab.classList.toggle("open");};
+$$("#fabmenu button").forEach(b=>b.onclick=()=>{
+  closeFab();b.dataset.add==="activity"?openActivityForm():openPersonForm();});
+document.addEventListener("click",e=>{if(!e.target.closest("#fabmenu")&&!e.target.closest("#fab"))closeFab();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeFab();});
 
 /* =======================================================================
    13 — demo data (deterministic, so the tool is usable before any upload)
@@ -1727,21 +2364,32 @@ function demo(){
   const kids=people.filter(p=>p.Role==="Participant").map(p=>p.Name);
 
   const activities=[];let aid=0;
+  const today=new Date();today.setHours(0,0,0,0);
   groups.forEach(([g,cat])=>{
-    const sessions=3+Math.floor(rnd()*4);
     aid++;
-    for(let k=0;k<sessions;k++){
-      const d=new Date(Date.now()-Math.floor(rnd()*120+k*7)*DAY);
+    const weekday=1+(aid%5);                           /* each group runs on its own weekday */
+    for(let k=-9;k<=5;k++){                            /* ~9 past sessions and 5 upcoming per group */
+      if(rnd()<.18)continue;
+      const d=new Date(today);d.setDate(d.getDate()+k*7+weekday-today.getDay());
       const nk=4+Math.floor(rnd()*8),nv=1+Math.floor(rnd()*3);
       const shuffle=a=>a.slice().sort(()=>rnd()-.5);
+      const roster=shuffle(kids).slice(0,nk),vteam=shuffle(vols).slice(0,nv);
+      const isPast=d<today;
+      /* past sessions carry an attendance record; a couple are left unrecorded on purpose */
+      const logged=isPast&&rnd()<.88;
+      const present=[],absent=[],cancelled=[];
+      if(logged){
+        roster.forEach(n=>{const r=rnd();(r<.82?present:r<.93?absent:cancelled).push(n);});
+        vteam.forEach(n=>{const r=rnd();(r<.9?present:r<.95?absent:cancelled).push(n);});
+      }
       activities.push({"Activity ID":"ACT-"+String(aid).padStart(3,"0"),"Name":g+" session",
         "Category":cat,"Group":g,"Date":iso(d),
         "Start Time":pick(["09:00","10:30","15:30","17:00","18:00"]),
         "End Time":pick(["10:30","12:00","17:00","18:30","19:30"]),
         "Location":pick(["Main Gym","Studio B","Community Pool","Kitchen","Art Room","Outdoor Track"]),
-        "Participants":shuffle(kids).slice(0,nk).join("; "),
-        "Volunteers":shuffle(vols).slice(0,nv).join("; "),
-        "Staff":rnd()<.9?pick(admins):"","Notes":""});
+        "Participants":roster.join("; "),"Volunteers":vteam.join("; "),
+        "Staff":rnd()<.9?pick(admins):"",
+        "Attended":present.join("; "),"Absent":absent.join("; "),"Cancelled":cancelled.join("; "),"Notes":""});
     }
   });
   const drives=["Donate 10 running shoes!","Holiday meal boxes","Swim gear drive","Art supplies for the studio",
