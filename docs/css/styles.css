@@ -3050,6 +3050,7 @@ body.iam-open {
 .page-about-v2 .detail-section {
   padding: clamp(3rem, 7vw, 5rem) 0;
   border-bottom: 1px solid var(--line);
+  scroll-margin-top: calc(var(--nav-h) + 3.2rem);
 }
 
 .page-about-v2 .detail-split {
