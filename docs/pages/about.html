@@ -1,25 +1,22 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Learn about Love 21's story, programmes, financial reports, and team."
+    />
     <title>About us | Love 21</title>
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
-  <body>
+  <body class="page-about-v2">
     <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
           <img class="brand-logo" src="../img/logo.png" alt="Love 21" width="120" height="74" />
         </a>
-        <button
-          class="nav-toggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="nav-menu"
-        >
-          Menu
-        </button>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
         <ul class="nav-links" id="nav-menu">
           <li><a class="nav-home" href="../index.html">Home</a></li>
           <li><a href="profile.html">Profile</a></li>
@@ -29,157 +26,471 @@
       </div>
     </nav>
 
-    <header class="page-banner">
-      <div class="container">
-        <p class="eyebrow">About</p>
-        <h1>#Somuchability</h1>
-        <p>
-          Love 21 is a Hong Kong charity. We build programmes around what
-          members can do, not what they cannot.
-        </p>
+    <header class="editorial-hero">
+      <div class="container editorial-hero-grid">
+        <div>
+          <p class="eyebrow">About Love 21</p>
+          <h1>See the ability. Build around it.</h1>
+          <p class="hero-copy">
+            Love 21 empowers Hong Kong's Down syndrome, autistic, and
+            neurodiverse community through sport, nutrition, family support,
+            and paths into the wider community.
+          </p>
+        </div>
+        <figure>
+          <img
+            src="../assets/media/our-story.jpg"
+            alt="Love 21 members, families, volunteers, and staff together"
+          />
+        </figure>
       </div>
     </header>
 
     <main>
-      <section class="section section-tight">
-        <div class="container prose-block">
-          <h2>What we do</h2>
-          <p>
-            We run sport, fitness, dance, and nutrition classes. We also offer
-            family support, including parent counselling. Members teach and
-            lead too: swim coaching, kitchen demos, art, and more.
-          </p>
-          <p>
-            Love 21 Foundation Limited is a registered charity. We keep the
-            work practical. If it does not help a real family or member, we
-            drop it.
-          </p>
-        </div>
-      </section>
-
-      <section class="section">
+      <nav class="section-index" aria-label="About us page sections">
         <div class="container">
-          <div class="section-head">
-            <h2>Quick numbers</h2>
+          <a href="#story">Our story</a>
+          <a href="#programmes">Programmes</a>
+          <a href="#reports">Financial reports</a>
+          <a href="#team">People & governance</a>
+          <a href="#instagram">Instagram posts</a>
+        </div>
+      </nav>
+
+      <section class="detail-section" id="story">
+        <div class="container detail-split">
+          <div class="detail-label">
+            <span>01</span>
+            <p>Our story</p>
           </div>
-          <div class="stat-strip">
-            <div>
-              <div class="stat-value">500+</div>
-              <div class="muted">Families</div>
+          <div class="detail-copy">
+            <p class="detail-lead">
+              LOVE 21 is a Hong Kong charity dedicated to empowering the Down
+              syndrome and autistic community through sport, nutrition, and
+              holistic support programmes.
+            </p>
+            <div class="prose-columns">
+              <p>
+                Our work began with sport and a simple observation: people
+                thrive when the environment focuses on their strengths. The
+                programme grew to include one-to-one nutrition support,
+                practical cooking, counselling, and parent connection.
+              </p>
+              <p>
+                The same principle shapes this website. Activities,
+                volunteering, giving, and personal progress are connected so
+                that every visit can lead to a clear next step.
+              </p>
             </div>
-            <div>
-              <div class="stat-value">800+</div>
-              <div class="muted">Sessions a month</div>
+            <div class="stat-row stat-row-large" aria-label="Love 21 in numbers">
+              <div><strong>90+</strong><span>activity types</span></div>
+              <div><strong>1,000+</strong><span>sessions each month</span></div>
+              <div><strong>500+</strong><span>families connected</span></div>
+              <div><strong>2018</strong><span>foundation established</span></div>
             </div>
-            <div>
-              <div class="stat-value">90+</div>
-              <div class="muted">Activity types</div>
+            <a
+              class="text-link"
+              href="https://love21foundation.com/our-story/"
+              target="_blank"
+              rel="noopener"
+              >Read the official Love 21 story</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="detail-section detail-section-muted" id="reports">
+        <div class="container detail-split">
+          <div class="detail-label">
+            <span>02</span>
+            <p>Financial reports</p>
+          </div>
+          <div class="detail-copy">
+            <p class="detail-lead">
+              Transparency should be easy to find, easy to read, and connected
+              to the work it describes.
+            </p>
+            <p>
+              Love 21 Foundation is a registered charity under Section 88 of
+              Hong Kong's Inland Revenue Ordinance. The official annual
+              reports provide the source of truth for programme progress and
+              financial stewardship.
+            </p>
+            <div class="financial-dashboard">
+              <div class="financial-dashboard-heading">
+                <div>
+                  <span>2024–2025 published figures</span>
+                  <h3>Income and expenditure, made visible.</h3>
+                </div>
+                <p>
+                  HKD, rounded to the nearest thousand in the annual report.
+                </p>
+              </div>
+
+              <div class="finance-chart-grid">
+                <figure class="finance-figure">
+                  <canvas
+                    width="420"
+                    height="420"
+                    data-finance-donut="income"
+                    role="img"
+                    aria-label="Income total HKD 13,495,000: 49 percent unrestricted funds, 49 percent restricted funds, and 2 percent other income."
+                  ></canvas>
+                  <figcaption>
+                    <div>
+                      <span>Total income</span>
+                      <strong>HKD 13.495m</strong>
+                    </div>
+                    <ul class="finance-legend">
+                      <li><i class="legend-green"></i>Unrestricted · 49%</li>
+                      <li><i class="legend-yellow"></i>Restricted · 49%</li>
+                      <li><i class="legend-red"></i>Other · 2%</li>
+                    </ul>
+                  </figcaption>
+                </figure>
+
+                <figure class="finance-figure">
+                  <canvas
+                    width="420"
+                    height="420"
+                    data-finance-donut="expenditure"
+                    role="img"
+                    aria-label="Expenditure total HKD 11,490,000: 86 percent programmes, 8 percent fundraising, and 6 percent administration."
+                  ></canvas>
+                  <figcaption>
+                    <div>
+                      <span>Total expenditure</span>
+                      <strong>HKD 11.490m</strong>
+                    </div>
+                    <ul class="finance-legend">
+                      <li><i class="legend-green"></i>Programmes · 86%</li>
+                      <li><i class="legend-yellow"></i>Fundraising · 8%</li>
+                      <li><i class="legend-red"></i>Administration · 6%</li>
+                    </ul>
+                  </figcaption>
+                </figure>
+              </div>
+
+              <figure class="finance-comparison">
+                <div>
+                  <span>Two-year comparison</span>
+                  <strong>Published totals</strong>
+                </div>
+                <canvas
+                  width="900"
+                  height="360"
+                  data-finance-bars
+                  role="img"
+                  aria-label="Bar chart comparing revenue and expenditure in 2023–2024 and 2024–2025."
+                ></canvas>
+                <figcaption>
+                  2023–24: HKD 8.25m revenue and HKD 6.54m expenditure.
+                  2024–25: HKD 13.50m income and HKD 11.49m expenditure.
+                </figcaption>
+              </figure>
             </div>
-            <div>
-              <div class="stat-value">1000+</div>
-              <div class="muted">Volunteer hours a month</div>
+            <div class="report-table" aria-label="Official annual reports">
+              <a
+                class="btn report-link"
+                href="https://love21foundation.com/wp-content/uploads/2026/04/Annualreport_final.pdf"
+                target="_blank"
+                rel="noopener"
+              >
+                <span>Annual report</span>
+                <strong>2024–2025</strong>
+                <small>Official PDF</small>
+              </a>
+              <a
+                class="btn report-link"
+                href="https://love21foundation.com/wp-content/uploads/2025/10/Love21-ANNUAL-REPORT_2324.pdf"
+                target="_blank"
+                rel="noopener"
+              >
+                <span>Annual report</span>
+                <strong>2023–2024</strong>
+                <small>Official PDF</small>
+              </a>
+              <a
+                class="btn report-link"
+                href="https://love21foundation.com/wp-content/uploads/2024/03/Love-21-Annual-Report-2022-2023-ENG-3.pdf"
+                target="_blank"
+                rel="noopener"
+              >
+                <span>Annual report</span>
+                <strong>2022–2023</strong>
+                <small>Official PDF</small>
+              </a>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section section-tight">
-        <div class="container prose-block">
-          <h2>Follow us</h2>
-          <p>
-            See class moments and member stories on Instagram.
-          </p>
-          <div class="action-bar">
-            <a
-              class="btn btn-primary"
-              href="https://www.instagram.com/love21foundation/"
-              target="_blank"
-              rel="noopener"
-              >Instagram · @love21foundation</a
-            >
-            <a
-              class="btn"
-              href="https://love21foundation.com/"
-              target="_blank"
-              rel="noopener"
-              >love21foundation.com</a
-            >
+      <section class="detail-section" id="programmes">
+        <div class="container detail-split">
+          <div class="detail-label">
+            <span>03</span>
+            <p>Our programmes</p>
+          </div>
+          <div class="detail-copy">
+            <p class="detail-lead">
+              Sport opens the door. Nutrition, family support, and community
+              participation help change last.
+            </p>
+            <div class="programme-list">
+              <article>
+                <img
+                  src="../assets/media/programme-sport.jpeg"
+                  alt="Love 21 sports programme participants and coaches"
+                />
+                <div>
+                  <span>Sport</span>
+                  <h3>Designed without limitations.</h3>
+                  <p>
+                    A broad range of sport, strength, coordination, and mental
+                    health activities helps members build skill and confidence.
+                  </p>
+                  <a class="text-link" href="activity-finder.html"
+                    >Find a sport activity</a
+                  >
+                </div>
+              </article>
+              <article>
+                <img
+                  src="../assets/media/programme-nutrition.jpeg"
+                  alt="Love 21 members in a cooking and nutrition class"
+                />
+                <div>
+                  <span>Nutrition</span>
+                  <h3>Healthy change made practical.</h3>
+                  <p>
+                    One-to-one guidance and cooking lessons help families build
+                    routines that work in everyday life.
+                  </p>
+                  <a class="text-link" href="activity-finder.html"
+                    >Find a nutrition activity</a
+                  >
+                </div>
+              </article>
+              <article>
+                <img
+                  src="../assets/media/programme-family.jpg"
+                  alt="Love 21 members and families together after a programme"
+                />
+                <div>
+                  <span>Family</span>
+                  <h3>Support extends beyond the class.</h3>
+                  <p>
+                    Parent-only sessions, counselling, and shared activities
+                    strengthen the network around each participant.
+                  </p>
+                  <a class="text-link" href="contact.html"
+                    >Ask about family support</a
+                  >
+                </div>
+              </article>
+              <article>
+                <img
+                  src="../assets/media/programme-community.jpg"
+                  alt="Love 21 members, volunteers, and community partners"
+                />
+                <div>
+                  <span>CSR and community</span>
+                  <h3>Make ability visible.</h3>
+                  <p>
+                    Corporate sessions and member-led experiences challenge
+                    assumptions and make inclusion tangible.
+                  </p>
+                  <a class="text-link" href="contact.html"
+                    >Plan a partnership</a
+                  >
+                </div>
+              </article>
+            </div>
           </div>
         </div>
       </section>
 
-<section class="section">
-  <div class="container">
-    <h2>Our Locations</h2>
-    <div class="location-grid">
-      <div class="location-map">
-        <iframe
-          title="Love 21 location map"
-          src="https://www.google.com/maps?q=21+Luk+Hop+Street+San+Po+Kong+Kowloon&output=embed"
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-        ></iframe>
-      </div>
-      <div class="location-copy prose-block">
-        <p>
-          <strong>Love 21 Space</strong> (activity centre)<br />
-          2/F, Trium Lab, 21 Luk Hop Street, San Po Kong, Kowloon
-        </p>
-        <p>
-          <strong>Office</strong><br />
-          1102, 11/F, Trium Lab, 21 Luk Hop Street, San Po Kong, Kowloon
-        </p>
-        <div class="action-bar">
-          <a class="btn btn-primary" href="contact.html">Contact us</a>
+      <section class="detail-section" id="team">
+        <div class="container detail-split">
+          <div class="detail-label">
+            <span>04</span>
+            <p>People & governance</p>
+          </div>
+          <div class="detail-copy">
+            <div class="team-governance">
+            <p class="detail-lead">
+              Governance brings together people from different professional
+              backgrounds who share a commitment to Hong Kong's neurodiverse
+              community.
+            </p>
+            <p class="board-subtitle">Board of Directors</p>
+            <div class="board-portrait-grid">
+              <a href="https://love21foundation.com/board-of-directors/carol-chan/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/person-placeholder.svg" alt="Portrait placeholder for Carol Chan" />
+                <span>Carol Chan</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/elenisymeonidou/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/eleni-symeonidou.jpeg" alt="Eleni Symeonidou" />
+                <span>Eleni Symeonidou</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/jeff-sayed/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/jeff-sayed.jpg" alt="Jeff Sayed" />
+                <span>Jeff Sayed</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/matthew-hosford/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/matthew-hosford.jpg" alt="Matthew Hosford" />
+                <span>Matthew Hosford</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/kevin-wong/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/person-placeholder.svg" alt="Portrait placeholder for Kevin Wong" />
+                <span>Kevin Wong</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/young-sook-stewart/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/young-sook-stewart.jpeg" alt="Young-Sook Stewart" />
+                <span>Young-Sook Stewart</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/lobo-cheung/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/lobo-cheung.jpeg" alt="Lobo Cheung" />
+                <span>Lobo Cheung</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/dan-maley/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/dan-maley.jpg" alt="Dan Maley" />
+                <span>Dan Maley</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/edith-chen/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/edith-chen.jpeg" alt="Edith Chen" />
+                <span>Edith Chen</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/james-barrett/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/james-barrett.jpeg" alt="James Barrett" />
+                <span>James Barrett</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/raymond-tam/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/raymond-tam.jpeg" alt="Raymond Tam" />
+                <span>Raymond Tam</span>
+              </a>
+              <a href="https://love21foundation.com/board-of-directors/dr-ruby-ng/" target="_blank" rel="noopener">
+                <img src="../assets/media/board/person-placeholder.svg" alt="Portrait placeholder for Dr. Ruby Ng" />
+                <span>Dr. Ruby Ng</span>
+              </a>
+            </div>
+
+            <figure class="organisation-chart">
+              <img
+                src="../assets/media/organisation-chart-july-2026.png"
+                alt="Love 21 Foundation organisation chart as of July 2026"
+              />
+              <figcaption>
+                Love 21 Foundation organisation chart · July 2026
+              </figcaption>
+            </figure>
+            <div class="action-bar">
+              <a class="btn btn-primary" href="contact.html">Contact us</a>
+            </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
-</main>
+      </section>
+
+      <section class="detail-section" id="instagram">
+        <div class="container detail-split">
+          <div class="detail-label">
+            <span>05</span>
+            <p>Instagram posts</p>
+          </div>
+          <div class="detail-copy">
+            <div class="instagram-row">
+              <p class="instagram-row-title">Pinned posts</p>
+              <div class="social-wall social-wall-about">
+              <a
+                href="https://www.instagram.com/love21foundation/"
+                target="_blank"
+                rel="noopener"
+              >
+                <img
+                  src="../assets/media/social-mission.jpg"
+                  alt="Love 21 mission post"
+                />
+                <span>Our mission</span>
+              </a>
+              <a
+                href="https://www.instagram.com/love21foundation/"
+                target="_blank"
+                rel="noopener"
+              >
+                <img
+                  src="../assets/media/social-communication.jpg"
+                  alt="Love 21 communication programme graduation"
+                />
+                <span>Celebrating progress</span>
+              </a>
+              <a
+                href="https://www.instagram.com/love21foundation/"
+                target="_blank"
+                rel="noopener"
+              >
+                <img
+                  src="../assets/media/social-board-game.jpg"
+                  alt="Love 21 board game group"
+                />
+                <span>Learning together</span>
+              </a>
+              </div>
+            </div>
+            <div class="instagram-row">
+              <p class="instagram-row-title">Recent posts</p>
+              <div class="social-wall social-wall-about">
+                <a href="https://www.instagram.com/love21foundation/" target="_blank" rel="noopener">
+                  <img src="../assets/media/programme-community.jpg" alt="Love 21 community programme post" />
+                  <span>Community in motion</span>
+                </a>
+                <a href="https://www.instagram.com/love21foundation/" target="_blank" rel="noopener">
+                  <img src="../assets/media/programme-nutrition.jpeg" alt="Love 21 nutrition programme post" />
+                  <span>Nutrition in practice</span>
+                </a>
+                <a href="https://www.instagram.com/love21foundation/" target="_blank" rel="noopener">
+                  <img src="../assets/media/programme-sport.jpeg" alt="Love 21 sport programme post" />
+                  <span>Moving together</span>
+                </a>
+              </div>
+            </div>
+            <div class="action-bar">
+              <a class="btn btn-primary" href="https://www.instagram.com/love21foundation/" target="_blank" rel="noopener">Follow Love 21 on Instagram</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
 
     <footer class="site-footer">
       <div class="footer-grid">
         <div>
           <div class="footer-brand">Love 21 Foundation</div>
-          <p>Classes and support in San Po Kong, Hong Kong.</p>
+          <p>Sport, nutrition, and support for Hong Kong's Down syndrome, autistic, and neurodiverse community.</p>
         </div>
         <div>
-          <h4>Links</h4>
+          <h4>Explore</h4>
           <ul class="footer-links">
             <li><a href="../index.html">Home</a></li>
-            <li><a href="about.html">About</a></li>
+            <li><a href="about.html" aria-current="page">About us</a></li>
             <li><a href="profile.html">Profile</a></li>
             <li><a href="contact.html">Contact</a></li>
-            <li>
-              <a
-                href="https://www.instagram.com/love21foundation/"
-                target="_blank"
-                rel="noopener"
-                >Instagram</a
-              >
-            </li>
+            <li><a href="transparency.html">Where money goes</a></li>
           </ul>
         </div>
         <div>
           <h4>Visit</h4>
-          <p>
-            Love 21 Space · 2/F, Trium Lab<br />
-            21 Luk Hop Street, San Po Kong<br />
-            <a href="tel:+85223222121">+852 2322 2121</a><br />
-            <a href="mailto:info@love21foundation.com"
-              >info@love21foundation.com</a
-            >
-          </p>
+          <p>Love 21 Space · 2/F, Trium Lab<br />21 Luk Hop Street, San Po Kong<br /><a href="tel:+85223222121">+852 2322 2121</a><br /><a href="mailto:info@love21foundation.com">info@love21foundation.com</a></p>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© Love 21 · Code to Give 2026 demo</span>
+        <span>© Love 21 Foundation · Hackathon demo for Code to Give 2026</span>
         <a href="../index.html">← Home</a>
       </div>
     </footer>
 
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/about.js"></script>
   </body>
 </html>

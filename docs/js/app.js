@@ -35,6 +35,35 @@
   const L = window.Love21;
   const onProfile = !!qs("[data-profile-root]");
 
+  // Keep the shared About us entry directly before Profile and Contact across
+  // the existing static page headers.
+  function addAboutNavigation() {
+    const links = qs(".nav-links");
+    if (!links || links.querySelector('[data-nav-about]')) return;
+    const inPages = /\/pages\//.test(location.pathname);
+    const aboutHref = inPages ? "about.html" : "pages/about.html";
+    const item = document.createElement("li");
+    const isAbout = /\/pages\/about\.html$/.test(location.pathname);
+    item.innerHTML =
+      '<a data-nav-about href="' +
+      aboutHref +
+      '"' +
+      (isAbout ? ' aria-current="page"' : "") +
+      ">About us</a>";
+    const profileOrContact = Array.from(links.querySelectorAll("a")).find(
+      function (link) {
+        return /(?:profile|contact)\.html$/.test(link.getAttribute("href") || "");
+      }
+    );
+    if (profileOrContact) {
+      profileOrContact.closest("li").before(item);
+    } else {
+      links.prepend(item);
+    }
+  }
+
+  addAboutNavigation();
+
   const toggle = qs(".nav-toggle");
   const links = qs(".nav-links");
   if (toggle && links) {
