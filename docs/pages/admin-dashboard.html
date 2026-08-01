@@ -367,6 +367,7 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   <button class="tab" data-p="people">2 · People</button>
   <button class="tab" data-p="donations">3 · Donations</button>
   <button class="tab" data-p="visitors">4 · Visitors</button>
+  <button class="tab" data-p="web">5 · WebPage Analytics</button>
   <button class="tab" data-p="data">Data &amp; uploads</button>
 </div>
 
@@ -492,6 +493,20 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   <div class="card" style="margin-top:14px">
     <div class="cardhead"><h3>Table view</h3><span class="hint">every value in the charts above, as numbers</span></div>
     <div class="tablewrap" style="max-height:44vh"><table id="vTable"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ 5. WEB APP ANALYTICS ============ -->
+<section class="panel" id="p-web">
+  <div class="card" style="margin-top:14px">
+    <div class="cardhead">
+      <h3>User Behaviors Dashboard</h3><span class="hint">data collected via PostHog</span>
+    </div>
+    <div style="padding: 0 16px 16px 16px;">
+      <iframe width="100%" height="800" frameborder="0" allowfullscreen style="padding: 0 16px 16px 16px;"
+        src="https://us.posthog.com/embedded/kat1k-XOicjkAmPJj3sWBaVYBORxDw" key="0"
+        sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+    </div>
   </div>
 </section>
 
