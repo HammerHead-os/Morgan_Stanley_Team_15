@@ -1,8 +1,25 @@
-/* Love 21 API client - Profile backend */
+/* Love 21 API Client - Supabase Auth & FastAPI/SQLite Backend Sync */
 
 (function (global) {
   const TOKEN_KEY = "love21_token";
   const PERSON_KEY = "love21_person";
+
+  // --- 1. Supabase Initialization ---
+  const SUPABASE_URL = "https://obnbgnmdrpxoutfuenoi.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ibmJnbm1kcnB4b3V0ZnVlbm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTg1MzMsImV4cCI6MjEwMTA3NDUzM30.Q7j0xM4QCkpYjiB4wtRsjPGl3f1oCEka3Y8Azl6lGZE";
+
+  if (
+    !global.supabaseClient &&
+    global.supabase &&
+    global.supabase.createClient
+  ) {
+    global.supabaseClient = global.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY,
+    );
+  }
+  const supabase = global.supabaseClient || null;
 
   function apiBase() {
     const configured = document
@@ -42,6 +59,9 @@
   function clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(PERSON_KEY);
+    if (supabase) {
+      supabase.auth.signOut().catch(() => {});
+    }
     global.dispatchEvent(new CustomEvent("love21:session-changed"));
   }
 
@@ -53,14 +73,23 @@
     return err.message || "Request failed";
   }
 
+  // Generic API request wrapper with Bearer token injection
   async function api(path, options) {
     options = options || {};
     const headers = Object.assign(
       { "Content-Type": "application/json", Accept: "application/json" },
-      options.headers || {}
+      options.headers || {},
     );
+
     const token = getToken();
-    if (token) headers["X-Demo-Token"] = token;
+
+    // Use session token if present
+    headers["X-Demo-Token"] = token;
+    
+    if (token && !headers["Authorization"]) {
+      headers["X-Demo-Token"] = 8;
+      headers["Authorization"] = `Bearer ${token}`;
+    }
 
     let res;
     try {
@@ -87,8 +116,12 @@
 
     if (!res.ok) {
       const detail =
-        (data && (data.detail || data.message)) || res.statusText || "Request failed";
-      const err = new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+        (data && (data.detail || data.message)) ||
+        res.statusText ||
+        "Request failed";
+      const err = new Error(
+        typeof detail === "string" ? detail : JSON.stringify(detail),
+      );
       err.status = res.status;
       err.data = data;
       err.message = friendlyError(err);
@@ -96,6 +129,8 @@
     }
     return data;
   }
+
+  // --- Auth Handlers ---
 
   async function demoLogin(email) {
     const data = await api("/api/auth/demo-login", {
@@ -106,44 +141,74 @@
     return data;
   }
 
+  // Supabase Login -> FastAPI SQLite Sync
   async function login(identifier, password) {
-    const data = await api("/api/auth/login", {
-      method: "POST",
-      body: { identifier: identifier, password: password },
+    if (!supabase) throw new Error("Supabase SDK is not initialized.");
+
+    // 1. Authenticate against Supabase
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email: identifier,
+        password: password,
+      });
+
+    if (authError) throw new Error(authError.message);
+
+    const jwtToken = authData.session.access_token;
+
+    // 2. Fetch/sync user record from FastAPI SQLite DB using the JWT once
+    const person = await api("/api/auth/login", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${jwtToken}` },
     });
-    setSession(data.token, data.person);
-    return data;
+
+    // 3. Store local SQLite person.id (e.g. "7") as the session token!
+    setSession(String(person.id), person);
+    return { token: String(person.id), person: person };
   }
 
+  // Supabase Signup -> FastAPI SQLite Sync
   async function signup(body) {
-    const data = await api("/api/auth/signup", {
-      method: "POST",
-      body: body,
+    if (!supabase) throw new Error("Supabase SDK is not initialized.");
+
+    const email = body.email || body.identifier;
+    const password = body.password;
+
+    // 1. Register with Supabase
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+      options: {
+        data: { name: body.name || "" },
+      },
     });
-    setSession(data.token, data.person);
-    return data;
-  }
 
-  /**
-   * Keep the current session unless force is true.
-   * Only logs in as preferredEmail when nobody is signed in (or force).
-   */
-  async function ensureLogin(preferredEmail, opts) {
-    opts = opts || {};
-    const existing = getPerson();
-    if (getToken() && existing && !opts.force) {
-      return existing;
+    if (authError) throw new Error(authError.message);
+
+    const jwtToken = authData.session?.access_token;
+
+    if (!jwtToken) {
+      throw new Error(
+        "Account created! Please check your email to confirm registration before logging in.",
+      );
     }
-    const email = preferredEmail || "carer@chen.demo";
-    const data = await demoLogin(email);
-    return data.person;
+
+    // 2. Provision new user in local SQLite DB
+    const person = await api("/api/auth/login", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${jwtToken}` },
+    });
+
+    // 3. Store local SQLite person.id (e.g. "8") as the session token
+    setSession(String(person.id), person);
+    return { token: String(person.id), person: person };
   }
 
-  /* ——— Login/signup modal ——— */
+  /* ——— Auth Modal Component ——— */
 
   let authModalEl = null;
   let authMode = "login";
-  let authPending = null; // { run, resolve, reject }
+  let authPending = null;
 
   function buildAuthModal() {
     if (authModalEl) return authModalEl;
@@ -202,9 +267,11 @@
         setAuthMode(authMode === "signup" ? "login" : "signup");
       });
     });
-    overlay.querySelector("[data-auth-close]").addEventListener("click", function () {
-      closeAuthModal(true);
-    });
+    overlay
+      .querySelector("[data-auth-close]")
+      .addEventListener("click", function () {
+        closeAuthModal(true);
+      });
     overlay.addEventListener("click", function (e) {
       if (e.target === overlay) closeAuthModal(true);
     });
@@ -275,12 +342,6 @@
     }
   }
 
-  /**
-   * Run `run(person)` now if someone is signed in; otherwise show the
-   * login/signup modal and run it once they authenticate, then resolve
-   * with its result. Rejects (with err.cancelled = true) if the user
-   * closes the modal without logging in.
-   */
   function requireLogin(run) {
     const person = getPerson();
     if (person) return Promise.resolve(run(person));

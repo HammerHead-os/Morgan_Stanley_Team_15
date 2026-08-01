@@ -96,6 +96,16 @@ def seed(db: Session) -> None:
         current_login_at=datetime.utcnow(),
         last_login_ip="14.0.128.42",
     )
+    # test = models.Person(
+    #         email="computer6ai@gmail.com",
+    #         name="Brian",
+    #         role_primary="admin",
+    #         roles="admin",
+    #         language="en",
+    #         password_hash=demo_hash,
+    #         profile_code="L21-HK-9002",
+    #         current_login_at=datetime.utcnow(),
+    #     )
     db.add_all([carer, member, dad, donor, volunteer, admin])
     db.flush()
 

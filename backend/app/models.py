@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from sqlalchemy import (
@@ -21,6 +21,9 @@ class Person(Base):
     __tablename__ = "people"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    supabase_user_id: Mapped[Optional[str]] = mapped_column(
+        String(100), unique=True, index=True, nullable=True
+    )
     email: Mapped[Optional[str]] = mapped_column(String(255), unique=True, index=True, nullable=True)
     name: Mapped[str] = mapped_column(String(120))
     role_primary: Mapped[str] = mapped_column(String(40), default="family")
@@ -33,8 +36,12 @@ class Person(Base):
     profile_code: Mapped[str] = mapped_column(String(32), unique=True)
     # mom | dad | caregiver | helper | child | (blank for non-family)
     household_role: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
-    issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    issued_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     # Login Tracking Aggregates
     login_count: Mapped[int] = mapped_column(Integer, default=0)
     failed_login_count: Mapped[int] = mapped_column(Integer, default=0)
