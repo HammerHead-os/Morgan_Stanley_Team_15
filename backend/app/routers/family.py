@@ -19,6 +19,8 @@ def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
     return schemas.RegistrationOut(
         id=reg.id,
         activity_id=reg.activity_id,
+        household_id=reg.household_id,
+        member_person_id=reg.member_person_id,
         party_size=reg.party_size,
         contact_name=reg.contact_name,
         contact_phone=reg.contact_phone,
@@ -27,9 +29,11 @@ def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
         waitlist_position=reg.waitlist_position,
         reminder_channel=reg.reminder_channel,
         created_at=reg.created_at,
+        session_date=reg.session_date,
         feedback=reg.feedback,
         activity_title=reg.activity.title if reg.activity else None,
         activity_location=reg.activity.location if reg.activity else None,
+        member_name=reg.member.name if reg.member else None,
         attendees=[schemas.AttendeeOut.model_validate(a) for a in reg.attendees],
     )
 

@@ -89,29 +89,6 @@ class ActivityOut(OrmModel):
     location: str
 
 
-class RegisterIn(BaseModel):
-    activity_id: int
-    member_person_id: int
-    reminder_channel: str = "email"
-
-
-class RegistrationOut(OrmModel):
-    id: int
-    activity_id: int
-    household_id: int
-    member_person_id: int
-    status: str
-    status_label: str = ""
-    waitlist_position: Optional[int] = None
-    reminder_channel: str
-    created_at: datetime
-    session_date: Optional[date] = None
-    feedback: Optional[str] = None
-    activity_title: Optional[str] = None
-    activity_location: Optional[str] = None
-    member_name: Optional[str] = None
-
-
 class FeedbackIn(BaseModel):
     feedback: str = Field(min_length=1, max_length=2000)
 
@@ -332,6 +309,8 @@ class AttendeeOut(OrmModel):
 class RegistrationOut(OrmModel):
     id: int
     activity_id: int
+    household_id: Optional[int] = None
+    member_person_id: Optional[int] = None
     party_size: int
     contact_name: str
     contact_phone: str
@@ -340,9 +319,11 @@ class RegistrationOut(OrmModel):
     waitlist_position: Optional[int] = None
     reminder_channel: str
     created_at: datetime
+    session_date: Optional[date] = None
     feedback: Optional[str] = None
     activity_title: Optional[str] = None
     activity_location: Optional[str] = None
+    member_name: Optional[str] = None
     attendees: list[AttendeeOut] = []
 
 

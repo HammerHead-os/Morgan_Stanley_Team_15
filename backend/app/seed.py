@@ -469,3 +469,178 @@ def _migrate_sqlite_columns() -> None: #using this function instead of actually 
                 """
             )
         )
+
+    # Backfill session_date on legacy registration rows so the Profile
+    # calendar shows class events (seed only sets these on fresh DBs).
+    _backfill_session_dates()
+
+    # Backfill volunteer shift scheduled dates so the Profile calendar
+    # shows volunteer shift events on legacy DBs.
+    _backfill_shift_dates()
+
+    # Ensure every demo account the UI offers exists on legacy DBs where
+    # the initial seed ran before some accounts were added.
+    _backfill_demo_accounts()
+
+
+def _backfill_shift_dates() -> None:
+    """Give legacy volunteer shifts a scheduled_date so the Profile calendar shows them."""
+    from sqlalchemy import text
+
+    with SessionLocal() as db:
+        rows = db.execute(
+            text(
+                "SELECT id FROM volunteer_shifts WHERE scheduled_date IS NULL "
+                "ORDER BY id"
+            )
+        ).fetchall()
+        today = date.today()
+        # Space shifts out starting tomorrow so the calendar has upcoming events.
+        for i, (shift_id,) in enumerate(rows):
+            scheduled = today + timedelta(days=i + 1)
+            db.execute(
+                text("UPDATE volunteer_shifts SET scheduled_date = :d WHERE id = :id"),
+                {"d": scheduled.isoformat(), "id": shift_id},
+            )
+        db.commit()
+
+
+def _backfill_demo_accounts() -> None:
+    """Create any missing demo accounts from auth.DEMO_ACCOUNTS."""
+    from sqlalchemy import text
+
+    with SessionLocal() as db:
+        existing = {
+            row[0]
+            for row in db.execute(
+                text("SELECT email FROM people WHERE email LIKE '%.demo' OR email LIKE '%.love21'")
+            ).fetchall()
+        }
+        household_id = db.execute(
+            text(
+                "SELECT h.id FROM households h "
+                "JOIN people p ON p.household_id = h.id "
+                "WHERE p.email = 'carer@chen.demo' LIMIT 1"
+            )
+        ).scalar()
+        if not household_id:
+            # The Chen household may not exist yet on this DB; create it.
+            db.execute(
+                text(
+                    "INSERT INTO households (name, notes) VALUES ('Chen family', 'Demo household')"
+                )
+            )
+            db.commit()
+            household_id = db.execute(
+                text("SELECT id FROM households WHERE name = 'Chen family' ORDER BY id LIMIT 1")
+            ).scalar()
+            carer_id = db.execute(
+                text("SELECT id FROM people WHERE email = 'carer@chen.demo'")
+            ).scalar()
+            if carer_id:
+                db.execute(
+                    text("UPDATE households SET carer_person_id = :c WHERE id = :h"),
+                    {"c": carer_id, "h": household_id},
+                )
+                db.execute(
+                    text("UPDATE people SET household_id = :h WHERE id = :c"),
+                    {"h": household_id, "c": carer_id},
+                )
+
+        accounts = {
+            "carer@chen.demo": ("Jamie Chen", "family", "family,volunteer,donor", "mom"),
+            "dad@chen.demo": ("Chris Chen", "family", "family,donor", "dad"),
+            "alex@chen.demo": ("Alex Chen", "member", "member", "child"),
+            "donor@demo.love21": ("Sam Wong", "donor", "donor,volunteer", None),
+            "volunteer@demo.love21": ("Taylor Ng", "volunteer", "volunteer,donor", None),
+        }
+        for email, (name, primary, roles, hh_role) in accounts.items():
+            if email in existing:
+                continue
+            profile_code = {
+                "carer@chen.demo": "L21-HK-1001",
+                "dad@chen.demo": "L21-HK-1003",
+                "alex@chen.demo": "L21-HK-1002",
+                "donor@demo.love21": "L21-HK-2001",
+                "volunteer@demo.love21": "L21-HK-3001",
+            }[email]
+            hh = household_id if hh_role else None
+            db.execute(
+                text(
+                    "INSERT INTO people "
+                    "(email, name, role_primary, roles, language, profile_code, "
+                    " household_id, household_role, issued_at, created_at) "
+                    "VALUES (:email, :name, :primary, :roles, 'both', :code, "
+                    " :hh, :hh_role, :now, :now)"
+                ),
+                {
+                    "email": email,
+                    "name": name,
+                    "primary": primary,
+                    "roles": roles,
+                    "code": profile_code,
+                    "hh": hh,
+                    "hh_role": hh_role,
+                    "now": datetime.utcnow(),
+                },
+            )
+            person_id = db.execute(
+                text("SELECT id FROM people WHERE email = :email"),
+                {"email": email},
+            ).scalar()
+            db.execute(
+                text(
+                    "INSERT OR IGNORE INTO comm_preferences "
+                    "(person_id, email_on, sms_on, whatsapp_on, opt_out_token) "
+                    "VALUES (:pid, 1, 0, 0, :token)"
+                ),
+                {"pid": person_id, "token": secrets.token_urlsafe(16)},
+            )
+            if email == "dad@chen.demo":
+                # Dad shares the Chen household registrations/calendar
+                db.execute(
+                    text(
+                        "UPDATE people SET household_id = :h WHERE id = :id"
+                    ),
+                    {"h": household_id, "id": person_id},
+                )
+        db.commit()
+
+
+def _backfill_session_dates() -> None:
+    """Give legacy registrations a session_date so the Profile calendar shows them."""
+    from sqlalchemy import text
+
+    day_offsets = {
+        "sunday": 0,
+        "monday": 1,
+        "tuesday": 2,
+        "wednesday": 3,
+        "thursday": 4,
+        "friday": 5,
+        "saturday": 6,
+    }
+    with SessionLocal() as db:
+        rows = db.execute(
+            text(
+                "SELECT r.id, r.status, a.day FROM registrations r "
+                "JOIN activities a ON a.id = r.activity_id "
+                "WHERE r.session_date IS NULL"
+            )
+        ).fetchall()
+        today = date.today()
+        for reg_id, status, day in rows:
+            target = day_offsets.get(day, 5)
+            if status == "attended":
+                # nearest past occurrence of the class day
+                delta = (today.weekday() - target) % 7
+                session_date = today - timedelta(days=delta or 7)
+            else:
+                # next occurrence of the class day
+                delta = (target - today.weekday()) % 7
+                session_date = today + timedelta(days=delta or 7)
+            db.execute(
+                text("UPDATE registrations SET session_date = :d WHERE id = :id"),
+                {"d": session_date.isoformat(), "id": reg_id},
+            )
+        db.commit()
