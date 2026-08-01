@@ -50,3 +50,8 @@ All three return `{ person, token }` — send `X-Demo-Token: <token>` on later r
 - `PATCH /api/impact/commitments/{id}` — pause / change / renew
 - `GET /api/volunteers/shifts` · `POST /api/volunteers/claims`
 - `PATCH /api/prefs` · `POST /api/prefs/opt-out/{token}`
+
+## Instagram feed
+
+See `INSTAGRAM_API_SETUP.md`. Endpoint: `GET /api/instagram/posts`.
+

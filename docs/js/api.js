@@ -5,7 +5,17 @@
   const PERSON_KEY = "love21_person";
 
   function apiBase() {
-    if (location.port === "8765" || location.protocol === "file:") {
+    const configured = document
+      .querySelector('meta[name="love21-api-base"]')
+      ?.getAttribute("content")
+      ?.trim();
+    if (configured) return configured.replace(/\/$/, "");
+    if (
+      location.port === "5173" ||
+      location.port === "4173" ||
+      location.port === "8765" ||
+      location.protocol === "file:"
+    ) {
       return "http://127.0.0.1:8000";
     }
     return "";

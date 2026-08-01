@@ -27,6 +27,7 @@ from .routers import (
     family,
     hire,
     impact,
+    instagram,
     profile,
     prefs,
     volunteers,
@@ -104,6 +105,7 @@ app.include_router(activities.router)
 app.include_router(family.router)
 app.include_router(achievements.router)
 app.include_router(impact.router)
+app.include_router(instagram.router)
 app.include_router(volunteers.router)
 app.include_router(prefs.router)
 app.include_router(profile.router)

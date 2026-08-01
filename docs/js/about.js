@@ -146,3 +146,120 @@
     window.addEventListener("resize", drawAll);
   }
 })();
+
+/* Instagram-style cards for the About page's pinned and recent posts. */
+(function () {
+  const iconBase =
+    "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/";
+  const defaultUsername = "love21foundation";
+
+  function icon(name) {
+    const image = document.createElement("img");
+    image.className = "instagram-ui-icon";
+    image.src = iconBase + name + ".svg";
+    image.alt = "";
+    image.setAttribute("aria-hidden", "true");
+    return image;
+  }
+
+  function staticPost(card) {
+    const media = card.querySelector("img");
+    const captionElement = card.querySelector("span");
+    if (!media || !captionElement) return null;
+    return {
+      caption: captionElement.textContent.trim(),
+      image_url: media.getAttribute("src"),
+      permalink: card.getAttribute("href"),
+      username: defaultUsername,
+    };
+  }
+
+  function renderCard(card, post) {
+    if (!post || !post.image_url || !post.permalink) return;
+
+    const username = post.username || defaultUsername;
+    const caption = (post.caption || "Instagram post").trim();
+
+    const header = document.createElement("div");
+    header.className = "instagram-post-header";
+
+    const avatar = document.createElement("img");
+    avatar.className = "instagram-avatar";
+    avatar.src = "../assets/media/love21-logo.png";
+    avatar.alt = "";
+
+    const account = document.createElement("div");
+    account.className = "instagram-account";
+    const accountName = document.createElement("strong");
+    accountName.textContent = username;
+    const location = document.createElement("span");
+    location.textContent = "Hong Kong";
+    account.append(accountName, location);
+    header.append(avatar, account, icon("three-dots-vertical"));
+
+    const media = document.createElement("img");
+    media.className = "instagram-post-media";
+    media.src = post.image_url;
+    media.alt = caption;
+    media.loading = "lazy";
+    media.decoding = "async";
+
+    const actionRow = document.createElement("div");
+    actionRow.className = "instagram-post-actions";
+    const primaryActions = document.createElement("div");
+    primaryActions.append(icon("heart"), icon("chat"), icon("send"));
+    actionRow.append(primaryActions, icon("bookmark"));
+
+    const copy = document.createElement("div");
+    copy.className = "instagram-post-copy";
+    const captionText = document.createElement("p");
+    const captionAccount = document.createElement("strong");
+    captionAccount.textContent = username;
+    captionText.append(captionAccount, document.createTextNode(" " + caption));
+    const postLink = document.createElement("span");
+    postLink.className = "instagram-post-meta";
+    postLink.textContent = "View post on Instagram";
+    copy.append(captionText, postLink);
+
+    card.href = post.permalink;
+    card.classList.add("instagram-post-card");
+    card.setAttribute("aria-label", caption + ". Open this post on Instagram.");
+    if (post.id) card.dataset.instagramMediaId = post.id;
+    card.replaceChildren(header, media, actionRow, copy);
+  }
+
+  function renderRow(name, posts) {
+    if (!posts || !posts.length) return;
+    const row = document.querySelector('[data-instagram-row="' + name + '"]');
+    if (!row) return;
+    const cards = Array.from(row.querySelectorAll(".social-wall-about > a"));
+    cards.forEach(function (card, index) {
+      if (posts[index]) {
+        card.hidden = false;
+        renderCard(card, posts[index]);
+      } else {
+        card.hidden = true;
+      }
+    });
+  }
+
+  const cards = Array.from(
+    document.querySelectorAll(".social-wall-about > a")
+  );
+  cards.forEach(function (card) {
+    renderCard(card, staticPost(card));
+  });
+
+  if (!window.Love21 || typeof window.Love21.api !== "function") return;
+  window.Love21.api("/api/instagram/posts")
+    .then(function (feed) {
+      if (!feed || !feed.connected) return;
+      if (feed.pinned && feed.pinned.length) {
+        renderRow("pinned", feed.pinned);
+      }
+      renderRow("recent", feed.recent);
+    })
+    .catch(function () {
+      // The static posts above are the intentional offline/API-error fallback.
+    });
+})();

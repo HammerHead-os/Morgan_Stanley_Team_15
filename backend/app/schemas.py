@@ -371,3 +371,21 @@ class ProfileOut(BaseModel):
     journey_events: list[JourneyEventOut] = []
     hire_enquiries: list[HireOut] = []
     calendar_events: list[CalendarEventOut] = []
+
+
+class InstagramPostOut(BaseModel):
+    id: str
+    caption: str
+    media_type: str
+    image_url: str
+    permalink: str
+    timestamp: datetime
+    username: str
+
+
+class InstagramFeedOut(BaseModel):
+    connected: bool
+    username: str
+    fetched_at: Optional[datetime] = None
+    pinned: list[InstagramPostOut] = Field(default_factory=list)
+    recent: list[InstagramPostOut] = Field(default_factory=list)
