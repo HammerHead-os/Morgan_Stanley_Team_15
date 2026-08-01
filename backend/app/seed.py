@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 
 from . import models
 from .database import Base, SessionLocal, engine
+from .security import hash_password
+
+DEMO_PASSWORD = "love21demo"
 
 
 def seed(db: Session) -> None:
@@ -15,6 +18,8 @@ def seed(db: Session) -> None:
     db.add(household)
     db.flush()
 
+    demo_hash = hash_password(DEMO_PASSWORD)
+
     carer = models.Person(
         email="carer@chen.demo",
         name="Jamie Chen",
@@ -23,6 +28,7 @@ def seed(db: Session) -> None:
         language="both",
         household_id=household.id,
         household_role="mom",
+        password_hash=demo_hash,
         profile_code="L21-HK-1001",
     )
     member = models.Person(
@@ -33,6 +39,7 @@ def seed(db: Session) -> None:
         language="yue",
         household_id=household.id,
         household_role="child",
+        password_hash=demo_hash,
         profile_code="L21-HK-1002",
     )
     dad = models.Person(
@@ -43,6 +50,7 @@ def seed(db: Session) -> None:
         language="en",
         household_id=household.id,
         household_role="dad",
+        password_hash=demo_hash,
         profile_code="L21-HK-1003",
     )
     donor = models.Person(
@@ -51,6 +59,7 @@ def seed(db: Session) -> None:
         role_primary="donor",
         roles="donor,volunteer",
         language="en",
+        password_hash=demo_hash,
         profile_code="L21-HK-2001",
     )
     volunteer = models.Person(
@@ -59,6 +68,7 @@ def seed(db: Session) -> None:
         role_primary="volunteer",
         roles="volunteer,donor",
         language="both",
+        password_hash=demo_hash,
         profile_code="L21-HK-3001",
     )
     db.add_all([carer, member, dad, donor, volunteer])

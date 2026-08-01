@@ -6,7 +6,7 @@
     <title>Give | Love 21</title>
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
-  <body>
+  <body data-hub="impact">
     <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
@@ -31,7 +31,13 @@
 
     <header class="page-banner">
       <div class="container">
-        <h1>Give monthly</h1>
+        <h1
+          data-tour
+          data-tour-title="Give monthly"
+          data-tour-text="Estimate the tax relief on a gift, see what it funds, then start a monthly gift — everything here is a live demo."
+        >
+          Give monthly
+        </h1>
         <p>
           Check a rough tax estimate, then start a monthly gift. Payment buttons
           here are demo only.
@@ -40,6 +46,9 @@
           <a class="btn btn-primary" href="#achievements"
             >What we achieved with your help</a
           >
+          <button type="button" class="btn btn-ghost" data-tour-start>
+            Replay walkthrough
+          </button>
         </div>
       </div>
     </header>
@@ -47,7 +56,12 @@
     <main class="section section-tight">
       <div class="container">
         <div class="tax-tool" id="tax">
-          <div class="card card-sky">
+          <div
+            class="card card-sky"
+            data-tour
+            data-tour-title="Tax calculator"
+            data-tour-text="Enter a monthly amount and your tax bracket for an instant relief estimate."
+          >
             <h2>Tax calculator</h2>
             <p class="muted">
               Rough guide only. Not IRD advice. Pick your marginal salaries-tax
@@ -70,7 +84,12 @@
             <div class="tax-result" data-tax-out></div>
           </div>
 
-          <div class="card card-yellow">
+          <div
+            class="card card-yellow"
+            data-tour
+            data-tour-title="Start a monthly gift"
+            data-tour-text="See what your gift covers, pick a demo payment method, then start it with one click."
+          >
             <h2>What it funds</h2>
             <p class="muted">
               About 2 coach-led programme sessions per HKD 300.
@@ -102,7 +121,13 @@
           </div>
         </div>
 
-        <section class="donor-achievements mt-2" id="achievements">
+        <section
+          class="donor-achievements mt-2"
+          id="achievements"
+          data-tour
+          data-tour-title="Real impact"
+          data-tour-text="Log in as a supporter and this feed fills with your own gift history instead of the demo examples."
+        >
           <h2>What we achieved with your help</h2>
           <p class="muted">
             Specific records from gifts. Switch to the supporter demo in Profile
@@ -176,15 +201,13 @@
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
     <script src="../js/tax.js"></script>
+    <script src="../js/hub-demo.js"></script>
     <script>
       (function () {
         var L = window.Love21;
         var box = document.querySelector("[data-donor-achievements]");
-        if (!L || !box) return;
-        L.ensureLogin("donor@demo.love21")
-          .then(function () {
-            return L.api("/api/impact/receipts");
-          })
+        if (!L || !box || !L.getPerson()) return;
+        L.api("/api/impact/receipts")
           .then(function (rows) {
             if (!rows || !rows.length) return;
             box.innerHTML = rows

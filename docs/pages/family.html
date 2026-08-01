@@ -26,23 +26,27 @@
     <header class="hub-hero hub-hero-family">
       <div class="hub-hero-media" aria-hidden="true"></div>
       <div class="container hub-hero-copy">
-        <p class="eyebrow">Chen family</p>
+        <p class="eyebrow" data-family-eyebrow>Example family</p>
         <h1
           data-tour
           data-tour-title="Family page"
-          data-tour-text="This page is for parents and carers. We will walk through booking Alex into Saturday swim."
+          data-tour-text="This page is for parents and carers. We will walk through booking a class and who can see it."
         >
-          Book a class for Alex
+          Book a class for your family
         </h1>
-        <p class="hub-lead">
-          Alex is 9. He needs a beginners swim lane on Saturday at the San Po
-          Kong pool. Jamie and Chris both see the booking on the same profile.
+        <p class="hub-lead" data-family-lead>
+          Example: Alex is 9 and needs a beginners swim lane on Saturday at the
+          San Po Kong pool. Jamie and Chris both see the booking on the same
+          profile.
         </p>
         <div class="action-bar">
           <button type="button" class="btn btn-primary" data-tour-start>
             Replay walkthrough
           </button>
           <a class="btn" href="activity-finder.html">Browse classes</a>
+          <button type="button" class="btn" data-family-login-cta>
+            Log in to see your own family
+          </button>
         </div>
       </div>
     </header>
@@ -73,11 +77,11 @@
           class="spec-card"
           data-tour
           data-tour-title="If a class is full"
-          data-tour-text="Nutrition is full right now. Alex is number 4 on the waitlist. You get an email when a spot opens."
+          data-tour-text="When a class is full you join a waitlist and get an email when a spot opens."
         >
-          <p class="hub-feature-tag">Waitlist</p>
+          <p class="hub-feature-tag" data-family-waitlist-tag>Example waitlist</p>
           <h2>One-on-one nutrition</h2>
-          <ul class="spec-list">
+          <ul class="spec-list" data-family-waitlist-list>
             <li>In Cantonese</li>
             <li>Alex is #4 on the waitlist</li>
             <li>Reminders go by email</li>
@@ -88,11 +92,11 @@
           class="spec-card"
           data-tour
           data-tour-title="Shared family profile"
-          data-tour-text="Mom, dad, and helpers can all see Alex’s classes. Add people under Profile."
+          data-tour-text="Mom, dad, and helpers can all see the household's classes. Add people under Profile."
         >
-          <p class="hub-feature-tag">Family</p>
-          <h2>Who can see Alex’s stuff</h2>
-          <ul class="spec-list">
+          <p class="hub-feature-tag" data-family-members-tag>Example household</p>
+          <h2>Who can see this household’s stuff</h2>
+          <ul class="spec-list" data-family-members-list>
             <li>Jamie · mom</li>
             <li>Chris · dad</li>
             <li>You can add a caregiver or helper</li>
@@ -108,13 +112,13 @@
           class="spec-strip"
           data-tour
           data-tour-title="Calendar"
-          data-tour-text="Alex’s classes also show up on the profile calendar."
+          data-tour-text="Booked classes also show up on the profile calendar."
         >
           <div>
-            <h2>Coming up for Alex</h2>
+            <h2 data-family-calendar-title>Coming up (example)</h2>
             <p class="muted">From the household calendar</p>
           </div>
-          <ul class="spec-list">
+          <ul class="spec-list" data-family-calendar-list>
             <li>Sat · Swim beginners · booked</li>
             <li>Last week · Cooking together · done</li>
             <li>Nutrition · waitlist #4</li>
@@ -163,6 +167,7 @@
 
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/family.js"></script>
     <script src="../js/hub-demo.js"></script>
   </body>
 </html>

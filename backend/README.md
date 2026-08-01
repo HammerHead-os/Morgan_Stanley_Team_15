@@ -14,14 +14,21 @@ Then open http://127.0.0.1:8000 (serves the website + API) or http://127.0.0.1:8
 
 ## Demo accounts
 
-| Email | Role |
-|-------|------|
-| `carer@chen.demo` | Family carer |
-| `alex@chen.demo` | Member |
-| `donor@demo.love21` | Supporter |
-| `volunteer@demo.love21` | Volunteer |
+| Email | Role | Password |
+|-------|------|----------|
+| `carer@chen.demo` | Family carer | `love21demo` |
+| `dad@chen.demo` | Family carer | `love21demo` |
+| `alex@chen.demo` | Member | `love21demo` |
+| `donor@demo.love21` | Supporter | `love21demo` |
+| `volunteer@demo.love21` | Volunteer | `love21demo` |
 
-Login: `POST /api/auth/demo-login` `{ "email": "..." }` → send `X-Demo-Token: <person_id>` on later requests.
+Two ways to authenticate:
+
+- **Instant demo switch** (no password, for quickly previewing a role): `POST /api/auth/demo-login` `{ "email": "..." }`
+- **Real login**, works for the demo accounts above too: `POST /api/auth/login` `{ "identifier": "email-or-phone", "password": "..." }`
+- **Sign up** a brand-new account: `POST /api/auth/signup` `{ "name", "password", "email" or "phone" }`
+
+All three return `{ person, token }` — send `X-Demo-Token: <token>` on later requests.
 
 ## Key endpoints
 

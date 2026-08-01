@@ -7,19 +7,16 @@
     family: {
       title: "Find a class",
       note: "Filter by age, day, or language.",
-      loginEmail: "carer@chen.demo",
-      href: "pages/family.html",
+      href: "pages/activity-finder.html",
     },
     contributor: {
       title: "Contribute",
       note: "Claim a task, hire someone, or cover a need.",
-      loginEmail: "volunteer@demo.love21",
-      href: "pages/contributor.html",
+      href: "pages/volunteer.html",
     },
     curious: {
       title: "Explore",
       note: "Learn about programmes and where gifts go.",
-      loginEmail: null,
       href: "pages/curious.html",
     },
   };
@@ -49,7 +46,7 @@
 
   const roleGrid = qs("[data-role-grid]");
   if (roleGrid) {
-    roleGrid.addEventListener("click", async function (e) {
+    roleGrid.addEventListener("click", function (e) {
       const btn = e.target.closest("[data-role]");
       if (!btn) return;
       let role = btn.getAttribute("data-role");
@@ -58,11 +55,6 @@
       if (role === "donor") role = "curious";
       localStorage.setItem(ROLE_KEY, role);
       const data = journeys[role];
-      if (data && data.loginEmail && L) {
-        try {
-          await L.demoLogin(data.loginEmail);
-        } catch (err) {}
-      }
       if (data && data.href) window.location.href = data.href;
     });
   }
@@ -77,14 +69,15 @@
       const body = {};
       body[channel] = on;
       try {
-        await L.ensureLogin();
-        await L.api("/api/prefs", { method: "PATCH", body: body });
-        L.showToast(
-          (on ? "Enabled" : "Disabled") + " " + channel.replace("_", " ")
-        );
+        await L.requireLogin(async function () {
+          await L.api("/api/prefs", { method: "PATCH", body: body });
+          L.showToast(
+            (on ? "Enabled" : "Disabled") + " " + channel.replace("_", " ")
+          );
+        });
       } catch (err) {
         btn.classList.toggle("on");
-        L.showToast(L.friendlyError(err));
+        if (!err.cancelled) L.showToast(L.friendlyError(err));
       }
     });
   });
@@ -167,40 +160,40 @@
       e.preventDefault();
       const activityId = Number(regBtn.getAttribute("data-register"));
       try {
-        let person = L.getPerson();
-        if (!person) person = await L.ensureLogin("carer@chen.demo");
-        const profile = await L.api("/api/profile");
-        if (!profile.family) {
-          L.showToast(
-            "This account has no household .  switch demo account in Profile."
-          );
-          return;
-        }
-        const member =
-          profile.family.members.find(function (m) {
-            return m.role_primary === "member";
-          }) || person;
-        const result = await L.api("/api/family/register", {
-          method: "POST",
-          body: {
-            activity_id: activityId,
-            member_person_id: member.id,
-            reminder_channel: "email",
-          },
+        await L.requireLogin(async function (person) {
+          const profile = await L.api("/api/profile");
+          if (!profile.family) {
+            L.showToast(
+              "This account has no household — switch demo account in Profile."
+            );
+            return;
+          }
+          const member =
+            profile.family.members.find(function (m) {
+              return m.role_primary === "member";
+            }) || person;
+          const result = await L.api("/api/family/register", {
+            method: "POST",
+            body: {
+              activity_id: activityId,
+              member_person_id: member.id,
+              reminder_channel: "email",
+            },
+          });
+          const msg =
+            result.status === "waitlist"
+              ? "Waitlist #" + result.waitlist_position + " — saved to profile"
+              : "Booked · " + (result.activity_title || "class");
+          if (onProfile && typeof window.reloadProfile === "function") {
+            L.showToast(msg);
+            window.reloadProfile();
+          } else {
+            L.goToProfile("ability", msg);
+          }
+          loadActivities();
         });
-        const msg =
-          result.status === "waitlist"
-            ? "Waitlist #" + result.waitlist_position + " .  saved to profile"
-            : "Booked · " + (result.activity_title || "class");
-        if (onProfile && typeof window.reloadProfile === "function") {
-          L.showToast(msg);
-          window.reloadProfile();
-        } else {
-          L.goToProfile("ability", msg);
-        }
-        loadActivities();
       } catch (err) {
-        L.showToast(L.friendlyError(err));
+        if (!err.cancelled) L.showToast(L.friendlyError(err));
       }
       return;
     }
@@ -210,18 +203,19 @@
       e.preventDefault();
       const shiftId = Number(claimBtn.getAttribute("data-claim-shift"));
       try {
-        if (!L.getPerson()) await L.ensureLogin("volunteer@demo.love21");
-        const claim = await L.api("/api/volunteers/claims", {
-          method: "POST",
-          body: { shift_id: shiftId },
+        await L.requireLogin(async function () {
+          const claim = await L.api("/api/volunteers/claims", {
+            method: "POST",
+            body: { shift_id: shiftId },
+          });
+          if (typeof window.reloadVolunteerShifts === "function") {
+            window.reloadVolunteerShifts();
+          }
+          if (typeof window.loadHomeTasks === "function") window.loadHomeTasks();
+          L.goToProfile("contribution", "Claimed: " + (claim.shift_title || "shift"));
         });
-        if (typeof window.reloadVolunteerShifts === "function") {
-          window.reloadVolunteerShifts();
-        }
-        if (typeof window.loadHomeTasks === "function") window.loadHomeTasks();
-        L.goToProfile("contribution", "Claimed: " + (claim.shift_title || "shift"));
       } catch (err) {
-        L.showToast(L.friendlyError(err));
+        if (!err.cancelled) L.showToast(L.friendlyError(err));
       }
       return;
     }
@@ -230,23 +224,21 @@
     if (commitBtn && L) {
       e.preventDefault();
       try {
-        if (!L.getPerson()) await L.ensureLogin("donor@demo.love21");
-        const amountEl = document.getElementById("gift");
-        const amount = amountEl ? Number(amountEl.value) || 300 : 300;
-        const c = await L.api("/api/impact/commitments", {
-          method: "POST",
-          body: {
-            amount_hkd: amount,
-            fund_category: "Sports programmes",
-            cadence: "monthly",
-          },
+        await L.requireLogin(async function () {
+          const amountEl = document.getElementById("gift");
+          const amount = amountEl ? Number(amountEl.value) || 300 : 300;
+          const c = await L.api("/api/impact/commitments", {
+            method: "POST",
+            body: {
+              amount_hkd: amount,
+              fund_category: "Sports programmes",
+              cadence: "monthly",
+            },
+          });
+          L.goToProfile("impact", "Monthly HKD " + c.amount_hkd + " started");
         });
-        L.goToProfile(
-          "impact",
-          "Monthly HKD " + c.amount_hkd + " started"
-        );
       } catch (err) {
-        L.showToast(L.friendlyError(err));
+        if (!err.cancelled) L.showToast(L.friendlyError(err));
       }
       return;
     }
@@ -256,32 +248,33 @@
       e.preventDefault();
       const action = commitAction.getAttribute("data-commitment-action");
       try {
-        if (!L.getPerson()) await L.ensureLogin("donor@demo.love21");
-        const list = await L.api("/api/impact/commitments");
-        if (!list.length) {
-          L.showToast("No commitment yet .  start one first");
-          return;
-        }
-        const body =
-          action === "pause"
-            ? { status: "paused" }
-            : action === "renew"
-              ? { status: "active" }
-              : { fund_category: "Nutrition programmes" };
-        await L.api("/api/impact/commitments/" + list[0].id, {
-          method: "PATCH",
-          body: body,
+        await L.requireLogin(async function () {
+          const list = await L.api("/api/impact/commitments");
+          if (!list.length) {
+            L.showToast("No commitment yet — start one first");
+            return;
+          }
+          const body =
+            action === "pause"
+              ? { status: "paused" }
+              : action === "renew"
+                ? { status: "active" }
+                : { fund_category: "Nutrition programmes" };
+          await L.api("/api/impact/commitments/" + list[0].id, {
+            method: "PATCH",
+            body: body,
+          });
+          L.goToProfile(
+            "impact",
+            action === "pause"
+              ? "Gift paused"
+              : action === "renew"
+                ? "Gift renewed"
+                : "Fund updated"
+          );
         });
-        L.goToProfile(
-          "impact",
-          action === "pause"
-            ? "Gift paused"
-            : action === "renew"
-              ? "Gift renewed"
-              : "Fund updated"
-        );
       } catch (err) {
-        L.showToast(L.friendlyError(err));
+        if (!err.cancelled) L.showToast(L.friendlyError(err));
       }
       return;
     }
@@ -301,6 +294,28 @@
       .replace(/"/g, "&quot;");
   }
 
+  function paintLogoutButton(show) {
+    let btn = qs("[data-logout]");
+    if (show) {
+      if (btn) return;
+      btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "link-btn nav-logout";
+      btn.setAttribute("data-logout", "");
+      btn.textContent = "Log out";
+      btn.addEventListener("click", function () {
+        L.clearSession();
+        location.reload();
+      });
+      const slot = qs("[data-session]");
+      if (slot && slot.parentNode) {
+        slot.insertAdjacentElement("afterend", btn);
+      }
+    } else if (btn) {
+      btn.remove();
+    }
+  }
+
   async function paintSession() {
     const slot = qs("[data-session]");
     if (!slot || !L) return;
@@ -309,6 +324,7 @@
       const person = L.getPerson();
       slot.textContent = person ? person.name : "Ready";
       if (person) slot.title = person.email;
+      paintLogoutButton(!!person);
     } catch (e) {
       slot.textContent = "Offline";
     }

@@ -84,20 +84,19 @@
     if (!e.target.closest("[data-onboard]")) return;
     e.preventDefault();
     try {
-      if (!L.getPerson()) {
-        await L.ensureLogin("volunteer@demo.love21");
-      }
-      await L.api("/api/volunteers/onboard", {
-        method: "POST",
-        body: {
-          skills: "cantonese,photos,sports",
-          languages: "yue,en",
-          availability: "weekends",
-        },
+      await L.requireLogin(async function () {
+        await L.api("/api/volunteers/onboard", {
+          method: "POST",
+          body: {
+            skills: "cantonese,photos,sports",
+            languages: "yue,en",
+            availability: "weekends",
+          },
+        });
+        L.goToProfile(null, "Onboarding done");
       });
-      L.goToProfile(null, "Onboarding done");
     } catch (err) {
-      L.showToast(L.friendlyError(err));
+      if (!err.cancelled) L.showToast(L.friendlyError(err));
     }
   });
 

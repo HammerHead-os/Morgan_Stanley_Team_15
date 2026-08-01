@@ -204,6 +204,11 @@ p {
   line-height: 1;
 }
 
+.nav-logout {
+  margin-left: 0.6rem;
+  font-size: 0.8rem;
+}
+
 .nav-session {
   display: inline-block;
   padding: 0.45rem 0.9rem;
@@ -1867,6 +1872,10 @@ body.iam-open {
   gap: 0.75rem;
 }
 
+.iam-roles[hidden] {
+  display: none;
+}
+
 .iam-role {
   appearance: none;
   text-align: left;
@@ -2795,4 +2804,88 @@ body.iam-open {
   .hire-people {
     grid-template-columns: 1fr;
   }
+}
+
+/* ——— Login / signup modal ——— */
+.auth-modal-overlay[hidden] {
+  display: none;
+}
+
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(12, 26, 22, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.auth-modal {
+  position: relative;
+  width: min(100%, 26rem);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: rise 0.25s var(--ease) both;
+}
+
+.auth-modal h2 {
+  font-size: 1.4rem;
+  margin: 0 0 0.35rem;
+}
+
+.auth-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-soft);
+  padding: 0.25rem 0.5rem;
+}
+
+.auth-modal-close:hover {
+  color: var(--ink);
+}
+
+.auth-modal-error {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: var(--coral-soft);
+  color: #b83d30;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.auth-modal-switch {
+  margin: 1rem 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.link-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--teal-deep);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+body.auth-modal-open {
+  overflow: hidden;
 }

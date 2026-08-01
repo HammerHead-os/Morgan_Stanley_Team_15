@@ -128,23 +128,22 @@
         return;
       }
       try {
-        if (!L.getPerson()) {
-          await L.ensureLogin("donor@demo.love21");
-        }
-        await L.api("/api/hire", {
-          method: "POST",
-          body: { creator_label: label, preferred_date: preferred || null },
+        await L.requireLogin(async function () {
+          await L.api("/api/hire", {
+            method: "POST",
+            body: { creator_label: label, preferred_date: preferred || null },
+          });
+          if (typeof L.goToProfile === "function") {
+            L.goToProfile(
+              null,
+              "Request sent for " + label + (preferred ? " · " + preferred : "")
+            );
+          } else {
+            toast("Request sent for " + label);
+          }
         });
-        if (typeof L.goToProfile === "function") {
-          L.goToProfile(
-            null,
-            "Request sent for " + label + (preferred ? " · " + preferred : "")
-          );
-        } else {
-          toast("Request sent for " + label);
-        }
       } catch (err) {
-        toast(L.friendlyError ? L.friendlyError(err) : err.message);
+        if (!err.cancelled) toast(L.friendlyError ? L.friendlyError(err) : err.message);
       }
       return;
     }

@@ -175,9 +175,9 @@
         <button type="button" class="iam-close" data-iam-close aria-label="Close">
           Close
         </button>
-        <p class="iam-eyebrow">Quick question</p>
+        <p class="iam-eyebrow" data-iam-eyebrow>Quick question</p>
         <h2 id="iam-title">What are you looking for?</h2>
-        <p class="iam-copy">
+        <p class="iam-copy" data-iam-copy>
           Choose one so we can send you to the right page. You can still give
           money from any of them.
         </p>
@@ -186,13 +186,30 @@
             <span class="iam-role-label">Family</span>
             <span class="iam-role-hint">I want to book a class for my kid</span>
           </button>
-          <button type="button" class="iam-role" data-role="contributor">
+          <button type="button" class="iam-role" data-role-step="contributor">
             <span class="iam-role-label">Contributor</span>
-            <span class="iam-role-hint">I want to volunteer or hire someone</span>
+            <span class="iam-role-hint">I want to volunteer, give, or hire someone</span>
           </button>
           <button type="button" class="iam-role" data-role="curious">
             <span class="iam-role-label">Just curious</span>
             <span class="iam-role-hint">I am just looking around</span>
+          </button>
+        </div>
+        <div class="iam-roles" data-iam-roles-sub="contributor" hidden>
+          <button type="button" class="iam-role" data-role="volunteer">
+            <span class="iam-role-label">Volunteer</span>
+            <span class="iam-role-hint">Grab a short task</span>
+          </button>
+          <button type="button" class="iam-role" data-role="donor">
+            <span class="iam-role-label">Donor</span>
+            <span class="iam-role-hint">Set up a monthly gift</span>
+          </button>
+          <button type="button" class="iam-role" data-role="company">
+            <span class="iam-role-label">Company / CSR</span>
+            <span class="iam-role-hint">Hire talent or book a CSR session</span>
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" data-iam-sub-back>
+            ← Back
           </button>
         </div>
         <p class="iam-note muted">

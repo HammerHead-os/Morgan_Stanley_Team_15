@@ -455,6 +455,7 @@
   const accountSel = document.querySelector("[data-account-select]");
   if (accountSel) {
     accountSel.addEventListener("change", async function () {
+      if (!accountSel.value) return;
       try {
         await L.demoLogin(accountSel.value);
         await reloadProfile();
@@ -548,32 +549,62 @@
             : 'Change fund to "' + fund + '"?';
       if (!window.confirm(confirmMsg)) return;
       try {
-        const list = await L.api("/api/impact/commitments");
-        if (!list.length) {
-          L.showToast("No gift yet. Start one from Give");
-          return;
-        }
-        const body =
-          action === "pause"
-            ? { status: "paused" }
-            : action === "renew"
-              ? { status: "active" }
-              : { fund_category: fund };
-        await L.api("/api/impact/commitments/" + list[0].id, {
-          method: "PATCH",
-          body: body,
+        await L.requireLogin(async function () {
+          const list = await L.api("/api/impact/commitments");
+          if (!list.length) {
+            L.showToast("No gift yet. Start one from Give");
+            return;
+          }
+          const body =
+            action === "pause"
+              ? { status: "paused" }
+              : action === "renew"
+                ? { status: "active" }
+                : { fund_category: fund };
+          await L.api("/api/impact/commitments/" + list[0].id, {
+            method: "PATCH",
+            body: body,
+          });
+          L.showToast("Gift updated");
+          await reloadProfile();
         });
-        L.showToast("Gift updated");
-        await reloadProfile();
       } catch (err) {
-        L.showToast(L.friendlyError(err));
+        if (!err.cancelled) L.showToast(L.friendlyError(err));
       }
     }
   });
 
+  function showLoggedOutState() {
+    const nameEl = document.querySelector("[data-cover-name]");
+    if (nameEl) nameEl.textContent = "You're not logged in";
+    const accountSel = document.querySelector("[data-account-select]");
+    if (accountSel) accountSel.value = "";
+    const feed = document.querySelector("[data-activity-feed]");
+    if (feed) {
+      feed.innerHTML =
+        '<p class="muted">Log in to see your classes, giving, and volunteer hours in one place.</p>' +
+        '<button type="button" class="btn btn-primary mt-1" data-profile-login-prompt>Log in</button>';
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest("[data-profile-login-prompt]")) return;
+    L.requireLogin(async function () {
+      const data = await reloadProfile();
+      if (accountSel && data.person && data.person.email) {
+        accountSel.value = data.person.email;
+      }
+    }).catch(function (err) {
+      if (!err.cancelled) L.showToast(L.friendlyError(err));
+    });
+  });
+
   (async function init() {
+    if (!L.getPerson()) {
+      showLoggedOutState();
+      return;
+    }
     try {
-      await L.ensureLogin();
       const data = await reloadProfile();
       if (accountSel && data.person && data.person.email) {
         accountSel.value = data.person.email;

@@ -6,7 +6,7 @@
     <title>Love 21 Profile</title>
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
-  <body>
+  <body data-hub="profile">
     <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
@@ -37,7 +37,12 @@
 
     <header class="profile-hero">
       <div class="container">
-        <div class="profile-top">
+        <div
+          class="profile-top"
+          data-tour
+          data-tour-title="Your profile"
+          data-tour-text="Name, roles, and profile code — this ID is what a household or coach uses to look you up."
+        >
           <div>
             <p class="eyebrow">Your profile</p>
             <h1 data-cover-name>Loading…</h1>
@@ -46,6 +51,9 @@
               <span class="profile-meta-sep" aria-hidden="true">·</span>
               <span data-cover-code></span>
             </p>
+            <button type="button" class="link-btn" data-tour-start>
+              Replay walkthrough
+            </button>
           </div>
           <button
             type="button"
@@ -114,6 +122,7 @@
             <label class="muted" style="font-size: 0.85rem">
               Switch demo account
               <select data-account-select>
+                <option value="" selected disabled hidden>Not logged in</option>
                 <option value="carer@chen.demo">Jamie Chen · Mom (multi-role)</option>
                 <option value="dad@chen.demo">Chris Chen · Dad</option>
                 <option value="alex@chen.demo">Alex Chen · Child</option>
@@ -132,13 +141,24 @@
 
     <main class="section section-tight" data-profile-root>
       <div class="container profile-layout">
-        <section class="panel-soft" data-actions-panel>
+        <section
+          class="panel-soft"
+          data-actions-panel
+          data-tour
+          data-tour-title="Quick actions"
+          data-tour-text="Shortcuts that match your roles — book a class, give monthly, browse volunteer tasks."
+        >
           <h2>What you can do</h2>
           <p class="muted">Actions match the roles on this profile.</p>
           <div class="action-bar" data-role-actions></div>
         </section>
 
-        <section class="panel-soft mt-2">
+        <section
+          class="panel-soft mt-2"
+          data-tour
+          data-tour-title="Your roles"
+          data-tour-text="One profile can be family, volunteer, and donor at the same time — toggle roles on or off here."
+        >
           <h2>Your roles</h2>
           <p class="muted">
             One profile can be family, volunteer, and donor at the same time.
@@ -219,7 +239,13 @@
           </div>
         </section>
 
-        <section class="panel-soft mt-2" id="calendar">
+        <section
+          class="panel-soft mt-2"
+          id="calendar"
+          data-tour
+          data-tour-title="Calendar"
+          data-tour-text="Every booked class and volunteer shift lands here — tap a day to see the details."
+        >
           <div class="cal-head">
             <h2>Calendar</h2>
             <div class="action-bar" style="margin-top: 0">
@@ -241,7 +267,12 @@
           <ul class="cal-day-list" data-cal-day-list></ul>
         </section>
 
-        <section class="mt-2">
+        <section
+          class="mt-2"
+          data-tour
+          data-tour-title="All activity"
+          data-tour-text="One feed for classes, volunteer hours, gifts, hires, and milestones — newest first."
+        >
           <h2>All activity</h2>
           <p class="muted">
             One feed for classes, volunteer hours, gifts, hires, and milestones.
@@ -286,5 +317,6 @@
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
     <script src="../js/profile.js"></script>
+    <script src="../js/hub-demo.js"></script>
   </body>
 </html>

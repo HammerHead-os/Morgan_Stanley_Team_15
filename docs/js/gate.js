@@ -3,17 +3,61 @@
 (function () {
   const ROLE_KEY = "love21_role";
   const ROLE_PAGES = {
-    family: "pages/family.html",
-    contributor: "pages/contributor.html",
+    family: "pages/activity-finder.html",
+    volunteer: "pages/volunteer.html",
+    donor: "pages/impact.html",
+    company: "pages/explore.html#marketplace",
     curious: "pages/curious.html",
+  };
+  const STEP_COPY = {
+    contributor: {
+      eyebrow: "Contributor",
+      title: "How do you want to help?",
+      copy: "Donor, volunteer, or company are all real, live pages — pick the one that fits.",
+    },
   };
 
   const overlay = document.querySelector("[data-iam-overlay]");
   const video = document.querySelector(".gate-video");
   const soundBtn = document.querySelector("[data-gate-sound]");
+  const mainRoles = document.querySelector("[data-iam-roles]");
+  const titleEl = document.getElementById("iam-title");
+  const eyebrowEl = document.querySelector("[data-iam-eyebrow]");
+  const copyEl = document.querySelector("[data-iam-copy]");
+  const defaultTitle = titleEl ? titleEl.textContent : "";
+  const defaultEyebrow = eyebrowEl ? eyebrowEl.textContent : "";
+  const defaultCopy = copyEl ? copyEl.textContent : "";
+
+  function showMainStep() {
+    if (mainRoles) mainRoles.hidden = false;
+    document.querySelectorAll("[data-iam-roles-sub]").forEach(function (el) {
+      el.hidden = true;
+    });
+    if (titleEl) titleEl.textContent = defaultTitle;
+    if (eyebrowEl) eyebrowEl.textContent = defaultEyebrow;
+    if (copyEl) copyEl.textContent = defaultCopy;
+  }
+
+  function showSubStep(step) {
+    const sub = document.querySelector('[data-iam-roles-sub="' + step + '"]');
+    if (!sub) return;
+    if (mainRoles) mainRoles.hidden = true;
+    document.querySelectorAll("[data-iam-roles-sub]").forEach(function (el) {
+      el.hidden = el !== sub;
+    });
+    const info = STEP_COPY[step];
+    if (info) {
+      if (titleEl) titleEl.textContent = info.title;
+      if (eyebrowEl) eyebrowEl.textContent = info.eyebrow;
+      if (copyEl) copyEl.textContent = info.copy;
+    }
+    const first = sub.querySelector(".iam-role");
+    if (first) first.focus();
+  }
 
   function openIam() {
     if (!overlay) return;
+    showMainStep();
     overlay.hidden = false;
     document.body.classList.add("iam-open");
     const first = overlay.querySelector(".iam-role");
@@ -38,24 +82,24 @@
     if (e.key === "Escape" && overlay && !overlay.hidden) closeIam();
   });
 
-  const roles = document.querySelector("[data-iam-roles]");
-  if (roles) {
-    roles.addEventListener("click", async function (e) {
-      const btn = e.target.closest("[data-role]");
-      if (!btn) return;
-      const role = btn.getAttribute("data-role");
+  const panel = document.querySelector(".iam-panel");
+  if (panel) {
+    panel.addEventListener("click", function (e) {
+      const backBtn = e.target.closest("[data-iam-sub-back]");
+      if (backBtn) {
+        showMainStep();
+        return;
+      }
+      const stepBtn = e.target.closest("[data-role-step]");
+      if (stepBtn) {
+        showSubStep(stepBtn.getAttribute("data-role-step"));
+        return;
+      }
+      const roleBtn = e.target.closest("[data-role]");
+      if (!roleBtn) return;
+      const role = roleBtn.getAttribute("data-role");
       if (!ROLE_PAGES[role]) return;
       localStorage.setItem(ROLE_KEY, role);
-      const L = window.Love21;
-      const emails = {
-        family: "carer@chen.demo",
-        contributor: "volunteer@demo.love21",
-      };
-      if (L && emails[role]) {
-        try {
-          await L.demoLogin(emails[role]);
-        } catch (err) {}
-      }
       window.location.href = ROLE_PAGES[role];
     });
   }

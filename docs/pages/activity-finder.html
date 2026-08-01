@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Activity Finder | Love 21</title>    <link rel="stylesheet" href="../css/styles.css" />
   </head>
-  <body>
+  <body data-hub="activity-finder">
                         <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
@@ -30,17 +30,35 @@
 
     <header class="page-banner">
       <div class="container">
-        <h1>Classes</h1>
+        <h1
+          data-tour
+          data-tour-title="Find a class"
+          data-tour-text="These are real, live classes — everything on this page is your household's actual booking flow."
+        >
+          Classes
+        </h1>
         <p>
           Filter by type, age, day, support need, and language. Full classes
           can go on a waitlist.
         </p>
+        <div class="action-bar">
+          <button type="button" class="btn btn-ghost btn-sm" data-tour-start>
+            Replay walkthrough
+          </button>
+        </div>
       </div>
     </header>
 
     <main class="section section-tight">
       <div class="container">
-        <form class="filters" data-activity-filters aria-label="Filters">
+        <form
+          class="filters"
+          data-activity-filters
+          aria-label="Filters"
+          data-tour
+          data-tour-title="Filter"
+          data-tour-text="Narrow classes by goal, age, day, support need, or language — the list updates as you pick."
+        >
           <div class="field">
             <label for="goal">Goal</label>
             <select id="goal" name="goal">
@@ -89,7 +107,13 @@
           </div>
         </form>
 
-        <div class="activity-grid" data-activity-grid>
+        <div
+          class="activity-grid"
+          data-activity-grid
+          data-tour
+          data-tour-title="Register"
+          data-tour-text="Click Register, or Join waitlist if a class is full. First time here? We'll ask you to log in or sign up before it books."
+        >
           <p class="empty-hint">Loading activities…</p>
         </div>
 
@@ -101,6 +125,7 @@
           <a class="btn btn-ghost" href="profile.html#ability"
             >Open Ability</a
           >
+          <a class="btn" href="family.html">Family overview</a>
         </div>
       </div>
     </main>
@@ -143,5 +168,6 @@
 
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/hub-demo.js"></script>
   </body>
 </html>

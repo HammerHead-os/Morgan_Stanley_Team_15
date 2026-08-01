@@ -3,6 +3,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
+
+class NoCacheStaticFiles(StaticFiles):
+    """Always revalidate with the browser instead of caching the site's HTML/JS/CSS.
+
+    This is a locally-iterated demo, not a production CDN target — without this,
+    browsers keep serving an old cached copy of e.g. gate.js after we ship a fix,
+    and a normal reload doesn't notice because the cache is still "fresh".
+    """
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
 from .routers import (
     achievements,
     activities,
@@ -54,4 +68,4 @@ def health():
 # Serve the static site (docs/ for GitHub Pages) in production/demo
 WEBSITE_DIR = Path(__file__).resolve().parent.parent.parent / "docs"
 if WEBSITE_DIR.is_dir():
-    app.mount("/", StaticFiles(directory=str(WEBSITE_DIR), html=True), name="site")
+    app.mount("/", NoCacheStaticFiles(directory=str(WEBSITE_DIR), html=True), name="site")

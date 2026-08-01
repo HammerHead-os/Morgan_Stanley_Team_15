@@ -21,14 +21,15 @@ class Person(Base):
     __tablename__ = "people"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    email: Mapped[Optional[str]] = mapped_column(String(255), unique=True, index=True, nullable=True)
     name: Mapped[str] = mapped_column(String(120))
     role_primary: Mapped[str] = mapped_column(String(40), default="family")
     # family (carer) | member | donor | volunteer | corporate
     # Multi-role: comma list e.g. "family,volunteer,donor"
     roles: Mapped[str] = mapped_column(String(120), default="family")
     language: Mapped[str] = mapped_column(String(20), default="both")
-    phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    phone: Mapped[Optional[str]] = mapped_column(String(40), unique=True, nullable=True)
+    password_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     profile_code: Mapped[str] = mapped_column(String(32), unique=True)
     # mom | dad | caregiver | helper | child | (blank for non-family)
     household_role: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)

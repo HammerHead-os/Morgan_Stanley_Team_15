@@ -6,7 +6,7 @@
     <title>Volunteer | Love 21</title>
     <link rel="stylesheet" href="../css/styles.css" />
   </head>
-  <body>
+  <body data-hub="volunteer">
             <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
@@ -31,20 +31,43 @@
 
     <header class="page-banner">
       <div class="container">
-        <h1>Volunteer</h1>
+        <h1
+          data-tour
+          data-tour-title="Volunteer tasks"
+          data-tour-text="Short tasks anyone can pick up. Claim one that matches your skills and time."
+        >
+          Volunteer
+        </h1>
         <p>
           Most tasks take under an hour. You get points when you finish.
         </p>
+        <div class="action-bar">
+          <button type="button" class="btn btn-ghost btn-sm" data-tour-start>
+            Replay walkthrough
+          </button>
+        </div>
       </div>
     </header>
 
     <main class="section section-tight">
       <div class="container">
-        <div class="activity-grid" data-shift-grid>
+        <div
+          class="activity-grid"
+          data-shift-grid
+          data-tour
+          data-tour-title="Pick a task"
+          data-tour-text="Each card is a short task. Some need a quick onboarding first — claim to get started."
+        >
           <p class="empty-hint">Loading tasks…</p>
         </div>
-        <div class="action-bar">
+        <div
+          class="action-bar"
+          data-tour
+          data-tour-title="Track your hours"
+          data-tour-text="Claimed and completed shifts show up on your profile, along with the points you earn."
+        >
           <a class="btn" href="profile.html#contribution">My hours</a>
+          <a class="btn" href="contributor.html">Hire someone instead</a>
         </div>
       </div>
     </main>
@@ -88,5 +111,6 @@
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
     <script src="../js/volunteer.js"></script>
+    <script src="../js/hub-demo.js"></script>
   </body>
 </html>

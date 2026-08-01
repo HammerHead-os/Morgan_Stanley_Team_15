@@ -39,23 +39,19 @@
     const amount = gift ? Number(gift.value) || 300 : 300;
     const method = pay.getAttribute("data-pay");
     try {
-      if (!L.getPerson()) {
-        await L.ensureLogin("donor@demo.love21");
-      }
-      await L.api("/api/impact/commitments", {
-        method: "POST",
-        body: {
-          amount_hkd: amount,
-          fund_category: "Sports programmes",
-          cadence: "monthly",
-        },
+      await L.requireLogin(async function () {
+        await L.api("/api/impact/commitments", {
+          method: "POST",
+          body: {
+            amount_hkd: amount,
+            fund_category: "Sports programmes",
+            cadence: "monthly",
+          },
+        });
+        L.goToProfile("impact", method + " · HKD " + amount + "/mo started");
       });
-      L.goToProfile(
-        "impact",
-        method + " · HKD " + amount + "/mo started"
-      );
     } catch (err) {
-      L.showToast(L.friendlyError(err));
+      if (!err.cancelled) L.showToast(L.friendlyError(err));
     }
   });
 })();

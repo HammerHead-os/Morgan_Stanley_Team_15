@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class OrmModel(BaseModel):
@@ -10,7 +10,8 @@ class OrmModel(BaseModel):
 
 class PersonOut(OrmModel):
     id: int
-    email: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
     name: str
     role_primary: str
     roles: list[str] = []
@@ -51,6 +52,24 @@ class DemoLoginIn(BaseModel):
 class DemoLoginOut(BaseModel):
     person: PersonOut
     token: str
+
+
+class SignupIn(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+    password: str = Field(min_length=6, max_length=200)
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+    @model_validator(mode="after")
+    def require_identifier(self):
+        if not self.email and not self.phone:
+            raise ValueError("Provide an email or a phone number")
+        return self
+
+
+class LoginIn(BaseModel):
+    identifier: str = Field(min_length=1)
+    password: str = Field(min_length=1)
 
 
 class ActivityOut(OrmModel):
