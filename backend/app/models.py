@@ -169,7 +169,12 @@ class HireEnquiry(Base):
         ForeignKey("people.id"), nullable=True
     )
     creator_label: Mapped[str] = mapped_column(String(200))
-    preferred_date: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    requester_name: Mapped[str] = mapped_column(String(120), default="")
+    company_name: Mapped[str] = mapped_column(String(160), default="")
+    event_description: Mapped[str] = mapped_column(Text, default="")
+    event_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    contact_phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     status: Mapped[str] = mapped_column(String(40), default="received")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

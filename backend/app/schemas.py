@@ -235,7 +235,7 @@ class ClaimOut(OrmModel):
 
 class ReflectionIn(BaseModel):
     reflection: str = Field(min_length=1, max_length=2000)
-    hours: Optional[float] = None
+    hours: Optional[float] = Field(default=None, gt=0, le=24)
 
 
 class VolunteerProfileOut(OrmModel):
@@ -284,13 +284,23 @@ class OnboardIn(BaseModel):
 
 class HireIn(BaseModel):
     creator_label: str = Field(min_length=2, max_length=200)
-    preferred_date: Optional[str] = Field(default=None, max_length=40)
+    requester_name: str = Field(min_length=1, max_length=120)
+    company_name: str = Field(min_length=1, max_length=160)
+    event_description: str = Field(min_length=1, max_length=2000)
+    event_date: Optional[date] = None
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
 
 
 class HireOut(OrmModel):
     id: int
     creator_label: str
-    preferred_date: Optional[str] = None
+    requester_name: str
+    company_name: str
+    event_description: str
+    event_date: Optional[date] = None
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
     status: str
     created_at: datetime
 
