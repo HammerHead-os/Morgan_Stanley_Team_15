@@ -32,6 +32,46 @@
   const L = window.Love21;
   const onProfile = !!qs("[data-profile-root]");
 
+  // Keep the primary navigation consistent across the public pages. The two
+  // informational links stay immediately before the profile/session control.
+  const primaryNav = qs(".site-nav .nav-links");
+  if (primaryNav) {
+    const inPagesDirectory = window.location.pathname.includes("/pages/");
+    const pagePrefix = inPagesDirectory ? "" : "pages/";
+    const ensureLink = function (label, href) {
+      if (Array.from(primaryNav.querySelectorAll("a")).some(function (link) {
+        return link.textContent.trim() === label;
+      })) return;
+
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = href;
+      link.textContent = label;
+      if (window.location.pathname.endsWith("/" + href)) {
+        link.setAttribute("aria-current", "page");
+      }
+      item.appendChild(link);
+      const contactItem = primaryNav.querySelector('a[href$="contact.html"]')?.parentElement;
+      primaryNav.insertBefore(
+        item,
+        label === "About"
+          ? contactItem || primaryNav.querySelector(".nav-session")?.parentElement || null
+          : primaryNav.querySelector(".nav-session")?.parentElement || null
+      );
+    };
+
+    ensureLink("About", pagePrefix + "about.html");
+    ensureLink("Contact", pagePrefix + "contact.html");
+  }
+
+  const brandLogo = qs(".site-nav .brand-logo");
+  if (brandLogo) {
+    const inPagesDirectory = window.location.pathname.includes("/pages/");
+    brandLogo.src = inPagesDirectory
+      ? "../assets/media/love21-logo.png"
+      : "assets/media/love21-logo.png";
+  }
+
   const toggle = qs(".nav-toggle");
   const links = qs(".nav-links");
   if (toggle && links) {

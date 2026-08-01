@@ -12,7 +12,7 @@
     <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
-          <img class="brand-logo" src="../img/logo.png" alt="Love 21" width="120" height="74" />
+          <img class="brand-logo" src="../assets/media/love21-logo.png" alt="Love 21" width="120" height="74" />
         </a>
         <button
           class="nav-toggle"
@@ -24,6 +24,7 @@
         </button>
                         <ul class="nav-links" id="nav-menu">
           <li><a class="nav-home" href="../index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
           <li><a href="contact.html" aria-current="page">Contact</a></li>
           <li><a class="nav-session" data-session href="profile.html">…</a></li>
         </ul>
@@ -42,6 +43,72 @@
     </header>
 
     <main>
+      <section class="section section-tight" id="message">
+        <div class="container contact-layout">
+          <div class="panel-soft stack">
+            <h2>Send a message</h2>
+            <p class="muted" style="margin: 0">
+              Demo only. This form does not send real email yet.
+            </p>
+            <form class="contact-form stack" data-contact-form>
+              <label>
+                Name
+                <input type="text" name="name" required maxlength="120" />
+              </label>
+              <label>
+                Email
+                <input type="email" name="email" required maxlength="200" />
+              </label>
+              <label>
+                Topic
+                <select name="topic">
+                  <option>General enquiry</option>
+                  <option>Join a programme</option>
+                  <option>Volunteer</option>
+                  <option>Donate / CSR</option>
+                  <option>Partnership</option>
+                </select>
+              </label>
+              <label>
+                Message
+                <textarea name="message" rows="5" required maxlength="2000"></textarea>
+              </label>
+              <button type="submit" class="btn btn-primary">Send message</button>
+            </form>
+          </div>
+
+          <div class="stack">
+            <div class="panel-soft">
+              <h3>Direct contacts</h3>
+              <p>
+                <strong>General</strong><br />
+                <a href="mailto:info@love21foundation.com"
+                  >info@love21foundation.com</a
+                ><br />
+                <a href="tel:+85223222121">+852 2322 2121</a>
+              </p>
+              <p>
+                <strong>Partnerships</strong><br />
+                Jeff (Founder / CEO)<br />
+                <a href="mailto:jeff@love21foundation.com"
+                  >jeff@love21foundation.com</a
+                >
+              </p>
+            </div>
+            <div class="panel-soft">
+              <h3>Quick links</h3>
+              <ul class="footer-links">
+                <li><a href="activity-finder.html">Find a class</a></li>
+                <li><a href="volunteer.html">Volunteer shifts</a></li>
+                <li><a href="impact.html">Give monthly</a></li>
+                <li><a href="opportunity.html">Current needs</a></li>
+                <li><a href="profile.html">Open Profile</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="section section-tight" id="visit">
         <div class="container">
           <div class="section-head">
@@ -114,71 +181,6 @@
         </div>
       </section>
 
-      <section class="section section-tight" id="message">
-        <div class="container contact-layout">
-          <div class="panel-soft stack">
-            <h2>Send a message</h2>
-            <p class="muted" style="margin: 0">
-              Demo only. This form does not send real email yet.
-            </p>
-            <form class="contact-form stack" data-contact-form>
-              <label>
-                Name
-                <input type="text" name="name" required maxlength="120" />
-              </label>
-              <label>
-                Email
-                <input type="email" name="email" required maxlength="200" />
-              </label>
-              <label>
-                Topic
-                <select name="topic">
-                  <option>General enquiry</option>
-                  <option>Join a programme</option>
-                  <option>Volunteer</option>
-                  <option>Donate / CSR</option>
-                  <option>Partnership</option>
-                </select>
-              </label>
-              <label>
-                Message
-                <textarea name="message" rows="5" required maxlength="2000"></textarea>
-              </label>
-              <button type="submit" class="btn btn-primary">Send message</button>
-            </form>
-          </div>
-
-          <div class="stack">
-            <div class="panel-soft">
-              <h3>Direct contacts</h3>
-              <p>
-                <strong>General</strong><br />
-                <a href="mailto:info@love21foundation.com"
-                  >info@love21foundation.com</a
-                ><br />
-                <a href="tel:+85223222121">+852 2322 2121</a>
-              </p>
-              <p>
-                <strong>Partnerships</strong><br />
-                Jeff (Founder / CEO)<br />
-                <a href="mailto:jeff@love21foundation.com"
-                  >jeff@love21foundation.com</a
-                >
-              </p>
-            </div>
-            <div class="panel-soft">
-              <h3>Quick links</h3>
-              <ul class="footer-links">
-                <li><a href="activity-finder.html">Find a class</a></li>
-                <li><a href="volunteer.html">Volunteer shifts</a></li>
-                <li><a href="impact.html">Give monthly</a></li>
-                <li><a href="opportunity.html">Current needs</a></li>
-                <li><a href="profile.html">Open Profile</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
     </main>
 
     <footer class="site-footer">
