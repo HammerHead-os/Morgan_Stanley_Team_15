@@ -150,9 +150,10 @@ class ConsentIn(BaseModel):
 
 
 class CommitmentIn(BaseModel):
-    amount_hkd: float = 300
-    fund_category: str = "Sports programmes"
+    amount_hkd: float = Field(default=300, gt=0, le=1_000_000)
+    fund_category: str = Field(default="Sports programmes", max_length=80)
     cadence: str = "monthly"
+    payment_method: str = Field(default="PayMe", max_length=40)
 
 
 class CommitmentOut(OrmModel):
@@ -163,6 +164,7 @@ class CommitmentOut(OrmModel):
     status: str
     status_label: str = ""
     cadence: str
+    payment_method: str = "PayMe"
     office_perk_unlocked: bool = True
     started_at: datetime
     updated_at: datetime

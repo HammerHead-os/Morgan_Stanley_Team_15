@@ -20,6 +20,7 @@ def _commitment_out(c: models.DonationCommitment) -> schemas.CommitmentOut:
         status=c.status,
         status_label=status_label(c.status),
         cadence=c.cadence,
+        payment_method=c.payment_method,
         office_perk_unlocked=bool(c.office_perk_unlocked),
         started_at=c.started_at,
         updated_at=c.updated_at,
@@ -56,6 +57,7 @@ def start_commitment(
         amount_hkd=body.amount_hkd,
         fund_category=body.fund_category,
         cadence=body.cadence,
+        payment_method=body.payment_method,
         status="active",
     )
     db.add(commitment)
@@ -97,7 +99,7 @@ def start_commitment(
             person_id=person.id,
             event_type="commitment_started",
             channel="email",
-            payload=f"amount={body.amount_hkd};fund={body.fund_category}",
+            payload=f"amount={body.amount_hkd};fund={body.fund_category};method={body.payment_method}",
         )
     )
     db.commit()

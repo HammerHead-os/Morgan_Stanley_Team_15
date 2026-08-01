@@ -423,7 +423,7 @@ def init_db() -> None:
         db.close()
 
 
-def _migrate_sqlite_columns() -> None:
+def _migrate_sqlite_columns() -> None: #using this function instead of actually altering the database before discussing
     """Add new columns on existing SQLite DBs without wiping data."""
     from sqlalchemy import text
 
@@ -431,6 +431,17 @@ def _migrate_sqlite_columns() -> None:
         ("volunteer_profiles", "points_balance", "INTEGER DEFAULT 0"),
         ("volunteer_profiles", "points_spent", "INTEGER DEFAULT 0"),
         ("volunteer_shift_claims", "points_awarded", "INTEGER DEFAULT 0"),
+        ("donation_commitments", "payment_method", "VARCHAR(40) DEFAULT 'PayMe'"),
+        ("hire_enquiries", "requester_name", "VARCHAR(120) DEFAULT ''"),
+        ("hire_enquiries", "company_name", "VARCHAR(160) DEFAULT ''"),
+        ("hire_enquiries", "event_description", "TEXT DEFAULT ''"),
+        ("hire_enquiries", "event_date", "DATE"),
+        ("hire_enquiries", "contact_email", "VARCHAR(255)"),
+        ("hire_enquiries", "contact_phone", "VARCHAR(40)"),
+        ("registrations", "owner_person_id", "INTEGER"),
+        ("registrations", "party_size", "INTEGER DEFAULT 1"),
+        ("registrations", "contact_name", "VARCHAR(120) DEFAULT ''"),
+        ("registrations", "contact_phone", "VARCHAR(40) DEFAULT ''"),
     ]
     with engine.begin() as conn:
         for table, col, decl in alters:
@@ -438,6 +449,13 @@ def _migrate_sqlite_columns() -> None:
             names = {r[1] for r in rows}
             if col not in names:
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {decl}"))
+
+        # backfill owner_person_id on any legacy registration rows that predate it
+        conn.execute(text(
+            "UPDATE registrations SET owner_person_id = member_person_id "
+            "WHERE owner_person_id IS NULL AND member_person_id IS NOT NULL"
+        ))
+
         # Demo: give Taylor a starter balance once if still at zero
         conn.execute(
             text(

@@ -209,6 +209,7 @@ class DonationCommitment(Base):
     status: Mapped[str] = mapped_column(String(40), default="active")
     # active | paused | cancelled
     cadence: Mapped[str] = mapped_column(String(20), default="monthly")
+    payment_method: Mapped[str] = mapped_column(String(40), default="PayMe")
     office_perk_unlocked: Mapped[bool] = mapped_column(Boolean, default=True)
     started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
