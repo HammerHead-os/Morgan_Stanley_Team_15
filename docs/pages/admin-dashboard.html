@@ -340,6 +340,17 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 </style>
 </head>
 <body>
+<script src="../js/api.js"></script>
+<script>
+(function () {
+  var L = window.Love21;
+  var person = L && L.getPerson();
+  var isAdmin = person && Array.isArray(person.roles) && person.roles.indexOf("admin") !== -1;
+  if (!isAdmin) {
+    location.replace("profile.html");
+  }
+})();
+</script>
 
 <div class="appbar">
   <div class="brand"><b>Love 21 Foundation</b><span>Administrative Data Dashboard</span></div>

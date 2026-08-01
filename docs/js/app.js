@@ -311,6 +311,28 @@
       .replace(/"/g, "&quot;");
   }
 
+  function paintAdminLink(person) {
+    const isAdmin = !!person && Array.isArray(person.roles) && person.roles.indexOf("admin") !== -1;
+    let link = qs("[data-admin-link]");
+    if (isAdmin) {
+      if (link) return;
+      const slot = qs("[data-session]");
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = "admin-dashboard.html";
+      a.textContent = "Admin dashboard";
+      a.setAttribute("data-admin-link", "");
+      li.appendChild(a);
+      const sessionLi = slot && slot.closest("li");
+      if (sessionLi && sessionLi.parentNode) {
+        sessionLi.parentNode.insertBefore(li, sessionLi);
+      }
+    } else if (link) {
+      const li = link.closest("li");
+      (li || link).remove();
+    }
+  }
+
   function paintLogoutButton(show) {
     let btn = qs("[data-logout]");
     if (show) {
@@ -342,6 +364,7 @@
       slot.textContent = person ? person.name : "Ready";
       if (person) slot.title = person.email;
       paintLogoutButton(!!person);
+      paintAdminLink(person);
     } catch (e) {
       slot.textContent = "Offline";
     }

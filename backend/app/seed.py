@@ -71,12 +71,21 @@ def seed(db: Session) -> None:
         password_hash=demo_hash,
         profile_code="L21-HK-3001",
     )
-    db.add_all([carer, member, dad, donor, volunteer])
+    admin = models.Person(
+        email="admin@demo.love21",
+        name="Morgan Yip",
+        role_primary="admin",
+        roles="admin",
+        language="en",
+        password_hash=demo_hash,
+        profile_code="L21-HK-9001",
+    )
+    db.add_all([carer, member, dad, donor, volunteer, admin])
     db.flush()
 
     household.carer_person_id = carer.id
 
-    for person in (carer, member, dad, donor, volunteer):
+    for person in (carer, member, dad, donor, volunteer, admin):
         db.add(
             models.CommPreferences(
                 person_id=person.id,
@@ -440,8 +449,28 @@ def init_db() -> None:
     db = SessionLocal()
     try:
         seed(db)
+        _ensure_admin_demo_account(db)
     finally:
         db.close()
+
+
+def _ensure_admin_demo_account(db: Session) -> None:
+    """Backfill the admin demo account on DBs that were already seeded
+    before the admin role existed, without touching anything else."""
+    if db.query(models.Person).filter_by(email="admin@demo.love21").first():
+        return
+    db.add(
+        models.Person(
+            email="admin@demo.love21",
+            name="Morgan Yip",
+            role_primary="admin",
+            roles="admin",
+            language="en",
+            password_hash=hash_password(DEMO_PASSWORD),
+            profile_code="L21-HK-9001",
+        )
+    )
+    db.commit()
 
 
 def _migrate_sqlite_columns() -> None:

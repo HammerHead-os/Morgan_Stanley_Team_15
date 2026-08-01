@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-ALLOWED_ROLES = ("family", "member", "volunteer", "donor", "corporate")
+ALLOWED_ROLES = ("family", "member", "volunteer", "donor", "corporate", "admin")
 
 
 def parse_roles(person) -> list[str]:
