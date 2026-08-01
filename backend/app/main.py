@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .db_supabase import get_supabase
 from .posthog_client import get_posthog, initialize_posthog, shutdown_posthog
-from .routers import supabase_backend
+from .routers import app_supabase, supabase_backend
 
 
 @asynccontextmanager
@@ -53,8 +53,9 @@ async def posthog_request_context(request: Request, call_next):
 
 app.include_router(supabase_backend.router)
 
-
+print("testing output")
 if os.getenv("ENABLE_LEGACY_DEMO_DB") == "1":
+    print("using Legacy DB")
     from .routers import (  # noqa: PLC0415
         achievements,
         activities,
@@ -81,6 +82,8 @@ if os.getenv("ENABLE_LEGACY_DEMO_DB") == "1":
     @app.on_event("startup")
     def on_startup():
         init_db()
+else:
+    app.include_router(app_supabase.router)
 
 
 @app.get("/api/health")
@@ -90,8 +93,8 @@ def health():
 
 @app.get("/api/supabase/health")
 def supabase_health():
-    get_supabase()
-    return {"ok": True, "supabase_configured": True}
+    supabase_client = get_supabase()
+    return {"ok": True, "supabase_configured": True, "client": str(supabase_client)}
 
 
 WEBSITE_DIR = Path(__file__).resolve().parent.parent.parent / "docs"

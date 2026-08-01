@@ -7,7 +7,7 @@ venv/
 # Environment files
 .env*
 .env.local
-!.env.example
+!.env.local.example
 !.env.sample
 
 .DS_Store

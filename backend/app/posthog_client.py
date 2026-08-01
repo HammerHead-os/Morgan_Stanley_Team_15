@@ -1,6 +1,7 @@
 """PostHog client lifecycle and configuration."""
 
 import atexit
+import logging
 import os
 from typing import Optional
 
@@ -10,6 +11,7 @@ from posthog import Posthog
 load_dotenv()
 
 _client: Optional[Posthog] = None
+logger = logging.getLogger("uvicorn.error")
 
 
 def initialize_posthog() -> Optional[Posthog]:
@@ -20,12 +22,7 @@ def initialize_posthog() -> Optional[Posthog]:
 
     if not token or not host:
         if os.getenv("ENVIRONMENT", "development").lower() != "production":
-            missing = "POSTHOG_PROJECT_TOKEN" if not token else "POSTHOG_HOST"
-            raise RuntimeError(
-                f"{missing} variable required by PostHog is missing or un-configured, "
-                f"this causes events to be silently missed. This error stops appearing "
-                f"once {missing} is configured"
-            )
+            logger.warning("PostHog is disabled because POSTHOG_PROJECT_TOKEN or POSTHOG_HOST is missing.")
         return None
 
     _client = Posthog(

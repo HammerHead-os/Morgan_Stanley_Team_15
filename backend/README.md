@@ -1,6 +1,7 @@
 # Love 21 Supabase API
 
-FastAPI backend functions for the Supabase schema in `supabase/migrations`.
+FastAPI backend functions for the frontend-facing Love 21 app contract and the
+raw Supabase schema in `supabase/migrations`.
 
 ## Run
 
@@ -21,6 +22,20 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 Open http://127.0.0.1:8000/docs.
+
+The static frontend in `docs/` calls the stable `/api/*` app contract:
+
+- `POST /api/auth/demo-login`
+- `GET /api/profile`
+- `GET /api/activities`
+- `POST /api/family/register`
+- `GET|POST /api/volunteers/*`
+- `GET|POST|PATCH /api/impact/*`
+- `GET|PATCH /api/prefs`
+- `GET|POST /api/hire`
+
+These routes are backed by Supabase tables created by
+`supabase/migrations/003_app_contract_tables.sql`.
 
 ## Supabase Endpoints
 
@@ -44,4 +59,4 @@ All migration-backed routes are under `/api/supabase`:
 - `DELETE /api/supabase/admins/{user_id}`
 
 The legacy SQLite demo routes are disabled by default. Set `ENABLE_LEGACY_DEMO_DB=1`
-only if you need the old demo API.
+only if you intentionally want to compare against the old local database.
