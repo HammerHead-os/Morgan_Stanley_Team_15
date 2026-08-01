@@ -169,11 +169,22 @@
             </button>
             <ul class="nav-dropdown-menu" id="home-dropdown-menu" data-home-dropdown-menu hidden>
               <li><button type="button" class="nav-dropdown-item" data-role="family">Family</button></li>
-              <li><button type="button" class="nav-dropdown-item" data-role="volunteer">Contributor</button></li>
+              <li class="nav-dropdown-expand">
+                <button type="button" class="nav-dropdown-item nav-dropdown-item-expand" data-contributor-toggle aria-expanded="false" aria-controls="contributor-submenu">
+                  Contributor <span class="nav-dropdown-expand-caret" aria-hidden="true">▾</span>
+                </button>
+                <ul class="nav-dropdown-submenu" id="contributor-submenu" data-contributor-submenu hidden>
+                  <li><button type="button" class="nav-dropdown-item" data-role="donor">Donor</button></li>
+                  <li><button type="button" class="nav-dropdown-item" data-role="volunteer">Volunteer</button></li>
+                  <li><button type="button" class="nav-dropdown-item" data-role="company">Company</button></li>
+                </ul>
+              </li>
               <li><button type="button" class="nav-dropdown-item" data-role="curious">Just curious</button></li>
             </ul>
           </li>
+          <li><a href="pages/about.html">About</a></li>
           <li><a href="pages/contact.html">Contact</a></li>
+          <li><a href="pages/impact.html">Donations</a></li>
           <li><a class="nav-session" data-session href="pages/profile.html">…</a></li>
         </ul>
       </div>

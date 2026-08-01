@@ -555,6 +555,8 @@
     if (nameEl) nameEl.textContent = p.name;
     const loginBtn = document.querySelector("[data-profile-login-prompt]");
     if (loginBtn) loginBtn.hidden = true;
+    const logoutBtn = document.querySelector("[data-logout]");
+    if (logoutBtn) logoutBtn.hidden = false;
     if (roleEl) {
       const roles = personRoles(data);
       const bits = roles.map(function (r) {
@@ -904,6 +906,8 @@
     if (accountSel) accountSel.value = "";
     const loginBtn = document.querySelector("[data-profile-login-prompt]");
     if (loginBtn) loginBtn.hidden = false;
+    const logoutBtn = document.querySelector("[data-logout]");
+    if (logoutBtn) logoutBtn.hidden = true;
   }
 
   document.addEventListener("click", function (e) {
@@ -916,6 +920,12 @@
     }).catch(function (err) {
       if (!err.cancelled) L.showToast(L.friendlyError(err));
     });
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest("[data-logout]")) return;
+    L.clearSession();
+    location.reload();
   });
 
   (async function init() {

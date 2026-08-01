@@ -266,24 +266,44 @@ p {
   color: var(--ink);
 }
 
-.nav-logout {
-  margin-left: 0.6rem;
-  font-size: 0.8rem;
+.nav-dropdown-item-expand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nav-dropdown-expand-caret {
+  font-size: 0.65rem;
+  transition: transform var(--ease);
+}
+
+.nav-dropdown-item-expand[aria-expanded="true"] .nav-dropdown-expand-caret {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-submenu {
+  list-style: none;
+  margin: 0.2rem 0 0.3rem 0.6rem;
+  padding: 0.2rem 0 0.2rem 0.65rem;
+  border-left: 2px solid var(--line);
+}
+
+.nav-dropdown-submenu[hidden] {
+  display: none;
+}
+
+.nav-dropdown-submenu .nav-dropdown-item {
+  font-size: 0.85rem;
 }
 
 .nav-session {
   display: inline-block;
-  padding: 0.45rem 0.9rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--white);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--ink-soft);
   max-width: 10rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 .nav-toggle {
@@ -1873,12 +1893,6 @@ body.page-gate .site-nav-gate .nav-links a[aria-current="page"] {
   color: #fff;
 }
 
-body.page-gate .site-nav-gate .nav-session {
-  background: rgba(8, 14, 12, 0.55);
-  border-color: rgba(255, 255, 255, 0.35);
-  color: rgba(245, 247, 246, 0.92) !important;
-}
-
 body.page-gate .site-nav-gate .nav-dropdown-menu {
   background: rgba(8, 14, 12, 0.92);
   border-color: rgba(255, 255, 255, 0.25);
@@ -1891,6 +1905,10 @@ body.page-gate .site-nav-gate .nav-dropdown-item {
 body.page-gate .site-nav-gate .nav-dropdown-item:hover {
   background: rgba(255, 255, 255, 0.12);
   color: #fff;
+}
+
+body.page-gate .site-nav-gate .nav-dropdown-submenu {
+  border-left-color: rgba(255, 255, 255, 0.25);
 }
 
 body.page-gate .brand-logo {
@@ -3027,6 +3045,19 @@ body.iam-open {
   padding-left: 1.1rem;
   color: var(--ink-soft);
   line-height: 1.65;
+}
+
+.spec-list-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem 2rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 700px) {
+  .spec-list-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .spec-strip {

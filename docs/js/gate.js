@@ -3,12 +3,20 @@
 (function () {
   const ROLE_KEY = "love21_role";
   const ROLE_PAGES = {
-    family: "pages/activity-finder.html",
-    volunteer: "pages/volunteer.html",
-    donor: "pages/impact.html",
-    company: "pages/explore.html#marketplace",
-    curious: "pages/curious.html",
+    family: "activity-finder.html",
+    volunteer: "volunteer.html",
+    donor: "impact.html",
+    company: "explore.html#marketplace",
+    curious: "curious.html",
   };
+  // gate.js loads on every page now (not just index.html at the docs root),
+  // so role destinations need to resolve relative to wherever we currently are.
+  const inPagesDir = /\/pages\//.test(location.pathname);
+  function resolveRolePage(role) {
+    const page = ROLE_PAGES[role];
+    if (!page) return null;
+    return inPagesDir ? page : "pages/" + page;
+  }
   const STEP_COPY = {
     contributor: {
       eyebrow: "Contributor",
@@ -96,20 +104,39 @@
     const roleBtn = e.target.closest("[data-role]");
     if (!roleBtn) return;
     const role = roleBtn.getAttribute("data-role");
-    if (!ROLE_PAGES[role]) return;
+    const dest = resolveRolePage(role);
+    if (!dest) return;
     localStorage.setItem(ROLE_KEY, role);
-    window.location.href = ROLE_PAGES[role];
+    window.location.href = dest;
   });
 
   const homeDropdown = document.querySelector("[data-home-dropdown]");
   const homeDropdownToggle = document.querySelector("[data-home-dropdown-toggle]");
   const homeDropdownMenu = document.querySelector("[data-home-dropdown-menu]");
+  const contributorToggle = document.querySelector("[data-contributor-toggle]");
+  const contributorSubmenu = document.querySelector("[data-contributor-submenu]");
+
+  function closeContributorSubmenu() {
+    if (!contributorToggle || !contributorSubmenu) return;
+    contributorSubmenu.hidden = true;
+    contributorToggle.setAttribute("aria-expanded", "false");
+  }
 
   function closeHomeDropdown() {
     if (!homeDropdown || !homeDropdownMenu) return;
     homeDropdownMenu.hidden = true;
     homeDropdown.classList.remove("open");
     if (homeDropdownToggle) homeDropdownToggle.setAttribute("aria-expanded", "false");
+    closeContributorSubmenu();
+  }
+
+  if (contributorToggle && contributorSubmenu) {
+    contributorToggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const willOpen = contributorSubmenu.hidden;
+      contributorSubmenu.hidden = !willOpen;
+      contributorToggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    });
   }
 
   if (homeDropdown && homeDropdownToggle && homeDropdownMenu) {

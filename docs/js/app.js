@@ -373,28 +373,6 @@
     }
   }
 
-  function paintLogoutButton(show) {
-    let btn = qs("[data-logout]");
-    if (show) {
-      if (btn) return;
-      btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "link-btn nav-logout";
-      btn.setAttribute("data-logout", "");
-      btn.textContent = "Log out";
-      btn.addEventListener("click", function () {
-        L.clearSession();
-        location.reload();
-      });
-      const slot = qs("[data-session]");
-      if (slot && slot.parentNode) {
-        slot.insertAdjacentElement("afterend", btn);
-      }
-    } else if (btn) {
-      btn.remove();
-    }
-  }
-
   async function paintSession() {
     const slot = qs("[data-session]");
     if (!slot || !L) return;
@@ -403,7 +381,6 @@
       const person = L.getPerson();
       slot.textContent = person ? person.name : "Profile";
       if (person) slot.title = person.email;
-      paintLogoutButton(!!person);
       paintAdminLink(person);
     } catch (e) {
       slot.textContent = "Offline";

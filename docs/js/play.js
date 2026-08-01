@@ -22,7 +22,7 @@
       ],
     },
     {
-      q: "An office wants to "do CSR" this quarter. What's the useful move?",
+      q: "An office wants to \"do CSR\" this quarter. What's the useful move?",
       choices: [
         {
           t: "Share a sad post and a donate link",

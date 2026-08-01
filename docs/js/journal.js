@@ -139,7 +139,7 @@
     return (
       '<header class="book-page-header"><span>' +
       escapeHtml(data.label) +
-      " passport</span><strong>" +
+      " journal</span><strong>" +
       escapeHtml(section) +
       '</strong><span class="book-page-number">' +
       String(pageNumber).padStart(2, "0") +
@@ -161,12 +161,12 @@
     return (
       '<article class="book-page book-page-left">' +
       pageHeader(data, 1, "Personal profile") +
-      '<div class="book-profile"><div class="book-profile-photo">' + escapeHtml(holderInitials()) + '</div><div><p class="book-overline">Passport holder</p><h3>' + escapeHtml(holderName()) + '<\/h3><p>Hong Kong · Member since ' +
+      '<div class="book-profile"><div class="book-profile-photo">' + escapeHtml(holderInitials()) + '</div><div><p class="book-overline">Journal holder</p><h3>' + escapeHtml(holderName()) + '<\/h3><p>Hong Kong · Member since ' +
       escapeHtml(data.joined) +
       "</p></div></div>" +
       '<div class="book-role-summary">' + stats + "</div>" +
       '<div class="book-profile-details">' + details + "</div>" +
-      '<footer class="book-page-footer"><span>Passport no.</span><strong>' +
+      '<footer class="book-page-footer"><span>Journal no.</span><strong>' +
       escapeHtml(data.code) +
       "</strong></footer></article>" +
       '<article class="book-page book-page-right">' +
