@@ -84,6 +84,124 @@
 
   window.loadHomeTasks = loadHomeTasks;
 
+  function pointsFor(mins) {
+    if (mins <= 15) return 20;
+    if (mins <= 30) return 35;
+    if (mins <= 45) return 40;
+    return mins + 5;
+  }
+
+  function skillLabel(raw) {
+    const map = {
+      cantonese: "Cantonese reading",
+      photos: "basic photo sorting",
+      voice: "phone mic, English or Cantonese",
+      sports: "on-site sports help",
+    };
+    return String(raw || "")
+      .split(",")
+      .map(function (x) {
+        x = x.trim().toLowerCase();
+        return map[x] || x;
+      })
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  function loadMicroBoard() {
+    const board = document.querySelector("[data-micro-board]");
+    if (!board) return;
+
+    const fallback = [
+      {
+        id: null,
+        title: "Cantonese flyer check",
+        description: "Proofread banquet flyers.",
+        duration_min: 15,
+        skills_needed: "cantonese",
+        remote: true,
+        requires_onboarding: false,
+      },
+      {
+        id: null,
+        title: "Photo sort",
+        description: "Sort July hike photos into swim, kitchen, and track folders.",
+        duration_min: 30,
+        skills_needed: "photos",
+        remote: true,
+        requires_onboarding: false,
+      },
+      {
+        id: null,
+        title: "Voice cheers",
+        description: "Record a few short cheers for Saturday track.",
+        duration_min: 45,
+        skills_needed: "voice",
+        remote: true,
+        requires_onboarding: false,
+      },
+    ];
+
+    function render(shifts) {
+      const list = (shifts || []).filter(function (s) {
+        return !s.requires_onboarding;
+      }).slice(0, 6);
+      const rows = list.length ? list : fallback;
+      board.innerHTML = rows
+        .map(function (s) {
+          const skill = skillLabel(s.skills_needed);
+          const btn = s.id
+            ? '<button type="button" class="btn btn-sm btn-primary" data-claim-shift="' +
+              s.id +
+              '" data-claim-stay>Claim</button>'
+            : '<button type="button" class="btn btn-sm btn-primary" data-demo-claim>Claim</button>';
+          return (
+            '<article class="micro-task">' +
+            '<p class="micro-task-time">' +
+            s.duration_min +
+            (s.remote ? " min · remote" : " min · on-site") +
+            "</p><h3>" +
+            escapeHtml(s.title) +
+            "</h3><p>" +
+            escapeHtml(s.description) +
+            "</p>" +
+            (skill
+              ? '<p class="task-meta-line">Skills needed: ' +
+                escapeHtml(skill) +
+                "</p>"
+              : "") +
+            '<p class="task-meta-line">Points given: ' +
+            pointsFor(s.duration_min) +
+            "</p>" +
+            btn +
+            "</article>"
+          );
+        })
+        .join("");
+    }
+
+    if (!L) {
+      render(fallback);
+      return;
+    }
+    L.api("/api/volunteers/shifts")
+      .then(render)
+      .catch(function () {
+        render(fallback);
+      });
+  }
+
+  window.loadMicroBoard = loadMicroBoard;
+
+  document.addEventListener("click", function (e) {
+    const demo = e.target.closest("[data-demo-claim]");
+    if (!demo) return;
+    e.preventDefault();
+    const card = demo.closest(".micro-task");
+    if (card) card.remove();
+    toast("Claimed. Start the API to save it on your profile.");
+  });
+
   // Hire: click person → show date/time slots
   document.addEventListener("click", function (e) {
     const select = e.target.closest("[data-hire-select]");
@@ -156,5 +274,8 @@
 
   if (document.querySelector("[data-home-tasks]")) {
     loadHomeTasks();
+  }
+  if (document.querySelector("[data-micro-board]")) {
+    loadMicroBoard();
   }
 })();

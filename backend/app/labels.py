@@ -27,6 +27,7 @@ EVENT_LABELS = {
     "volunteer_onboarded": "Volunteer profile ready",
     "shift_claimed": "Volunteer shift claimed",
     "shift_completed": "Shift completed",
+    "points_redeemed": "Points redeemed",
     "hire_enquiry": "Creator hire enquiry sent",
     "one_click_opt_out": "Opted out of messages",
 }

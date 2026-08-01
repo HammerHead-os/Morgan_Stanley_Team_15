@@ -257,6 +257,8 @@ def seed(db: Session) -> None:
         availability="saturday mornings, remote",
         onboarded=True,
         hours_logged=6.5,
+        points_balance=55,
+        points_spent=0,
     )
     db.add(vprofile)
     # Jamie is also a volunteer in the multi-role demo
@@ -336,6 +338,7 @@ def seed(db: Session) -> None:
             hours=0.25,
             reflection="Quick. Flyers look clearer in Cantonese.",
             completed_at=datetime.utcnow() - timedelta(days=18),
+            points_awarded=20,
         )
     )
     db.add(
@@ -343,9 +346,10 @@ def seed(db: Session) -> None:
             shift_id=shifts[1].id,
             volunteer_profile_id=vprofile.id,
             status="completed",
-            hours=1.5,
+            hours=0.5,
             reflection="Sorted hiking set; tagged for social wall.",
             completed_at=datetime.utcnow() - timedelta(days=10),
+            points_awarded=35,
         )
     )
     db.add(
@@ -354,6 +358,7 @@ def seed(db: Session) -> None:
             volunteer_profile_id=vprofile.id,
             status="claimed",
             hours=shifts[2].duration_min / 60.0,
+            points_awarded=0,
         )
     )
     shifts[0].spots_left = 2
@@ -398,8 +403,39 @@ def seed(db: Session) -> None:
 
 def init_db() -> None:
     Base.metadata.create_all(bind=engine)
+    _migrate_sqlite_columns()
     db = SessionLocal()
     try:
         seed(db)
     finally:
         db.close()
+
+
+def _migrate_sqlite_columns() -> None:
+    """Add new columns on existing SQLite DBs without wiping data."""
+    from sqlalchemy import text
+
+    alters = [
+        ("volunteer_profiles", "points_balance", "INTEGER DEFAULT 0"),
+        ("volunteer_profiles", "points_spent", "INTEGER DEFAULT 0"),
+        ("volunteer_shift_claims", "points_awarded", "INTEGER DEFAULT 0"),
+    ]
+    with engine.begin() as conn:
+        for table, col, decl in alters:
+            rows = conn.execute(text(f"PRAGMA table_info({table})")).fetchall()
+            names = {r[1] for r in rows}
+            if col not in names:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {decl}"))
+        # Demo: give Taylor a starter balance once if still at zero
+        conn.execute(
+            text(
+                """
+                UPDATE volunteer_profiles
+                SET points_balance = 55
+                WHERE points_balance = 0
+                  AND person_id = (
+                    SELECT id FROM people WHERE email = 'volunteer@demo.love21'
+                  )
+                """
+            )
+        )

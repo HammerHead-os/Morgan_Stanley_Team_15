@@ -226,6 +226,8 @@ class VolunteerProfile(Base):
     availability: Mapped[str] = mapped_column(String(120), default="")
     onboarded: Mapped[bool] = mapped_column(Boolean, default=False)
     hours_logged: Mapped[float] = mapped_column(Float, default=0.0)
+    points_balance: Mapped[int] = mapped_column(Integer, default=0)
+    points_spent: Mapped[int] = mapped_column(Integer, default=0)
 
     person: Mapped[Person] = relationship(back_populates="volunteer_profile")
     shifts: Mapped[list["VolunteerShiftClaim"]] = relationship(
@@ -267,6 +269,7 @@ class VolunteerShiftClaim(Base):
     reflection: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     claimed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    points_awarded: Mapped[int] = mapped_column(Integer, default=0)
 
     shift: Mapped[VolunteerShift] = relationship(back_populates="claims")
     volunteer: Mapped[VolunteerProfile] = relationship(back_populates="shifts")

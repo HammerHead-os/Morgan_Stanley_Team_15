@@ -223,7 +223,11 @@ class ClaimOut(OrmModel):
     hours: float
     reflection: Optional[str] = None
     claimed_at: datetime
+    completed_at: Optional[datetime] = None
     shift_title: Optional[str] = None
+    points_awarded: int = 0
+    points_available: int = 0
+    duration_min: Optional[int] = None
 
 
 class ReflectionIn(BaseModel):
@@ -239,7 +243,35 @@ class VolunteerProfileOut(OrmModel):
     availability: str
     onboarded: bool
     hours_logged: float
+    points_balance: int = 0
+    points_spent: int = 0
 
+
+class RedeemIn(BaseModel):
+    reward_id: str = Field(min_length=2, max_length=40)
+
+
+class RewardOut(BaseModel):
+    id: str
+    label: str
+    cost: int
+    detail: str = ""
+
+
+class RedeemOut(BaseModel):
+    ok: bool
+    reward_id: str
+    reward_label: str
+    cost: int
+    points_balance: int
+    message: str = ""
+
+
+class PointsOut(BaseModel):
+    points_balance: int
+    points_spent: int
+    hours_logged: float
+    rewards: list[RewardOut] = []
 
 class OnboardIn(BaseModel):
     skills: Optional[str] = None
@@ -319,6 +351,9 @@ class VolunteerProfileSummaryOut(BaseModel):
     profile: Optional[VolunteerProfileOut] = None
     claims: list[ClaimOut]
     suggested_next: Optional[VolunteerShiftOut] = None
+    points_balance: int = 0
+    points_spent: int = 0
+    rewards: list[RewardOut] = []
 
 
 class ProfileOut(BaseModel):
