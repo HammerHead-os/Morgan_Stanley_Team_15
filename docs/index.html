@@ -146,16 +146,26 @@
           Menu
         </button>
         <ul class="nav-links" id="nav-menu">
-          <li>
-            <a class="nav-home" href="index.html" aria-current="page">Home</a>
-          </li>
-          <li><a href="pages/profile.html">Profile</a></li>
-          <li><a href="pages/contact.html">Contact</a></li>
-          <li>
-            <button type="button" class="btn btn-sm gate-open-btn" data-open-iam>
-              Choose role
+          <li class="nav-dropdown" data-home-dropdown>
+            <button
+              type="button"
+              class="nav-home nav-dropdown-toggle"
+              data-home-dropdown-toggle
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="home-dropdown-menu"
+              aria-current="page"
+            >
+              Home <span class="nav-dropdown-caret" aria-hidden="true">▾</span>
             </button>
+            <ul class="nav-dropdown-menu" id="home-dropdown-menu" data-home-dropdown-menu hidden>
+              <li><button type="button" class="nav-dropdown-item" data-role="family">Family</button></li>
+              <li><button type="button" class="nav-dropdown-item" data-role="volunteer">Contributor</button></li>
+              <li><button type="button" class="nav-dropdown-item" data-role="curious">Just curious</button></li>
+            </ul>
           </li>
+          <li><a href="pages/contact.html">Contact</a></li>
+          <li><a class="nav-session" data-session href="pages/profile.html">…</a></li>
         </ul>
       </div>
     </nav>

@@ -208,6 +208,64 @@ p {
   line-height: 1;
 }
 
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-toggle {
+  font: inherit;
+  cursor: pointer;
+}
+
+.nav-dropdown-caret {
+  font-size: 0.65rem;
+  transition: transform var(--ease);
+}
+
+.nav-dropdown.open .nav-dropdown-caret {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  left: 0;
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+  z-index: 40;
+}
+
+.nav-dropdown-menu[hidden] {
+  display: none;
+}
+
+.nav-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nav-dropdown-item:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
 .nav-logout {
   margin-left: 0.6rem;
   font-size: 0.8rem;
@@ -258,6 +316,11 @@ p {
   .nav-links.open {
     display: flex;
   }
+  .nav-dropdown-menu {
+    position: static;
+    box-shadow: none;
+    margin-top: 0.4rem;
+  }
 }
 
 /* ——— Buttons ——— */
@@ -279,6 +342,10 @@ p {
   background: var(--surface);
   color: var(--ink);
   box-shadow: none;
+}
+
+.btn[hidden] {
+  display: none;
 }
 
 .btn:hover {
@@ -1803,6 +1870,26 @@ body.page-gate .site-nav-gate .nav-links a {
 
 body.page-gate .site-nav-gate .nav-links a:hover,
 body.page-gate .site-nav-gate .nav-links a[aria-current="page"] {
+  color: #fff;
+}
+
+body.page-gate .site-nav-gate .nav-session {
+  background: rgba(8, 14, 12, 0.55);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(245, 247, 246, 0.92) !important;
+}
+
+body.page-gate .site-nav-gate .nav-dropdown-menu {
+  background: rgba(8, 14, 12, 0.92);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+body.page-gate .site-nav-gate .nav-dropdown-item {
+  color: rgba(245, 247, 246, 0.85);
+}
+
+body.page-gate .site-nav-gate .nav-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
 }
 

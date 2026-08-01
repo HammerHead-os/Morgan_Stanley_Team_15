@@ -553,6 +553,8 @@
     const roleEl = document.querySelector("[data-cover-role]");
     const codeEl = document.querySelector("[data-cover-code]");
     if (nameEl) nameEl.textContent = p.name;
+    const loginBtn = document.querySelector("[data-profile-login-prompt]");
+    if (loginBtn) loginBtn.hidden = true;
     if (roleEl) {
       const roles = personRoles(data);
       const bits = roles.map(function (r) {
@@ -900,12 +902,8 @@
     if (nameEl) nameEl.textContent = "You're not logged in";
     const accountSel = document.querySelector("[data-account-select]");
     if (accountSel) accountSel.value = "";
-    const feed = document.querySelector("[data-activity-feed]");
-    if (feed) {
-      feed.innerHTML =
-        '<p class="muted">Log in to see your classes, giving, and volunteer hours in one place.</p>' +
-        '<button type="button" class="btn btn-primary mt-1" data-profile-login-prompt>Log in</button>';
-    }
+    const loginBtn = document.querySelector("[data-profile-login-prompt]");
+    if (loginBtn) loginBtn.hidden = false;
   }
 
   document.addEventListener("click", function (e) {
@@ -938,10 +936,10 @@
         sessionStorage.removeItem("love21_flash");
       }
     } catch (err) {
-      const feed = document.querySelector("[data-activity-feed]");
-      if (feed) {
-        feed.innerHTML =
-          '<p class="muted">Profile needs the local API. Run the backend, then refresh.</p>';
+      const flashEl = document.querySelector("[data-profile-flash]");
+      if (flashEl) {
+        flashEl.hidden = false;
+        flashEl.textContent = "Profile needs the local API. Run the backend, then refresh.";
       }
     }
   })();

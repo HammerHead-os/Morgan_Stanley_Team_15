@@ -361,7 +361,7 @@
     try {
       await L.api("/api/health");
       const person = L.getPerson();
-      slot.textContent = person ? person.name : "Ready";
+      slot.textContent = person ? person.name : "Profile";
       if (person) slot.title = person.email;
       paintLogoutButton(!!person);
       paintAdminLink(person);

@@ -30,9 +30,8 @@
         </button>
         <ul class="nav-links" id="nav-menu">
           <li><a class="nav-home" href="../index.html">Home</a></li>
-          <li><a href="profile.html" aria-current="page">Profile</a></li>
           <li><a href="contact.html">Contact</a></li>
-          <li><span class="nav-session" data-session>…</span></li>
+          <li><a class="nav-session" data-session href="profile.html" aria-current="page">…</a></li>
         </ul>
       </div>
     </nav>
@@ -55,6 +54,14 @@
             </p>
             <button type="button" class="link-btn" data-tour-start>
               Replay walkthrough
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm mt-1"
+              data-profile-login-prompt
+              hidden
+            >
+              Log in
             </button>
           </div>
           <button
