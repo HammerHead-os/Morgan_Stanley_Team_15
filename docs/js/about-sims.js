@@ -61,7 +61,7 @@
       z0: 16,
       z1: 24,
       title: "Level 4 · Find your bag",
-      hint: "Walk up to your bag and press E (or click).",
+      hint: "Walk up to the yellow bag with red 21, then press E or click it.",
     },
   ];
 
@@ -89,18 +89,23 @@
 
   let walkers = [];
 
-  // Level 4 — many similar bags; only one is correct
+  // Level 4 — many similar bags; only one is correct (spaced so picking is clearer)
   const bags = [
-    { x: -3.6, z: 19.6, color: "#f5d76e", label: "Yellow", mark: null, correct: false },
-    { x: -1.8, z: 20.2, color: "#e8a838", label: "Gold", mark: null, correct: false },
-    { x: 0, z: 19.4, color: "#f0c020", label: "Yellow", mark: "12", correct: false },
-    { x: 1.8, z: 20.4, color: "#f0c020", label: "Yellow", mark: "21", correct: true },
-    { x: 3.6, z: 19.7, color: "#dde066", label: "Lime", mark: null, correct: false },
-    { x: -2.8, z: 21.6, color: "#3d6fb8", label: "Blue", mark: "21", correct: false },
-    { x: -0.6, z: 21.8, color: "#e85d4c", label: "Red", mark: null, correct: false },
-    { x: 1.2, z: 21.5, color: "#f0c020", label: "Yellow", mark: "2", correct: false },
-    { x: 3.0, z: 21.7, color: "#2f9e6d", label: "Green", mark: "21", correct: false },
+    { x: -4.2, z: 19.2, color: "#f5d76e", label: "Yellow", mark: null, correct: false },
+    { x: -2.4, z: 20.6, color: "#e8a838", label: "Gold", mark: null, correct: false },
+    { x: -0.6, z: 19.0, color: "#f0c020", label: "Yellow", mark: "12", correct: false },
+    { x: 1.6, z: 20.2, color: "#f0c020", label: "Yellow", mark: "21", correct: true },
+    { x: 4.0, z: 19.4, color: "#dde066", label: "Lime", mark: null, correct: false },
+    { x: -3.4, z: 22.0, color: "#3d6fb8", label: "Blue", mark: "21", correct: false },
+    { x: -1.0, z: 22.2, color: "#e85d4c", label: "Red", mark: null, correct: false },
+    { x: 2.8, z: 22.0, color: "#f0c020", label: "Yellow", mark: "2", correct: false },
+    { x: 4.4, z: 21.4, color: "#2f9e6d", label: "Green", mark: "21", correct: false },
   ];
+
+  // Screen-space hit boxes from last draw (for click-to-pick)
+  let bagHits = [];
+  let hoverBag = null;
+  let aimBag = null;
 
   const trees = [
     { x: -8, z: -4, h: 3 },
@@ -379,24 +384,79 @@
     return Math.sqrt(dx * dx + dz * dz);
   }
 
-  function tryPickBag() {
-    if (level < 4 && player.z < 16) return;
-    let best = null;
-    let bestD = 2.2;
-    bags.forEach(function (b) {
-      const d = dist2(player.x, player.z, b.x, b.z);
-      if (d < bestD) {
-        bestD = d;
-        best = b;
-      }
-    });
-    if (!best) return;
-    if (best.correct) {
+  function canPickBags() {
+    return level >= 4 || player.z >= 16;
+  }
+
+  function resolvePick(bag) {
+    if (!bag) return;
+    if (bag.correct) {
       won = true;
       endSession("win");
     } else {
       wrongBagFlash = 1;
     }
+  }
+
+  /** Bag closest to where you're looking (within reach). */
+  function bagInView(maxDist) {
+    const reach = maxDist == null ? 3.8 : maxDist;
+    const sin = Math.sin(player.yaw);
+    const cos = Math.cos(player.yaw);
+    let best = null;
+    let bestScore = Infinity;
+    bags.forEach(function (b) {
+      const d = dist2(player.x, player.z, b.x, b.z);
+      if (d > reach) return;
+      const dx = b.x - player.x;
+      const dz = b.z - player.z;
+      const forward = dx * sin + dz * cos;
+      if (forward < 0.2) return;
+      const side = Math.abs(dx * cos - dz * sin);
+      const score = side * 1.4 + d * 0.35;
+      if (score < bestScore) {
+        bestScore = score;
+        best = b;
+      }
+    });
+    return best;
+  }
+
+  function bagUnderPoint(cssX, cssY) {
+    let best = null;
+    let bestRz = Infinity;
+    for (let i = 0; i < bagHits.length; i++) {
+      const h = bagHits[i];
+      if (
+        cssX >= h.left &&
+        cssX <= h.right &&
+        cssY >= h.top &&
+        cssY <= h.bottom
+      ) {
+        if (h.rz < bestRz) {
+          bestRz = h.rz;
+          best = h.bag;
+        }
+      }
+    }
+    return best;
+  }
+
+  function tryPickBag(fromClick) {
+    if (!canPickBags()) return;
+    let bag = null;
+    if (fromClick && fromClick.bag) {
+      bag = fromClick.bag;
+    } else {
+      bag = bagInView(3.8);
+    }
+    if (!bag) return;
+    // Must be fairly close to interact
+    if (dist2(player.x, player.z, bag.x, bag.z) > 4.2) {
+      wrongBagFlash = 0.35;
+      return;
+    }
+    resolvePick(bag);
   }
 
   function project(x, z, cos, sin, W, H, horizon, focal) {
@@ -440,42 +500,66 @@
   function drawBag(ctx, bag, cos, sin, W, H, horizon, focal) {
     const p = project(bag.x, bag.z, cos, sin, W, H, horizon, focal);
     if (!p) return null;
+    const bw = p.scale * (bag.correct ? 0.72 : 0.6);
+    const bh = p.scale * (bag.correct ? 0.58 : 0.5);
+    const left = p.sx - bw * 0.5;
+    const top = p.sy - bh - p.scale * 0.14;
+    const right = p.sx + bw * 0.5;
+    const bottom = p.sy + p.scale * 0.12;
+    bagHits.push({
+      bag: bag,
+      left: left - 14,
+      right: right + 14,
+      top: top - 14,
+      bottom: bottom + 14,
+      rz: p.rz,
+    });
+    const selected = bag === aimBag || bag === hoverBag;
+    const inReach = dist2(player.x, player.z, bag.x, bag.z) <= 4.2;
     return {
       rz: p.rz,
       bag: bag,
       draw: function () {
+        if (selected) {
+          ctx.strokeStyle = "rgba(255, 240, 120, 0.95)";
+          ctx.lineWidth = Math.max(3, p.scale * 0.07);
+          ctx.strokeRect(left - 5, top - 5, bw + 10, bh + p.scale * 0.3);
+          ctx.fillStyle = "rgba(255, 220, 80, 0.2)";
+          ctx.fillRect(left - 5, top - 5, bw + 10, bh + p.scale * 0.3);
+        }
         ctx.fillStyle = "rgba(0,0,0,0.2)";
         ctx.beginPath();
         ctx.ellipse(p.sx, p.sy + 2, p.scale * 0.5, p.scale * 0.16, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = bag.color;
-        ctx.fillRect(
-          p.sx - p.scale * 0.3,
-          p.sy - p.scale * 0.55,
-          p.scale * 0.6,
-          p.scale * 0.5
-        );
+        ctx.fillRect(left, p.sy - bh, bw, bh);
         ctx.fillStyle = "rgba(0,0,0,0.18)";
         ctx.fillRect(
-          p.sx - p.scale * 0.26,
-          p.sy - p.scale * 0.68,
-          p.scale * 0.52,
+          p.sx - bw * 0.42,
+          p.sy - bh - p.scale * 0.14,
+          bw * 0.84,
           p.scale * 0.14
         );
         if (bag.mark) {
           ctx.fillStyle = bag.correct ? "#e85d4c" : "#222";
-          ctx.font = "bold " + Math.max(13, p.scale * 0.3) + "px sans-serif";
+          ctx.font =
+            "bold " +
+            Math.max(14, p.scale * (bag.correct ? 0.38 : 0.3)) +
+            "px sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText(bag.mark, p.sx, p.sy - p.scale * 0.25);
+          ctx.fillText(bag.mark, p.sx, p.sy - bh * 0.35);
         }
-        ctx.strokeStyle = "rgba(255,255,255,0.65)";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(
-          p.sx - p.scale * 0.3,
-          p.sy - p.scale * 0.55,
-          p.scale * 0.6,
-          p.scale * 0.5
-        );
+        if (!selected) {
+          ctx.strokeStyle = "rgba(255,255,255,0.55)";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(left, p.sy - bh, bw, bh);
+        }
+        if (selected && inReach) {
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold " + Math.max(12, p.scale * 0.2) + "px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("E / click", p.sx, top - 8);
+        }
       },
     };
   }
@@ -513,20 +597,47 @@
     window.addEventListener("resize", onResize);
 
     // No pointer lock — keep the normal cursor so Exit is easy
+    let dragDist = 0;
+    let pointerCss = { x: 0, y: 0 };
+    canvas.style.cursor = "crosshair";
+
     canvas.addEventListener("mousedown", function () {
       if (!playing) return;
       dragging = true;
+      dragDist = 0;
     });
     window.addEventListener("mouseup", function () {
       dragging = false;
     });
-    canvas.addEventListener("click", function () {
-      if (!playing) return;
-      if (player.z >= 16) tryPickBag();
+    canvas.addEventListener("click", function (e) {
+      if (!playing || !canPickBags()) return;
+      // Ignore click if this was mostly a look-drag
+      if (dragDist > 14) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const hit = bagUnderPoint(x, y);
+      if (hit) {
+        tryPickBag({ bag: hit });
+        return;
+      }
+      // Fallback: bag you're aiming at
+      tryPickBag();
     });
 
     onMouse = function (e) {
-      if (!playing || !dragging) return;
+      if (!playing) return;
+      const rect = canvas.getBoundingClientRect();
+      pointerCss.x = e.clientX - rect.left;
+      pointerCss.y = e.clientY - rect.top;
+      hoverBag = canPickBags() ? bagUnderPoint(pointerCss.x, pointerCss.y) : null;
+      if (hoverBag && dist2(player.x, player.z, hoverBag.x, hoverBag.z) <= 4.2) {
+        canvas.style.cursor = "pointer";
+      } else {
+        canvas.style.cursor = "crosshair";
+      }
+      if (!dragging) return;
+      dragDist += Math.abs(e.movementX) + Math.abs(e.movementY);
       player.yaw += e.movementX * 0.003;
     };
     document.addEventListener("mousemove", onMouse);
@@ -553,6 +664,14 @@
       if (hintEl) {
         if (wrongBagFlash > 0.3) {
           hintEl.textContent = "Wrong bag — look for yellow with red 21";
+        } else if (L.id === 4 && (aimBag || hoverBag)) {
+          const target = hoverBag || aimBag;
+          const d = dist2(player.x, player.z, target.x, target.z);
+          if (d <= 4.2) {
+            hintEl.textContent = "Bag highlighted — press E or click to pick it up";
+          } else {
+            hintEl.textContent = "Walk closer to the yellow bag with red 21";
+          }
         } else {
           hintEl.textContent = L.hint;
         }
@@ -755,6 +874,11 @@
         });
       });
 
+      bagHits = [];
+      aimBag = canPickBags() ? bagInView(4.0) : null;
+      if (hoverBag && (!canPickBags() || dist2(player.x, player.z, hoverBag.x, hoverBag.z) > 5)) {
+        hoverBag = null;
+      }
       bags.forEach(function (b) {
         const item = drawBag(ctx, b, cos, sin, W, H, horizon, focal);
         if (item) drawList.push(item);
