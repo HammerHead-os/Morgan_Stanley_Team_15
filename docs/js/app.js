@@ -87,8 +87,7 @@
       "</div>" +
       "<div>" +
       "<h4>Visit</h4>" +
-      '<p class="footer-contact">Love 21 Space · 2/F, Trium Lab<br />' +
-      "21 Luk Hop Street, San Po Kong<br />" +
+      '<p class="footer-contact">Love 21 Space · 2/F, Trium Lab, 21 Luk Hop Street, San Po Kong<br />' +
       '<a href="tel:+85223222121">+852 2322 2121</a><br />' +
       '<a href="mailto:info@love21foundation.com">info@love21foundation.com</a></p>' +
       '<div class="footer-social-links" aria-label="Love 21 social media">' +

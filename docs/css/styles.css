@@ -1505,6 +1505,63 @@ p {
   font-size: 0.82rem;
 }
 
+.footer-language {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.footer-language-label {
+  margin-right: 0.2rem;
+  color: var(--ink-soft);
+}
+
+.footer-language-button {
+  appearance: none;
+  border: 0;
+  padding: 0.15rem 0.25rem;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.footer-language-button:hover,
+.footer-language-button:focus-visible,
+.footer-language-button[aria-pressed="true"] {
+  color: var(--teal-deep);
+}
+
+.footer-language-button[aria-pressed="true"] {
+  font-weight: 700;
+}
+
+body.page-gate .site-footer-home {
+  position: relative;
+  z-index: 1;
+  color: rgba(245, 247, 246, 0.82);
+  background: rgba(8, 14, 12, 0.72);
+  border-top-color: rgba(255, 255, 255, 0.16);
+}
+
+body.page-gate .site-footer-home .footer-bottom {
+  border-top: 0;
+}
+
+body.page-gate .site-footer-home .footer-language-label,
+body.page-gate .site-footer-home .footer-language-button {
+  color: rgba(245, 247, 246, 0.82);
+}
+
+body.page-gate .site-footer-home .footer-language-button:hover,
+body.page-gate .site-footer-home .footer-language-button:focus-visible,
+body.page-gate .site-footer-home .footer-language-button[aria-pressed="true"] {
+  color: #fff;
+}
+
 .site-footer a:hover {
   color: var(--coral);
 }

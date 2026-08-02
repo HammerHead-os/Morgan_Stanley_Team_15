@@ -14,6 +14,14 @@
   const calTitle = document.querySelector("[data-family-calendar-title]");
   const calList = document.querySelector("[data-family-calendar-list]");
 
+  function tr(value) {
+    return window.Love21I18n ? window.Love21I18n.translate(value) : value;
+  }
+
+  function sentenceEnd() {
+    return document.documentElement.lang === "zh-Hant" ? "。" : ".";
+  }
+
   const ROLE_LABELS = {
     mom: "Mom",
     dad: "Dad",
@@ -30,14 +38,14 @@
   }
 
   function showExample() {
-    if (eyebrowEl) eyebrowEl.textContent = "Example family";
+    if (eyebrowEl) eyebrowEl.textContent = tr("Example family");
     if (leadEl)
-      leadEl.textContent =
-        "Example: Alex is 9 and needs a beginners swim lane on Saturday at " +
-        "the San Po Kong pool. Jamie and Chris both see the booking on the same profile.";
-    if (waitlistTag) waitlistTag.textContent = "Example waitlist";
-    if (membersTag) membersTag.textContent = "Example household";
-    if (calTitle) calTitle.textContent = "Coming up (example)";
+      leadEl.textContent = tr(
+        "Example: Alex is 9 and needs a beginners swim lane on Saturday at the San Po Kong pool. Jamie and Chris both see the booking on the same profile."
+      );
+    if (waitlistTag) waitlistTag.textContent = tr("Example waitlist");
+    if (membersTag) membersTag.textContent = tr("Example household");
+    if (calTitle) calTitle.textContent = tr("Coming up (example)");
     if (loginCta) loginCta.hidden = false;
   }
 
@@ -65,43 +73,58 @@
     if (leadEl) {
       if (booked.length) {
         leadEl.textContent =
-          (booked[0].member_name || "A member") +
-          " is booked into " +
-          (booked[0].activity_title || "a class") +
-          ". Everyone on the household sees it on the same profile.";
+          (booked[0].member_name || tr("A member")) +
+          " " +
+          tr("is booked into") +
+          " " +
+          (booked[0].activity_title || tr("a class")) +
+          sentenceEnd() +
+          " " +
+          tr("Everyone on the household sees it on the same profile.");
       } else if (waitlisted.length) {
         leadEl.textContent =
-          (waitlisted[0].member_name || "A member") +
-          " is on the waitlist for " +
-          (waitlisted[0].activity_title || "a class") +
-          ". You get an email when a spot opens.";
+          (waitlisted[0].member_name || tr("A member")) +
+          " " +
+          tr("is on the waitlist for") +
+          " " +
+          (waitlisted[0].activity_title || tr("a class")) +
+          sentenceEnd() +
+          " " +
+          tr("You get an email when a spot opens.");
       } else {
-        leadEl.textContent =
-          "No classes booked yet. Browse open classes below to get started.";
+        leadEl.textContent = tr(
+          "No classes booked yet. Browse open classes below to get started."
+        );
       }
     }
 
-    if (waitlistTag) waitlistTag.textContent = waitlisted.length ? "Your waitlist" : "No waitlist";
+    if (waitlistTag)
+      waitlistTag.textContent = waitlisted.length ? tr("Your waitlist") : tr("No waitlist");
     if (waitlistList) {
       waitlistList.innerHTML = waitlisted.length
         ? waitlisted
             .map(function (r) {
               return (
                 "<li>" +
-                escapeHtml(r.activity_title || "Class") +
+                escapeHtml(tr(r.activity_title || "Class")) +
                 "</li><li>" +
                 escapeHtml(r.member_name || "") +
                 " · " +
-                escapeHtml(r.status_label || "Waitlist") +
+                escapeHtml(tr(r.status_label || "Waitlist")) +
                 "</li>"
               );
             })
             .join("")
-        : "<li>No one is on a waitlist right now</li><li>Browse classes to join one</li>";
+        : "<li>" +
+          tr("No one is on a waitlist right now") +
+          "</li><li>" +
+          tr("Browse classes to join one") +
+          "</li>";
     }
 
     const members = (data.family && data.family.members) || [];
-    if (membersTag) membersTag.textContent = members.length ? "Your household" : "No household yet";
+    if (membersTag)
+      membersTag.textContent = members.length ? tr("Your household") : tr("No household yet");
     if (membersList) {
       membersList.innerHTML = members.length
         ? members
@@ -110,27 +133,33 @@
                 "<li>" +
                 escapeHtml(m.name) +
                 " · " +
-                escapeHtml(ROLE_LABELS[m.household_role] || "Member") +
+                escapeHtml(tr(ROLE_LABELS[m.household_role] || "Member")) +
                 "</li>"
               );
             })
             .join("")
-        : "<li>Add family members from your Profile</li>";
+        : "<li>" + tr("Add family members from your Profile") + "</li>";
     }
 
     const calEvents = (data.calendar_events || []).filter(function (e) {
       return e.kind === "class";
     });
-    if (calTitle) calTitle.textContent = "Coming up";
+    if (calTitle) calTitle.textContent = tr("Coming up");
     if (calList) {
       calList.innerHTML = calEvents.length
         ? calEvents
             .slice(0, 4)
             .map(function (e) {
-              return "<li>" + escapeHtml(e.title) + " · " + escapeHtml(e.status || "") + "</li>";
+              return (
+                "<li>" +
+                escapeHtml(tr(e.title)) +
+                " · " +
+                escapeHtml(tr(e.status || "")) +
+                "</li>"
+              );
             })
             .join("")
-        : "<li>Nothing booked yet</li>";
+        : "<li>" + tr("Nothing booked yet") + "</li>";
     }
   }
 
@@ -152,6 +181,14 @@
       });
     });
   }
+
+  document.addEventListener("love21:languagechange", function () {
+    if (L.getPerson()) {
+      showReal();
+    } else {
+      showExample();
+    }
+  });
 
   init();
 })();

@@ -4,6 +4,15 @@
   const L = window.Love21;
   const grid = document.querySelector("[data-shift-grid]");
   if (!grid) return;
+  let lastShifts = null;
+
+  function tr(value) {
+    return window.Love21I18n ? window.Love21I18n.translate(value) : value;
+  }
+
+  function minutesLabel(value) {
+    return value + (document.documentElement.lang === "zh-Hant" ? " 分鐘" : " min");
+  }
 
   const SKILL_LABELS = {
     cantonese: "Cantonese reading",
@@ -80,7 +89,7 @@
       .split(",")
       .map(function (s) {
         s = s.trim().toLowerCase();
-        return SKILL_LABELS[s] || s;
+        return tr(SKILL_LABELS[s] || s);
       })
       .filter(Boolean)
       .join(", ");
@@ -101,13 +110,16 @@
   }
 
   function fmtDate(iso) {
-    if (!iso || iso === "soon") return "Date on claim";
+    if (!iso || iso === "soon") return tr("Date on claim");
     try {
-      return new Date(iso + "T12:00:00").toLocaleDateString(undefined, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      });
+      return new Date(iso + "T12:00:00").toLocaleDateString(
+        document.documentElement.lang === "zh-Hant" ? "zh-HK" : undefined,
+        {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        }
+      );
     } catch (e) {
       return String(iso);
     }
@@ -115,44 +127,54 @@
 
   function cardHtml(s) {
     const when = s.remote
-      ? "Remote · async"
-      : "In person · " + fmtDate(s.scheduled_date);
+      ? tr("Remote · async")
+      : tr("In person · dated") + " · " + fmtDate(s.scheduled_date);
     const tags =
       '<div class="activity-meta">' +
       '<span class="tag">' +
-      s.duration_min +
-      " min</span>" +
+      minutesLabel(s.duration_min) +
+      "</span>" +
       '<span class="tag">' +
       when +
       "</span></div>";
     let btn;
     if (s.requires_onboarding) {
       btn =
-        '<button type="button" class="btn btn-sm btn-ink" data-onboard>Start onboarding</button>';
+        '<button type="button" class="btn btn-sm btn-ink" data-onboard>' +
+        tr("Start onboarding") +
+        "</button>";
     } else if (s.id) {
       btn =
         '<button type="button" class="btn btn-sm btn-primary" data-claim-shift="' +
         s.id +
-        '" data-claim-stay>Claim</button>';
+        '" data-claim-stay>' +
+        tr("Claim") +
+        "</button>";
     } else {
       btn =
-        '<button type="button" class="btn btn-sm btn-primary" data-demo-claim>Claim</button>';
+        '<button type="button" class="btn btn-sm btn-primary" data-demo-claim>' +
+        tr("Claim") +
+        "</button>";
     }
     const skills = skillLine(s.skills_needed);
     return (
       '<article class="activity">' +
       tags +
       "<h3>" +
-      escapeHtml(s.title) +
+      escapeHtml(tr(s.title)) +
       "</h3><p>" +
-      escapeHtml(s.description) +
+      escapeHtml(tr(s.description)) +
       "</p>" +
       (skills
-        ? '<p class="task-meta-line">Skills needed: ' +
+        ? '<p class="task-meta-line">' +
+          tr("Skills needed:") +
+          " " +
           escapeHtml(skills) +
           "</p>"
         : "") +
-      '<p class="task-meta-line">Points given: ' +
+      '<p class="task-meta-line">' +
+      tr("Points given:") +
+      " " +
       pointsGiven(s.duration_min) +
       "</p>" +
       btn +
@@ -161,6 +183,7 @@
   }
 
   function renderShifts(shifts) {
+    lastShifts = shifts && shifts.length ? shifts : null;
     const rows = shifts && shifts.length ? shifts : FALLBACK;
     const remote = rows.filter(function (s) {
       return !!s.remote;
@@ -171,19 +194,23 @@
     let html = "";
     if (remote.length) {
       html +=
-        '<h3 class="task-split-title">Remote · async</h3>' +
+        '<h3 class="task-split-title">' +
+        tr("Remote · async") +
+        "</h3>" +
         '<div class="activity-grid">' +
         remote.map(cardHtml).join("") +
         "</div>";
     }
     if (onsite.length) {
       html +=
-        '<h3 class="task-split-title">In person · dated</h3>' +
+        '<h3 class="task-split-title">' +
+        tr("In person · dated") +
+        "</h3>" +
         '<div class="activity-grid">' +
         onsite.map(cardHtml).join("") +
         "</div>";
     }
-    grid.innerHTML = html || '<p class="empty-hint">No tasks open right now.</p>';
+    grid.innerHTML = html || '<p class="empty-hint">' + tr("No tasks open right now.") + "</p>";
   }
 
   async function reloadVolunteerShifts() {
@@ -212,7 +239,7 @@
       const card = demo.closest(".activity");
       if (card) card.remove();
       if (L && L.showToast) {
-        L.showToast("Claimed. Run the local API to save it on your profile.");
+        L.showToast(tr("Claimed. Run the local API to save it on your profile."));
       }
       return;
     }
@@ -235,6 +262,10 @@
     } catch (err) {
       if (!err.cancelled) L.showToast(L.friendlyError(err));
     }
+  });
+
+  document.addEventListener("love21:languagechange", function () {
+    renderShifts(lastShifts);
   });
 
   reloadVolunteerShifts();
