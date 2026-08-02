@@ -441,6 +441,10 @@ def _contains(query: str, *terms: str) -> bool:
     return any(term.casefold() in folded for term in terms)
 
 
+def _is_chinese_query(query: str) -> bool:
+    return bool(re.search(r"[\u3400-\u9fff]", query))
+
+
 def _local_answer(
     query: str,
     access_level: str,
@@ -448,7 +452,17 @@ def _local_answer(
     member: dict[str, Any] | None,
     admin: dict[str, Any] | None,
 ) -> str:
+    zh = _is_chinese_query(query)
+
     if _contains(query, "finance", "financial", "report", "income", "expenditure", "财务", "財務", "年报", "年報", "財報"):
+        if zh:
+            return (
+                "## 2024–2025 財務概覽\n\n"
+                f"- **總收入：** {_money(FINANCE_2024_25['income_total'])}\n"
+                f"- **總支出：** {_money(FINANCE_2024_25['expenditure_total'])}\n"
+                "- 項目支出佔總支出的 **86%**。\n\n"
+                "[查看財務圖表及正式財務報告](/pages/about.html#reports)"
+            )
         return (
             "## 2024–2025 financial overview\n\n"
             f"- **Total income:** {_money(FINANCE_2024_25['income_total'])}\n"
@@ -457,6 +471,14 @@ def _local_answer(
             "[Open the visual breakdown and official financial reports](/pages/about.html#reports)"
         )
     if _contains(query, "contact", "phone", "email", "address", "聯絡", "联系", "地址", "電話", "电话"):
+        if zh:
+            return (
+                "## 聯絡 Love 21\n\n"
+                "- **電話：** +852 2322 2121\n"
+                "- **電郵：** info@love21foundation.com\n"
+                "- **地址：** 新蒲崗六合街 21 號 ARTISAN LAB 2 樓 Trium Lab\n\n"
+                "[前往聯絡頁面](/pages/contact.html)"
+            )
         return (
             "## Contact Love 21\n\n"
             "- **Phone:** +852 2322 2121\n"
@@ -464,51 +486,21 @@ def _local_answer(
             "- **Visit:** 2/F, Trium Lab, 21 Luk Hop Street, San Po Kong\n\n"
             "[Open the Contact page](/pages/contact.html)"
         )
-    personal_activity_query = access_level in {"member", "admin"} and _contains(
-        query,
-        "my ",
-        "family",
-        "joined",
-        "attended",
-        "record",
-        "我",
-        "家人",
-        "參加",
-        "参加",
-        "記錄",
-        "记录",
-    )
-    if _contains(query, "programme", "program", "activity", "class", "活動", "活动", "課程", "课程") and not personal_activity_query:
-        programmes = public.get("programmes", [])[:5]
-        lines = "\n".join(
-            f"- **{item['title']}** — {item['day']}, {item['location']}, {item['spots_left']} places left"
-            for item in programmes
-        )
-        return f"## Current programmes\n\n{lines}\n\n[Open the Activity Finder](/pages/activity-finder.html)"
 
-    if access_level in {"member", "admin"} and member:
-        if _contains(query, "family", "家人", "家庭", "member", "成員", "成员"):
-            family = member.get("family_members", [])
-            lines = "\n".join(
-                f"- **{item['name']}** — {item.get('relationship') or item.get('primary_role')}"
-                for item in family
-            ) or "No family members are connected to this account."
-            return f"## Your family\n\n{lines}\n\n[Open your Profile](/pages/profile.html#family)"
-        if _contains(query, "my activity", "joined", "attended", "record", "参加", "參加", "記錄", "记录", "活動"):
-            records = member.get("activity_records", [])
-            lines = "\n".join(
-                f"- **{item['activity']}** — {item['member']}, {item.get('date') or 'date not set'}, {item['status']}"
-                for item in records[:10]
-            ) or "No activity records are connected to this account."
-            return f"## Your activity records\n\n{lines}\n\n[Open your Profile calendar](/pages/profile.html#calendar)"
-
-    if access_level == "admin" and admin and _contains(
+    admin_query = access_level == "admin" and admin and _contains(
         query,
         "dashboard",
         "visitor",
         "traffic",
         "how many",
         "analytics",
+        "registration",
+        "attendance",
+        "people count",
+        "donation total",
+        "volunteer claim",
+        "管理儀表板",
+        "管理仪表板",
         "網站有多少人",
         "网站有多少人",
         "瀏覽",
@@ -517,9 +509,16 @@ def _local_answer(
         "访客",
         "人數",
         "人数",
-    ):
-        counts = admin["database_counts"]
-        browser = admin["browser_dashboard"]
+        "參加記錄",
+        "参加记录",
+        "報名",
+        "报名",
+        "總數",
+        "总数",
+    )
+    if admin_query:
+        counts = admin.get("database_counts", {})
+        browser = admin.get("browser_dashboard", {})
         visitor = next(
             (
                 value
@@ -528,19 +527,112 @@ def _local_answer(
             ),
             None,
         )
-        visitor_line = (
-            f"- **Recorded website visits:** {visitor.get('total_visits', 0):,}\n"
-            if visitor
-            else "- **Recorded website visits:** no dashboard visitor dataset is stored in this browser yet.\n"
+        registration_statuses = admin.get("registration_statuses", {})
+        status_text = ", ".join(
+            f"{status}: {count}" for status, count in registration_statuses.items()
+        ) or ("未有分類記錄" if zh else "no status breakdown available")
+        visits = visitor.get("total_visits", 0) if visitor else None
+        if zh:
+            visit_line = (
+                f"- **網站瀏覽次數：** {visits:,}\n"
+                if visits is not None
+                else "- **網站瀏覽次數：** 此瀏覽器尚未儲存訪客資料。\n"
+            )
+            return (
+                "## 職員儀表板摘要\n\n"
+                + visit_line
+                + f"- **Demo 資料庫人數：** {counts.get('people', 0):,}\n"
+                + f"- **活動參加記錄：** {counts.get('registrations', 0):,}（{status_text}）\n"
+                + f"- **義工認領記錄：** {counts.get('volunteer_claims', 0):,}\n"
+                + f"- **有效捐款承諾總額：** {_money(admin.get('active_commitment_value_hkd', 0))}\n\n"
+                + "[前往管理儀表板](/pages/admin-dashboard.html)"
+            )
+        visit_line = (
+            f"- **Recorded website visits:** {visits:,}\n"
+            if visits is not None
+            else "- **Recorded website visits:** no visitor dataset is stored in this browser yet.\n"
         )
         return (
             "## Staff dashboard snapshot\n\n"
-            + visitor_line
-            + f"- **People in the demo database:** {counts['people']:,}\n"
-            + f"- **Activity registrations:** {counts['registrations']:,}\n"
-            + f"- **Volunteer claims:** {counts['volunteer_claims']:,}\n\n"
+            + visit_line
+            + f"- **People in the demo database:** {counts.get('people', 0):,}\n"
+            + f"- **Activity registrations:** {counts.get('registrations', 0):,} ({status_text})\n"
+            + f"- **Volunteer claims:** {counts.get('volunteer_claims', 0):,}\n"
+            + f"- **Active donation commitments:** {_money(admin.get('active_commitment_value_hkd', 0))}\n\n"
             + "[Open the Admin dashboard](/pages/admin-dashboard.html)"
         )
+
+    personal_activity_query = access_level in {"member", "admin"} and _contains(
+        query,
+        "my activity",
+        "my account record",
+        "family joined",
+        "family attended",
+        "activities has my family",
+        "joined",
+        "attended",
+        "activity record",
+        "我參加",
+        "我参加",
+        "家人參加",
+        "家人参加",
+        "參加過",
+        "参加过",
+        "活動記錄",
+        "活动记录",
+        "帳戶記錄",
+        "账户记录",
+    )
+
+    if access_level in {"member", "admin"} and member:
+        if personal_activity_query:
+            records = member.get("activity_records", [])
+            if zh:
+                lines = "\n".join(
+                    f"- **{item['activity']}** — {item['member']}，{item.get('date') or '日期未設定'}，{item['status']}"
+                    for item in records[:10]
+                ) or "此帳戶目前沒有活動參加記錄。"
+                return f"## 你的活動記錄\n\n{lines}\n\n[查看個人日曆](/pages/profile.html#calendar)"
+            lines = "\n".join(
+                f"- **{item['activity']}** — {item['member']}, {item.get('date') or 'date not set'}, {item['status']}"
+                for item in records[:10]
+            ) or "No activity records are connected to this account."
+            return f"## Your activity records\n\n{lines}\n\n[Open your Profile calendar](/pages/profile.html#calendar)"
+        if _contains(query, "family", "家人", "家庭", "member", "成員", "成员"):
+            family = member.get("family_members", [])
+            if zh:
+                lines = "\n".join(
+                    f"- **{item['name']}** — {item.get('relationship') or item.get('primary_role')}"
+                    for item in family
+                ) or "此帳戶目前沒有連結的家庭成員。"
+                return f"## 你的家庭成員\n\n{lines}\n\n[查看個人檔案](/pages/profile.html#family)"
+            lines = "\n".join(
+                f"- **{item['name']}** — {item.get('relationship') or item.get('primary_role')}"
+                for item in family
+            ) or "No family members are connected to this account."
+            return f"## Your family\n\n{lines}\n\n[Open your Profile](/pages/profile.html#family)"
+
+    if _contains(query, "programme", "program", "activity", "class", "活動", "活动", "課程", "课程"):
+        programmes = public.get("programmes", [])[:5]
+        if zh:
+            lines = "\n".join(
+                f"- **{item['title']}** — {item['day']}，{item['location']}，尚餘 {item['spots_left']} 個名額"
+                for item in programmes
+            ) or "目前沒有可顯示的活動。"
+            return f"## 現有活動\n\n{lines}\n\n[前往活動搜尋](/pages/activity-finder.html)"
+        lines = "\n".join(
+            f"- **{item['title']}** — {item['day']}, {item['location']}, {item['spots_left']} places left"
+            for item in programmes
+        ) or "No programmes are currently available."
+        return f"## Current programmes\n\n{lines}\n\n[Open the Activity Finder](/pages/activity-finder.html)"
+
+    if zh:
+        suggestions = ["有哪些活動？", "財務報告在哪裡？", "如何聯絡 Love 21？"]
+        if access_level in {"member", "admin"}:
+            suggestions.extend(("我參加過哪些活動？", "我的家人有哪些？"))
+        if access_level == "admin":
+            suggestions.extend(("網站記錄了多少次瀏覽？", "總結管理儀表板。"))
+        return "## 詢問 Love 21\n\n" + "\n".join(f"- {item}" for item in suggestions)
 
     suggestions = [
         "What programmes are available?",
@@ -548,7 +640,7 @@ def _local_answer(
         "How can I contact Love 21?",
     ]
     if access_level in {"member", "admin"}:
-        suggestions.extend(("Which activities has my family joined?", "Show my account records."))
+        suggestions.extend(("Which activities has my family joined?", "Show my family members."))
     if access_level == "admin":
         suggestions.extend(("How many website visits are recorded?", "Summarise the staff dashboard."))
     return "## Ask Love 21\n\n" + "\n".join(f"- {item}" for item in suggestions)

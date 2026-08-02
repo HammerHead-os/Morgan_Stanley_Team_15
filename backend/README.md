@@ -66,7 +66,10 @@ server-enforced read-only access levels:
 Copy the DeepSeek values from `.env.example` into `backend/.env` and set
 `DEEPSEEK_API_KEY`. The key remains in FastAPI and is never sent to the browser.
 Without a key, or if DeepSeek is temporarily unavailable, verified local demo
-answers remain available.
+answers remain available for the questions shown in each mode: public programmes,
+contact and finance for guests; family and activity records for members; and
+visitor, registration and database totals for administrators. The fallback uses
+the same server-derived access level and never broadens a user's permissions.
 
 The previous n8n widget is preserved in `docs/js/n8n-agent-legacy.js`. Switch the
 single value in `docs/js/agent-config.js` from `"deepseek"` to `"n8n"` to restore it.
@@ -88,4 +91,3 @@ To enable it, copy `.env.example` to `.env` and fill in the PostHog values:
 POSTHOG_PROJECT_TOKEN=<server-side project API key>
 POSTHOG_HOST=https://us.i.posthog.com
 ```
-
