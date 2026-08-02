@@ -311,49 +311,63 @@
         </section>
 
         <section id="member-management" class="panel-soft mt-2" data-family-section hidden>
-          <h2>Bookings</h2>
-          <p class="muted">
-            Anyone in the household can cancel a booking, not just who it's for.
-          </p>
-          <div data-family-bookings></div>
-          <h2 class="mt-2">Family members</h2>
-          <p class="muted">
-            Mom, dad, caregivers, and helpers share the same child records.
-          </p>
-          <div data-family-members></div>
-          <form class="profile-member-form mt-2" data-add-member-form>
-            <h3>Add someone</h3>
-            <label>
-              Name
-              <input type="text" name="name" required maxlength="120" />
-            </label>
-            <label>
-              Role in household
-              <select name="household_role" required>
-                <option value="mom">Mom</option>
-                <option value="dad">Dad</option>
-                <option value="caregiver">Caregiver</option>
-                <option value="helper">Helper</option>
-                <option value="child">Child / member</option>
-              </select>
-            </label>
-            <label>
-              Email
-              <input type="email" name="email" required maxlength="200" />
-            </label>
-            <button type="submit" class="btn btn-primary btn-sm">Add member</button>
-          </form>
-          <form class="profile-member-form mt-2" data-join-household-form>
-            <h3>Have an invite code?</h3>
-            <p class="muted" style="margin: 0 0 0.5rem">
-              Join a different household instead of your own.
-            </p>
-            <label>
-              Invite code
-              <input type="text" name="code" required maxlength="64" />
-            </label>
-            <button type="submit" class="btn btn-sm">Join household</button>
-          </form>
+          <details class="profile-accordion" open>
+            <summary>
+              <h2>Bookings</h2>
+              <span class="profile-accordion-caret" aria-hidden="true">+</span>
+            </summary>
+            <div class="profile-accordion-body">
+              <p class="muted">
+                Anyone in the household can cancel a booking, not just who it's for.
+              </p>
+              <div data-family-bookings></div>
+            </div>
+          </details>
+          <details class="profile-accordion">
+            <summary>
+              <h2>Family members</h2>
+              <span class="profile-accordion-caret" aria-hidden="true">+</span>
+            </summary>
+            <div class="profile-accordion-body">
+              <p class="muted">
+                Mom, dad, caregivers, and helpers share the same child records.
+              </p>
+              <div data-family-members></div>
+              <form class="profile-member-form mt-2" data-add-member-form>
+                <h3>Add someone</h3>
+                <label>
+                  Name
+                  <input type="text" name="name" required maxlength="120" />
+                </label>
+                <label>
+                  Role in household
+                  <select name="household_role" required>
+                    <option value="mom">Mom</option>
+                    <option value="dad">Dad</option>
+                    <option value="caregiver">Caregiver</option>
+                    <option value="helper">Helper</option>
+                    <option value="child">Child / member</option>
+                  </select>
+                </label>
+                <label>
+                  Email
+                  <input type="email" name="email" required maxlength="200" />
+                </label>
+                <button type="submit" class="btn btn-primary btn-sm">Add member</button>
+              </form>
+              <form class="profile-member-form mt-2" data-join-household-form>
+                <h3>Have an invite code?</h3>
+                <p class="muted" style="margin: 0 0 0.5rem">
+                  Join a different household instead of your own.
+                </p>
+                <label>
+                  Invite code
+                  <input type="text" name="code" required maxlength="64" />
+                </label>
+                <button type="submit" class="btn btn-sm">Join household</button>
+              </form>
+            </div>
+          </details>
         </section>
 
         <section

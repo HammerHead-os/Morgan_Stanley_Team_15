@@ -1253,6 +1253,47 @@ p {
   box-shadow: 0 8px 24px rgba(20, 35, 31, 0.06);
 }
 
+/* ——— Profile section accordions (bookings / family members) ——— */
+.profile-accordion summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.profile-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.profile-accordion summary h2 {
+  margin: 0;
+}
+
+.profile-accordion-caret {
+  flex: none;
+  margin-left: auto;
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--ink-soft);
+  line-height: 1;
+  transition: transform var(--ease);
+}
+
+.profile-accordion[open] .profile-accordion-caret {
+  transform: rotate(45deg);
+}
+
+.profile-accordion-body {
+  padding-top: 0.85rem;
+}
+
+.profile-accordion + .profile-accordion {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
 /* ——— Resources accordion ——— */
 .resources-note {
   max-width: 60ch;
