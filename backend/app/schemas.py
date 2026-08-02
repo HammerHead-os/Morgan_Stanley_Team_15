@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -429,3 +429,32 @@ class InstagramFeedOut(BaseModel):
     fetched_at: Optional[datetime] = None
     pinned: list[InstagramPostOut] = Field(default_factory=list)
     recent: list[InstagramPostOut] = Field(default_factory=list)
+
+
+class AgentMessageIn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=6000)
+
+
+class AgentClientContext(BaseModel):
+    current_path: str = Field(default="/", max_length=500)
+    dashboard_data: dict[str, Any] | None = None
+
+
+class AgentChatIn(BaseModel):
+    messages: list[AgentMessageIn] = Field(min_length=1, max_length=16)
+    client_context: AgentClientContext = Field(default_factory=AgentClientContext)
+
+
+class AgentToolTrace(BaseModel):
+    name: str
+    result_count: int = 0
+
+
+class AgentChatOut(BaseModel):
+    answer: str
+    access_level: Literal["guest", "member", "admin"]
+    provider: str = "local-demo"
+    configured: bool = False
+    tools: list[AgentToolTrace] = Field(default_factory=list)
+    notice: str | None = None

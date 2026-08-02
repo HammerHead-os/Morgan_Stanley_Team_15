@@ -31,6 +31,7 @@ If the site says Offline, you're on GitHub Pages or the API isn't running — us
 | `alex@chen.demo` | Member | `love21demo` |
 | `donor@demo.love21` | Supporter | `love21demo` |
 | `volunteer@demo.love21` | Volunteer | `love21demo` |
+| `admin@demo.love21` | Administrator | `love21demo` |
 
 Two ways to authenticate:
 
@@ -51,7 +52,25 @@ All three return `{ person, token }` — send `X-Demo-Token: <token>` on later r
 - `GET /api/volunteers/shifts` · `POST /api/volunteers/claims`
 - `PATCH /api/prefs` · `POST /api/prefs/opt-out/{token}`
 
+## AI Agent
+
+The bottom-right AI Agent is available across the website and has three
+server-enforced read-only access levels:
+
+1. Guests can search public pages, programmes, contact details, finance, and impact.
+2. Signed-in members can additionally search only their own account, household,
+   activity, donation, and volunteer demo records.
+3. Administrators can additionally search database aggregates and the demo dataset
+   stored by the Administrative Data Dashboard in the current browser.
+
+Copy the DeepSeek values from `.env.example` into `backend/.env` and set
+`DEEPSEEK_API_KEY`. The key remains in FastAPI and is never sent to the browser.
+Without a key, or if DeepSeek is temporarily unavailable, verified local demo
+answers remain available.
+
+The previous n8n widget is preserved in `docs/js/n8n-agent-legacy.js`. Switch the
+single value in `docs/js/agent-config.js` from `"deepseek"` to `"n8n"` to restore it.
+
 ## Instagram feed
 
 See `INSTAGRAM_API_SETUP.md`. Endpoint: `GET /api/instagram/posts`.
-

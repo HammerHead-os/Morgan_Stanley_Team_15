@@ -7,6 +7,12 @@ ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
+    # Love 21 AI Agent. The key never leaves the FastAPI process.
+    deepseek_api_key: str | None = None
+    deepseek_model: str = "deepseek-chat"
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_timeout_seconds: int = 30
+
     instagram_access_token: str | None = None
     instagram_user_id: str | None = None
     instagram_username: str = "love21foundation"
@@ -23,6 +29,10 @@ class Settings(BaseSettings):
     @property
     def instagram_is_configured(self) -> bool:
         return bool(self.instagram_access_token and self.instagram_user_id)
+
+    @property
+    def deepseek_is_configured(self) -> bool:
+        return bool(self.deepseek_api_key)
 
     @property
     def pinned_media_ids(self) -> list[str]:

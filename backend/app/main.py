@@ -23,6 +23,7 @@ class NoCacheStaticFiles(StaticFiles):
 from .routers import (
     achievements,
     activities,
+    agent,
     auth,
     family,
     hire,
@@ -101,6 +102,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(agent.router)
 app.include_router(activities.router)
 app.include_router(family.router)
 app.include_router(achievements.router)

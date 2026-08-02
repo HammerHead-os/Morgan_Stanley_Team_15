@@ -25,16 +25,6 @@
 
     <title>Love 21 Foundation</title>
     <link rel="stylesheet" href="css/styles.css?v=clean1" />
-    <link href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css" rel="stylesheet" />
-    <style>
-      /* Re-theme the n8n chat widget to match the site palette instead of its default pink/navy */
-      :root {
-        --chat--color--primary: #e85d4c;
-        --chat--color--primary-shade-50: #d1503f;
-        --chat--color--primary--shade-100: #b84532;
-        --chat--color-dark: #14231f;
-      }
-    </style>
     <style>
       /* Critical gate layout — keeps video full-bleed even if CSS cache is stale */
       html,
@@ -280,15 +270,7 @@
     <script src="js/app.js"></script>
     <script src="js/gate.js"></script>
     <script src="js/i18n.js"></script>
-    <script type="module">
-  import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
-  const chatIsTraditionalChinese = document.documentElement.lang === 'zh-Hant';
-  createChat({
-    webhookUrl: 'https://cllaiaj.app.n8n.cloud/webhook/78545d1e-8801-449c-a75e-5f8e0fb68ed9/chat',
-    initialMessages: chatIsTraditionalChinese
-      ? ['你好！👋 歡迎來到 Love 21 基金會。', '今天可以怎樣幫助你？']
-      : ['Hi! 👋 Welcome to Love 21 Foundation.', 'How can I help you today?']
-  });
-</script>
+    <script src="js/agent-config.js"></script>
+    <script src="js/agent.js"></script>
   </body>
 </html>

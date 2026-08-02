@@ -1,0 +1,157 @@
+/* Love 21 AI Agent — aligned with the main branch design tokens */
+.love21-agent {
+  --agent-ink: var(--ink, #14231f);
+  --agent-ink-soft: var(--ink-soft, #3d524c);
+  --agent-paper: var(--paper, #f7faf8);
+  --agent-paper-deep: var(--paper-deep, #eef3f1);
+  --agent-surface: var(--surface, #ffffff);
+  --agent-line: var(--line, rgba(20, 35, 31, 0.12));
+  --agent-coral: var(--coral, #e85d4c);
+  --agent-coral-soft: var(--coral-soft, #ffe0db);
+  --agent-teal: var(--teal, #0d7c6b);
+  --agent-teal-soft: var(--teal-soft, #d4f0ea);
+  --agent-gold-soft: var(--gold-soft, #fff0c8);
+  --agent-display: var(--font-display, "Fraunces", Georgia, serif);
+  --agent-body: var(--font-body, "Source Sans 3", system-ui, sans-serif);
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 10000;
+  font-family: var(--agent-body);
+  color: var(--agent-ink);
+  line-height: 1.45;
+}
+
+.love21-agent *, .love21-agent *::before, .love21-agent *::after { box-sizing: border-box; }
+.love21-agent [hidden] { display: none !important; }
+.love21-agent button, .love21-agent textarea { font: inherit; }
+
+.love21-agent-launcher {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  padding: 0;
+  color: #fff;
+  background: var(--agent-coral);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 14px 34px rgba(20, 35, 31, 0.24), 0 0 0 6px rgba(232, 93, 76, 0.12);
+  cursor: pointer;
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+
+.love21-agent-launcher:hover {
+  transform: translateY(-3px) rotate(-2deg);
+  box-shadow: 0 18px 42px rgba(20, 35, 31, 0.28), 0 0 0 8px rgba(232, 93, 76, 0.13);
+}
+
+.love21-agent-launcher:focus-visible,
+.love21-agent-close:focus-visible,
+.love21-agent button:focus-visible,
+.love21-agent textarea:focus-visible {
+  outline: 3px solid rgba(13, 124, 107, .3);
+  outline-offset: 3px;
+}
+
+.love21-agent-launcher svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.love21-agent-launcher svg .fill, .love21-agent-mini-icon svg .fill { fill: currentColor; stroke: none; }
+.love21-agent-launcher-pulse { position: absolute; top: 3px; right: 3px; width: 11px; height: 11px; background: #fff; border: 3px solid var(--agent-coral); border-radius: 50%; }
+
+.love21-agent-panel {
+  width: min(430px, calc(100vw - 2rem));
+  overflow: hidden;
+  color: var(--agent-ink);
+  background: color-mix(in srgb, var(--agent-paper) 94%, #fff 6%);
+  border: 1px solid rgba(20, 35, 31, .15);
+  border-radius: 22px;
+  box-shadow: 0 28px 80px rgba(20, 35, 31, .24);
+  animation: love21-agent-in .22s ease-out;
+}
+
+@keyframes love21-agent-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.love21-agent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1rem .8rem;
+  background: var(--agent-surface);
+  border-bottom: 1px solid var(--agent-line);
+}
+
+.love21-agent-identity { display: flex; align-items: center; gap: .7rem; }
+.love21-agent-identity > div { display: grid; justify-items: start; gap: .22rem; }
+.love21-agent-identity strong { font-family: var(--agent-display); font-size: 1.08rem; font-weight: 600; letter-spacing: -.01em; }
+.love21-agent-mini-icon { display: grid; place-items: center; width: 39px; height: 39px; color: #fff; background: var(--agent-coral); border-radius: 12px; }
+.love21-agent-mini-icon svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.love21-agent-access { padding: .15rem .45rem; border-radius: 99px; font-size: .65rem; font-weight: 700; letter-spacing: .015em; }
+.love21-agent-access.guest { color: #9e3f32; background: var(--agent-coral-soft); }
+.love21-agent-access.member { color: #096252; background: var(--agent-teal-soft); }
+.love21-agent-access.admin { color: #755814; background: var(--agent-gold-soft); }
+
+.love21-agent-close { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; color: var(--agent-ink-soft); background: var(--agent-paper-deep); border: 0; border-radius: 50%; font-size: 1.35rem; line-height: 1; cursor: pointer; }
+.love21-agent-close:hover { color: var(--agent-ink); background: var(--agent-coral-soft); }
+
+.love21-agent-suggestions { display: flex; gap: .45rem; padding: .72rem 1rem; overflow-x: auto; background: var(--agent-surface); scrollbar-width: none; }
+.love21-agent-suggestions::-webkit-scrollbar { display: none; }
+.love21-agent-suggestions button { flex: 0 0 auto; padding: .42rem .65rem; color: var(--agent-ink-soft); background: var(--agent-paper); border: 1px solid var(--agent-line); border-radius: 999px; font-size: .7rem; cursor: pointer; transition: color .2s ease, border-color .2s ease, background .2s ease; }
+.love21-agent-suggestions button:hover { color: var(--agent-teal); background: var(--agent-teal-soft); border-color: rgba(13, 124, 107, .24); }
+
+.love21-agent-messages { display: grid; align-content: start; gap: .75rem; height: min(410px, 49vh); padding: .9rem 1rem 1.1rem; overflow-y: auto; overscroll-behavior: contain; }
+.love21-agent-message { max-width: 92%; padding: .78rem .85rem; background: var(--agent-surface); border: 1px solid var(--agent-line); border-radius: 6px 16px 16px 16px; box-shadow: 0 3px 12px rgba(20, 35, 31, .04); }
+.love21-agent-message.user { justify-self: end; color: #fff; background: var(--agent-teal-deep, #095c50); border-color: transparent; border-radius: 16px 6px 16px 16px; box-shadow: none; }
+.love21-agent-message > small { display: block; margin-bottom: .38rem; color: #84918d; font-size: .6rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.love21-agent-message.user > small { color: rgba(255,255,255,.68); }
+.love21-agent-message.user p { margin: 0; color: #fff; font-size: .82rem; }
+.love21-agent-message.waiting { opacity: .76; }
+
+.love21-agent-markdown h2, .love21-agent-markdown h3, .love21-agent-markdown h4 { margin: .7rem 0 .4rem; color: var(--agent-ink); font-family: var(--agent-display); font-size: 1.03rem; line-height: 1.25; }
+.love21-agent-markdown h2:first-child, .love21-agent-markdown h3:first-child { margin-top: 0; }
+.love21-agent-markdown p, .love21-agent-markdown li, .love21-agent-markdown blockquote { color: var(--agent-ink-soft); font-size: .82rem; line-height: 1.55; }
+.love21-agent-markdown p { margin: .42rem 0 0; }
+.love21-agent-markdown ul, .love21-agent-markdown ol { display: grid; gap: .32rem; margin: .48rem 0 0; padding-left: 1.25rem; }
+.love21-agent-markdown blockquote { margin: .55rem 0 0; padding: .45rem .65rem; background: var(--agent-paper-deep); border-left: 3px solid var(--agent-teal); border-radius: 0 7px 7px 0; }
+.love21-agent-markdown a { display: inline-flex; align-items: baseline; gap: .1rem; color: var(--agent-teal); font-weight: 700; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.love21-agent-markdown a:hover { color: var(--agent-coral); }
+.love21-agent-markdown code { padding: .08rem .27rem; color: var(--agent-ink); background: var(--agent-paper-deep); border-radius: 5px; font-size: .75rem; }
+
+.love21-agent-table-scroll { max-width: 100%; margin: .65rem 0 .15rem; overflow-x: auto; border: 1px solid var(--agent-line); border-radius: 10px; }
+.love21-agent-markdown table { width: 100%; min-width: 290px; border-collapse: collapse; color: var(--agent-ink-soft); background: var(--agent-surface); font-size: .73rem; line-height: 1.4; }
+.love21-agent-markdown th, .love21-agent-markdown td { padding: .55rem .62rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--agent-line); }
+.love21-agent-markdown th { color: var(--agent-ink); background: var(--agent-paper-deep); font-weight: 700; }
+.love21-agent-markdown tbody tr:last-child td { border-bottom: 0; }
+
+.love21-agent-trace { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .65rem; }
+.love21-agent-trace span { padding: .2rem .38rem; color: #61716c; background: var(--agent-paper-deep); border-radius: 5px; font-size: .58rem; }
+.love21-agent-notice { margin-top: .58rem !important; padding-top: .5rem; color: #7b8582 !important; border-top: 1px solid var(--agent-line); font-size: .66rem !important; }
+
+.love21-agent-dots { display: flex; gap: 3px; margin-top: .5rem; }
+.love21-agent-dots i { width: 5px; height: 5px; background: var(--agent-teal); border-radius: 50%; animation: love21-dot 1s infinite ease-in-out; }
+.love21-agent-dots i:nth-child(2) { animation-delay: .14s; }
+.love21-agent-dots i:nth-child(3) { animation-delay: .28s; }
+@keyframes love21-dot { 0%, 65%, 100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+.love21-agent-form { display: flex; align-items: flex-end; gap: .55rem; padding: .78rem 1rem .68rem; background: var(--agent-surface); border-top: 1px solid var(--agent-line); }
+.love21-agent-form textarea { flex: 1; min-height: 45px; max-height: 120px; resize: vertical; padding: .65rem .72rem; color: var(--agent-ink); background: var(--agent-paper); border: 1px solid rgba(20, 35, 31, .15); border-radius: 11px; outline: none; font-size: .8rem; line-height: 1.4; transition: border-color .2s ease, box-shadow .2s ease; }
+.love21-agent-form textarea:focus { border-color: rgba(13, 124, 107, .42); box-shadow: 0 0 0 4px rgba(13, 124, 107, .1); }
+.love21-agent-form button { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; color: #fff; background: var(--agent-teal); border: 0; border-radius: 12px; cursor: pointer; transition: background .2s ease, transform .2s ease; }
+.love21-agent-form button:hover { background: #095c50; transform: translateY(-1px); }
+.love21-agent-form button:disabled { cursor: wait; opacity: .48; transform: none; }
+.love21-agent-form button svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.love21-agent-footnote { margin: 0; padding: 0 1rem .75rem; color: #82908c; background: var(--agent-surface); font-size: .62rem; text-align: center; }
+.love21-agent-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+@media (max-width: 560px) {
+  .love21-agent { right: .75rem; bottom: .75rem; }
+  .love21-agent-panel { width: calc(100vw - 1.5rem); border-radius: 18px; }
+  .love21-agent-messages { height: min(440px, 55vh); }
+  .love21-agent-launcher { width: 56px; height: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .love21-agent-panel, .love21-agent-dots i { animation: none; }
+  .love21-agent-launcher, .love21-agent button { transition: none; }
+}

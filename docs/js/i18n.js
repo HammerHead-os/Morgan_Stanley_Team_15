@@ -725,6 +725,10 @@
   }
 
   function injectLanguageSwitchers() {
+    document.querySelectorAll(".site-nav [data-language-switcher]").forEach(function (switcher) {
+      const item = switcher.closest(".nav-language-item");
+      (item || switcher).remove();
+    });
     document.querySelectorAll(".site-footer").forEach(function (footer) {
       const target = footer.querySelector(".footer-bottom") || footer;
       if (target.querySelector("[data-language-switcher]")) return;
@@ -737,7 +741,12 @@
         '<button type="button" class="footer-language-button" data-language-choice="en" aria-pressed="false">EN</button>' +
         '<span aria-hidden="true">/</span>' +
         '<button type="button" class="footer-language-button" data-language-choice="zh-Hant" aria-pressed="false">繁</button>';
-      target.appendChild(wrap);
+      const copyright = target.firstElementChild;
+      if (copyright && copyright.nextSibling) {
+        target.insertBefore(wrap, copyright.nextSibling);
+      } else {
+        target.appendChild(wrap);
+      }
     });
   }
 

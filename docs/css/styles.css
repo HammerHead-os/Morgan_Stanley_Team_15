@@ -1508,24 +1508,27 @@ p {
 .footer-language {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  margin-left: auto;
+  gap: 0.25rem;
+  margin-right: auto;
+  padding: 0.12rem 0.45rem;
+  color: var(--ink-soft);
   white-space: nowrap;
 }
 
 .footer-language-label {
-  margin-right: 0.2rem;
-  color: var(--ink-soft);
+  margin-right: 0.1rem;
+  font-size: 0.78rem;
 }
 
 .footer-language-button {
   appearance: none;
   border: 0;
-  padding: 0.15rem 0.25rem;
+  padding: 0.05rem 0.18rem;
   background: transparent;
   color: var(--ink-soft);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -1551,7 +1554,7 @@ body.page-gate .site-footer-home .footer-bottom {
   border-top: 0;
 }
 
-body.page-gate .site-footer-home .footer-language-label,
+body.page-gate .site-footer-home .footer-language,
 body.page-gate .site-footer-home .footer-language-button {
   color: rgba(245, 247, 246, 0.82);
 }
