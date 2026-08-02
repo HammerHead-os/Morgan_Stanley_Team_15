@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Storage</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        h2, h3 {
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        input[type="file"] {
+            display: block;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: var(--text);
+            margin-bottom: 15px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        .btn-delete {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+
+        .btn-delete:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        #status {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        li a {
+            color: var(--primary);
+            text-decoration: none;
+            word-break: break-all;
+            font-size: 0.95rem;
+        }
+
+        li a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Cloud Storage Manager</h2>
+
+    <!-- Upload Card -->
+    <div class="card">
+        <h3>Upload File</h3>
+        <input type="file" id="fileInput">
+        <button id="uploadBtn">Upload File</button>
+        <p id="status"></p>
+    </div>
+
+    <!-- File List Section -->
+    <div>
+        <h3>Your Files</h3>
+        <button id="refreshBtn" class="btn-secondary">Refresh List</button>
+        <ul id="fileList"></ul>
+    </div>
+
+    <!-- Supabase Logic via ES Modules -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const SUPABASE_URL = "https://obnbgnmdrpxoutfuenoi.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ibmJnbm1kcnB4b3V0ZnVlbm9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU0OTg1MzMsImV4cCI6MjEwMTA3NDUzM30.Q7j0xM4QCkpYjiB4wtRsjPGl3f1oCEka3Y8Azl6lGZE";
+        const BUCKET_NAME = "Love 21 Storage";
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const fileInput = document.getElementById("fileInput");
+        const status = document.getElementById("status");
+        const uploadBtn = document.getElementById("uploadBtn");
+        const refreshBtn = document.getElementById("refreshBtn");
+        const fileList = document.getElementById("fileList");
+
+        // Upload Event
+        uploadBtn.addEventListener("click", async () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                status.style.color = "var(--danger)";
+                status.textContent = "Please select a file first!";
+                return;
+            }
+
+            status.style.color = "var(--primary)";
+            status.textContent = "Uploading...";
+
+            const fileName = `${Date.now()}_${file.name}`;
+            const { error } = await supabase.storage.from(BUCKET_NAME).upload(fileName, file);
+
+            if (error) {
+                status.style.color = "var(--danger)";
+                status.textContent = `Error: ${error.message}`;
+            } else {
+                status.style.color = "#16a34a";
+                status.textContent = "Upload successful!";
+                fileInput.value = "";
+                loadFiles();
+            }
+        });
+
+        // Load Files Function
+        async function loadFiles() {
+            fileList.innerHTML = "<li>Loading files...</li>";
+
+            const { data: files, error } = await supabase.storage.from(BUCKET_NAME).list();
+
+            if (error) {
+                fileList.innerHTML = `<li style="color:var(--danger);">Error loading files: ${error.message}</li>`;
+                return;
+            }
+
+            fileList.innerHTML = "";
+            if (!files || files.length === 0) {
+                fileList.innerHTML = "<li style='color:var(--text-muted); justify-content:center;'>No files found in storage.</li>";
+                return;
+            }
+
+            files.forEach(file => {
+                if (file.name === ".emptyFolderPlaceholder") return;
+
+                const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(file.name);
+                
+                const li = document.createElement("li");
+                
+                const a = document.createElement("a");
+                a.href = data.publicUrl;
+                a.target = "_blank";
+                a.textContent = file.name;
+
+                const delBtn = document.createElement("button");
+                delBtn.textContent = "Delete";
+                delBtn.className = "btn-delete";
+                delBtn.onclick = () => deleteFile(file.name);
+
+                li.appendChild(a);
+                li.appendChild(delBtn);
+                fileList.appendChild(li);
+            });
+        }
+
+        // Delete Function
+        window.deleteFile = async function(fileName) {
+            if (!confirm(`Are you sure you want to delete ${fileName}?`)) return;
+
+            const { error } = await supabase.storage.from(BUCKET_NAME).remove([fileName]);
+            if (error) {
+                alert(`Delete failed: ${error.message}`);
+            } else {
+                loadFiles();
+            }
+        }
+
+        refreshBtn.addEventListener("click", loadFiles);
+
+        // Initial load
+        loadFiles();
+    </script>
+</body>
+</html>

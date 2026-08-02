@@ -1,9 +1,10 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Love 21 Foundation — Admin Data Dashboard</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Love 21 Foundation — Admin Data Dashboard</title>
 <style>
 /* ============================================================
    Design tokens
@@ -508,6 +509,10 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
         sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
     </div>
   </div>
+
+  <div class="container">
+    <p><a href="upload_supabase.html">Upload Docs</a></p>
+  </div>
 </section>
 
 <!-- ============ DATA ============ -->
@@ -604,6 +609,7 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 <div id="tip"></div>
 <div id="toast"></div>
 <div class="backdrop" id="backdrop"><div class="modal" id="modal"></div></div>
+
 
 <script>
 "use strict";
