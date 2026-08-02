@@ -59,9 +59,12 @@ a{color:var(--accent)}
 /* ---------- app chrome (kept plain on purpose) ---------- */
 .appbar{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);
   position:sticky;top:0;background:var(--surface);z-index:40}
-.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand{display:flex;align-items:center;gap:11px;min-width:0;text-decoration:none;color:inherit}
+.brand:hover{opacity:.85}
+.brand-logo{height:32px;width:auto;display:block;flex:none}
 .brand b{font-size:16px;font-weight:700;white-space:nowrap}
 .brand span{color:var(--muted);font-size:12.5px;white-space:nowrap}
+@media(max-width:760px){.brand span{display:none}}
 .spacer{flex:1}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;
   font-size:13px;font-weight:550;color:var(--ink-2);transition:background .14s,border-color .14s,color .14s,transform .08s}
@@ -343,7 +346,11 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 <body>
 
 <div class="appbar">
-  <div class="brand"><b>Love 21 Foundation</b><span>Administrative Data Dashboard</span></div>
+  <a class="brand" href="../index.html" title="Back to the Love 21 website">
+  <img class="brand-logo" src="../img/logo.png" alt="Love 21 Foundation" width="120" height="74"
+       onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:'Love 21 Foundation'}))">
+  <span>Administrative Data Dashboard</span>
+</a>
   <div class="spacer"></div>
   <span id="dbstate" class="chip grey"><i class="dot"></i>no data</span>
   <button class="btn" id="btnMedia" onclick="window.open('upload_supabase.html', '_blank')">Upload Docs</button>
@@ -2535,9 +2542,19 @@ function demo(){
 }
 $("#btnDemo").onclick=()=>{demo();refreshAll();toast("Demo data loaded — replace it any time by uploading your own files.");};
 
+/* keep the tab strip stuck directly under the app bar, whatever height the logo/buttons give it */
+function syncBarHeight(){
+  const h=$(".appbar").offsetHeight;
+  if(h)$(".tabs").style.top=h+"px";
+}
+addEventListener("resize",syncBarHeight);
+addEventListener("load",syncBarHeight);
+$(".brand-logo")&&$(".brand-logo").addEventListener("load",syncBarHeight);
+
 /* boot */
 if(!restore())demo();
 refreshAll();
+syncBarHeight();
 </script>
 </body>
 </html>
