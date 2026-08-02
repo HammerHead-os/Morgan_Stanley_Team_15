@@ -1,10 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <title>Love 21 Foundation — Admin Data Dashboard</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Love 21 Foundation — Admin Data Dashboard</title>
 <style>
 /* ============================================================
    Design tokens
@@ -339,32 +338,13 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 .toast.bad{background:#8f2620}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 </style>
-<!-- PostHog Analytics -->
-<script src="../js/posthog.js"></script>
 </head>
 <body>
-<script src="../js/api.js"></script>
-<script>
-(function () {
-  var L = window.Love21;
-  var person = L && L.getPerson();
-  var isAdmin = person && Array.isArray(person.roles) && person.roles.indexOf("admin") !== -1;
-  if (!isAdmin) {
-    location.replace("profile.html");
-  }
-})();
-</script>
 
 <div class="appbar">
   <div class="brand"><b>Love 21 Foundation</b><span>Administrative Data Dashboard</span></div>
   <div class="spacer"></div>
   <span id="dbstate" class="chip grey"><i class="dot"></i>no data</span>
-  
-    <!-- <div class="container">
-    <p><a href="upload_supabase.html">Upload Docs</a></p>
-  </div> -->
-
-  <button class="btn" id="btnMedia" onclick="window.open('upload_supabase.html', '_blank')">Upload Docs</button>
   <button class="btn" id="btnGoData">Upload data</button>
   <button class="btn primary" id="btnExportAll">Export all (.xlsx)</button>
 </div>
@@ -374,7 +354,6 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   <button class="tab" data-p="people">2 · People</button>
   <button class="tab" data-p="donations">3 · Donations</button>
   <button class="tab" data-p="visitors">4 · Visitors</button>
-  <button class="tab" data-p="web">5 · WebPage Analytics</button>
   <button class="tab" data-p="data">Data &amp; uploads</button>
 </div>
 
@@ -503,21 +482,6 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
   </div>
 </section>
 
-<!-- ============ 5. WEB APP ANALYTICS ============ -->
-<section class="panel" id="p-web">
-  <div class="card" style="margin-top:14px">
-    <div class="cardhead">
-      <h3>User Behaviors Dashboard</h3><span class="hint">data collected via PostHog</span>
-    </div>
-    <div style="padding: 0 16px 16px 16px;">
-      <iframe width="100%" height="800" frameborder="0" allowfullscreen style="padding: 0 16px 16px 16px;"
-        src="https://us.posthog.com/embedded/kat1k-XOicjkAmPJj3sWBaVYBORxDw" key="0"
-        sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-    </div>
-  </div>
-
-</section>
-
 <!-- ============ DATA ============ -->
 <section class="panel" id="p-data">
   <div class="card" style="margin-bottom:14px">
@@ -580,7 +544,8 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
         <li><code>Date of Birth</code> or <code>Age</code></li>
         <li><code>Joined</code> · <code>Last Online</code></li>
         <li><code>Emergency Contact</code> <code>Notes</code></li></ul>
-      <div class="hint" style="margin-top:8px">90+ days since <code>Last Online</code> marks the person Inactive automatically.</div>
+      <div class="hint" style="margin-top:8px">90+ days since <code>Last Online</code> marks the person Inactive automatically.
+        Attendance (365 days) and hours are calculated from the activity rosters — you don't supply them.</div>
     </div>
     <div class="card"><b>Donations</b>
       <ul><li><code>Donation ID</code></li><li><code>Campaign</code> / <code>Drive</code> — e.g. "Donate 10 running shoes!"</li>
@@ -596,6 +561,12 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
         <li><code>Source</code> <code>Region</code></li></ul>
     </div>
   </div>
+  <p class="hint" style="margin-top:10px"><b>Hours are earned, not uploaded.</b> Marking someone
+    <b>present</b> at a past session banks that session's length — <code>End Time</code> minus
+    <code>Start Time</code> — as volunteer hours (volunteers) or participation hours (participants).
+    No-shows, same-day cancellations and sessions without times bank nothing, and staff monitoring a session
+    are not counted. The <b>Attendance (365d)</b> and <b>Hours (365d)</b> columns are a rolling window over the
+    last 365 days; the profile pop-up also shows all-time hours.</p>
   <p class="hint" style="margin-top:14px">Dates are read as <code>YYYY-MM-DD</code> when possible; slash dates are read
     month-first unless the first number is above 12. Everything you load stays in this browser (nothing is uploaded anywhere)
     and is restored the next time you open the file.</p>
@@ -612,7 +583,6 @@ svg text{font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
 <div id="tip"></div>
 <div id="toast"></div>
 <div class="backdrop" id="backdrop"><div class="modal" id="modal"></div></div>
-
 
 <script>
 "use strict";
@@ -1029,6 +999,24 @@ function ingest(table,rows){
   return rows.length;
 }
 
+/* session length, used to bank hours when someone is marked present */
+function parseClock(v){
+  const m=String(v==null?"":v).trim().match(/^(\d{1,2})\s*[:.]?\s*(\d{2})?\s*(am|pm)?$/i);
+  if(!m)return null;
+  let h=+m[1];const mi=+(m[2]||0),ap=(m[3]||"").toLowerCase();
+  if(ap==="pm"&&h<12)h+=12;
+  if(ap==="am"&&h===12)h=0;
+  return h>23||mi>59?null:h+mi/60;
+}
+function sessionHours(a){
+  const s=parseClock(a.time),e=parseClock(a.end);
+  if(s==null||e==null)return 0;
+  let d=e-s;if(d<0)d+=24;                       /* an evening session that crosses midnight */
+  return d>0&&d<24?Math.round(d*100)/100:0;
+}
+const WINDOW_DAYS=365;
+const hrs=n=>(Math.round(n*10)/10).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1})+" h";
+
 /* derived lookups */
 let peopleById={},peopleByName={},nameIndex=[];
 DB.edits={};                                    /* "<activity id>|<date>|<name key>" -> status, set by hand */
@@ -1046,6 +1034,7 @@ function derive(){
   const today=new Date();today.setHours(0,0,0,0);
   DB.activities.forEach(a=>{
     a.past=a.date?a.date<today:false;
+    a.hours=sessionHours(a);
     a.attended=a.attended||{};
     /* anything an administrator changed by hand wins over the uploaded lists */
     const ak=actKey(a);
@@ -1077,10 +1066,26 @@ function derive(){
   const gc={};DB.activities.forEach(a=>gc[a.group]=(gc[a.group]||0)+1);
   Object.keys(gc).sort((x,y)=>gc[y]-gc[x]||(x<y?-1:1))
     .forEach((g,i)=>{if(i<GROUP_COLORS.length)groupColor[g]=GROUP_COLORS[i];});
+  /* rolling 365-day attendance and banked hours — a session only pays hours when marked present */
+  const cut=Date.now()-WINDOW_DAYS*DAY;
   DB.people.forEach(p=>{
     p.totalDonated=p.donations.reduce((s,d)=>s+d.amount,0)||p.donatedCol;
     p.eventCount=p.events.length||p.eventsCol.length;
     p.inactive=p.lastOnline?daysSince(p.lastOnline)>INACTIVE_DAYS:false;
+    let sess=0,rec=0,att=0,h=0,hAll=0,noTimes=0;
+    p.events.forEach(e=>{
+      if(!e.a.past||e.cap==="Staff")return;
+      const inWin=e.a.date&&e.a.date.getTime()>=cut;
+      if(inWin){sess++;if(e.att)rec++;}
+      if(e.att==="present"){
+        hAll+=e.a.hours;
+        if(!e.a.hours)noTimes++;
+        if(inWin){att++;h+=e.a.hours;}
+      }
+    });
+    p.sess365=sess;p.rec365=rec;p.att365=att;p.noTimes=noTimes;
+    p.hours365=Math.round(h*100)/100;p.hoursAll=Math.round(hAll*100)/100;
+    p.att365Rate=rec?att/rec:null;
   });
   buildNameIndex();
 }
@@ -1178,6 +1183,18 @@ function openPerson(key){
             '</td><td>'+esc(d.time||"—")+'</td></tr>').join("")+'</tbody></table>'
           :'<div class="hint">'+(p.donatedCol?'Total from the People sheet: '+money(p.donatedCol)+' (no itemised transactions loaded).':'No donations recorded.')+'</div>')+
       '</div>'+
+      '<div class="sec"><h4>'+(p.role==="volunteer"?"Volunteer hours":"Hours &amp; attendance")+
+        ' · last 365 days</h4>'+
+        '<div class="stats" style="margin:0">'+
+          stat(p.role==="volunteer"?"Volunteer hours":"Participation hours",hrs(p.hours365),
+            "all time "+hrs(p.hoursAll))+
+          stat("Sessions attended",num(p.att365),p.rec365?"of "+num(p.rec365)+" recorded":"none recorded yet")+
+          stat("Attendance rate",p.att365Rate==null?"—":Math.round(p.att365Rate*100)+"%",
+            p.sess365>p.rec365?(p.sess365-p.rec365)+" session(s) not recorded":"")+
+        '</div>'+
+        (p.noTimes?'<div class="hint" style="margin-top:8px">'+p.noTimes+
+          ' session(s) they attended have no start/end time, so they bank no hours.</div>':'')+
+      '</div>'+
       '<div class="sec"><h4>Events participated</h4>'+
         (evRows.length?'<table class="minitable"><thead><tr><th>Activity</th><th>Group</th><th>Date</th><th>Taking part as</th><th>Attended</th></tr></thead><tbody>'+
           evRows.map(e=>'<tr><td><span class="gchip" style="--gc:'+colorOfGroup(e.a.group)+'"><i class="sw"></i>'+
@@ -1200,7 +1217,13 @@ function openPerson(key){
     {name:"Profile",rows:[["Field","Value"],["Person ID",p.id],["Name",p.name],["Role",p.roleRaw||ROLES[p.role]],
       ["Email",p.email],["Phone",p.phone],["Address",p.address],["Age",p.age],["Member since",iso(p.joined)],
       ["Last online",iso(p.lastOnline)],["Status",p.inactive?"Inactive":"Active"],
-      ["Total donated",p.totalDonated],["Events participated",p.eventCount],["Notes",p.notes]]},
+      ["Total donated",p.totalDonated],["Events participated",p.eventCount],
+      ["Sessions rostered (365d)",p.sess365],["Sessions recorded (365d)",p.rec365],
+      ["Sessions attended (365d)",p.att365],
+      ["Attendance rate (365d)",p.att365Rate==null?"":Math.round(p.att365Rate*100)+"%"],
+      [(p.role==="volunteer"?"Volunteer":"Participation")+" hours (365d)",p.hours365],
+      [(p.role==="volunteer"?"Volunteer":"Participation")+" hours (all time)",p.hoursAll],
+      ["Notes",p.notes]]},
     sheetOf("Donations",[{h:"Drive",f:d=>d.campaign},{h:"Amount",f:d=>d.amount},{h:"Date",f:d=>iso(d.date)},
       {h:"Time",f:d=>d.time},{h:"Method",f:d=>d.method}],donRows),
     sheetOf("Events",[{h:"Activity",f:e=>e.a.name},{h:"Group",f:e=>e.a.group},{h:"Category",f:e=>e.a.category},
@@ -1412,8 +1435,9 @@ function setAttendance(a,name,status){
   const k=norm(name),ek=actKey(a)+"|"+k;
   if(status){DB.edits[ek]=status;a.attended[k]=status;}
   else{DB.edits[ek]="";delete a.attended[k];}
-  derive();save();renderActivities();renderRoster();updateEditBtn();
-  toast(name+" · "+ATT[status||""].label.toLowerCase());
+  derive();save();renderActivities();renderRoster();renderPeople();updateEditBtn();
+  toast(name+" · "+ATT[status||""].label.toLowerCase()+
+    (status==="present"&&a.hours?" · +"+hrs(a.hours):""));
 }
 function updateEditBtn(){
   const n=Object.keys(DB.edits).filter(k=>DB.edits[k]).length,eb=$("#btnClearEdits");
@@ -1427,6 +1451,7 @@ function exportActivities(){
     sheetOf("Activities",[{h:"Activity ID",f:a=>a.id},{h:"Activity",f:a=>a.name},{h:"Category",f:a=>a.category},
       {h:"Group",f:a=>a.group},{h:"Date",f:a=>iso(a.date)},{h:"Start Time",f:a=>a.time},{h:"End Time",f:a=>a.end},
       {h:"Location",f:a=>a.location},{h:"Status",f:a=>a.past?"Past":"Upcoming"},
+      {h:"Session hours",f:a=>a.hours||""},
       {h:"Kids enrolled",f:a=>a.participants.length},
       {h:"Volunteers",f:a=>a.volunteers.length},{h:"Staff",f:a=>a.staff.length},
       {h:"Kids present",f:a=>a.past?a.attKids.present:""},{h:"Kids no-show",f:a=>a.past?a.attKids.absent:""},
@@ -1490,6 +1515,9 @@ function renderPeople(){
     stat("Volunteers",num(DB.people.filter(p=>p.role==="volunteer").length))+
     stat("Participants",num(DB.people.filter(p=>p.role==="participant").length))+
     stat("Inactive 90+ days",num(inact),inact?"grey tag on their name":"everyone has logged in recently")+
+    stat("Volunteer hours (365d)",hrs(DB.people.filter(p=>p.role==="volunteer").reduce((s,p)=>s+p.hours365,0)),
+      "banked from sessions marked present")+
+    stat("Participant hours (365d)",hrs(DB.people.filter(p=>p.role==="participant").reduce((s,p)=>s+p.hours365,0)))+
     stat("Donated (all people)",money(DB.people.reduce((s,p)=>s+p.totalDonated,0)));
 
   pExtraCols=[...new Set(DB.people.flatMap(p=>Object.keys(p.raw||{})))]
@@ -1506,6 +1534,17 @@ function renderPeople(){
     {k:"address",h:"Address",v:p=>esc(p.address||"—")},
     {k:"joined",h:"Member since",v:p=>pretty(p.joined)},
     {k:"lastOnline",h:"Last online",v:p=>p.lastOnline?pretty(p.lastOnline)+' <span class="muted small">('+daysSince(p.lastOnline)+'d)</span>':"—"},
+    {k:"att365Rate",h:"Attendance (365d)",v:p=>p.rec365
+      ?'<span class="att" title="'+p.att365+' of '+p.rec365+' recorded sessions in the last 365 days'+
+        (p.sess365>p.rec365?" · "+(p.sess365-p.rec365)+" not recorded":"")+'">'+
+        '<span class="mini"><i style="width:'+Math.round(p.att365Rate*100)+'%"></i></span>'+
+        p.att365+'/'+p.rec365+' <span class="muted">'+Math.round(p.att365Rate*100)+'%</span></span>'
+      :'<span class="muted" title="'+p.sess365+' session(s) on the roster, none recorded yet">—</span>'},
+    {k:"hours365",h:"Hours (365d)",v:p=>p.hours365
+      ?'<span title="'+(p.role==="volunteer"?"volunteer hours":"participation hours")+
+        ' from sessions marked present in the last 365 days">'+hrs(p.hours365)+'</span>'
+      :(p.noTimes?'<span class="muted" title="present at '+p.noTimes+' session(s) with no start/end time">no times</span>'
+        :'<span class="muted">—</span>'),cls:"num"},
     {k:"totalDonated",h:"Donated",v:p=>money(p.totalDonated),cls:"num"},
     {k:"eventCount",h:"Events",v:p=>num(p.eventCount),cls:"num"},
     {k:"emergency",h:"Emergency contact",v:p=>esc(p.emergency||"—")}
@@ -1527,10 +1566,18 @@ function exportPeople(){
       {h:"Member since",f:p=>iso(p.joined)},{h:"Last online",f:p=>iso(p.lastOnline)},
       {h:"Days since online",f:p=>daysSince(p.lastOnline)},{h:"Status",f:p=>p.inactive?"Inactive":"Active"},
       {h:"Total donated",f:p=>p.totalDonated},{h:"Donations",f:p=>p.donations.length},
-      {h:"Events participated",f:p=>p.eventCount},{h:"Emergency contact",f:p=>p.emergency},
+      {h:"Events participated",f:p=>p.eventCount},
+      {h:"Sessions rostered (365d)",f:p=>p.sess365},{h:"Sessions recorded (365d)",f:p=>p.rec365},
+      {h:"Sessions attended (365d)",f:p=>p.att365},
+      {h:"Attendance rate (365d)",f:p=>p.att365Rate==null?"":Math.round(p.att365Rate*100)+"%"},
+      {h:"Hours (365d)",f:p=>p.hours365},{h:"Hours (all time)",f:p=>p.hoursAll},
+      {h:"Emergency contact",f:p=>p.emergency},
       {h:"Notes",f:p=>p.notes}].concat(pExtraCols.map(k=>({h:k,f:p=>p.raw[k]}))),rows),
-    {name:"Event participation",rows:[["Person ID","Name","Activity","Group","Date","Taking part as"]].concat(
-      rows.flatMap(p=>p.events.map(e=>[p.id,p.name,e.a.name,e.a.group,iso(e.a.date),e.cap])))}
+    {name:"Event participation",rows:[["Person ID","Name","Activity","Group","Date","Taking part as",
+      "Attended","Session hours","Hours banked"]].concat(
+      rows.flatMap(p=>p.events.map(e=>[p.id,p.name,e.a.name,e.a.group,iso(e.a.date),e.cap,
+        !e.a.past?"Upcoming":ATT[e.att||""].label,e.a.hours||"",
+        e.att==="present"?(e.a.hours||0):0])))}
   ]);
 }
 
@@ -2419,10 +2466,12 @@ function demo(){
         roster.forEach(n=>{const r=rnd();(r<.82?present:r<.93?absent:cancelled).push(n);});
         vteam.forEach(n=>{const r=rnd();(r<.9?present:r<.95?absent:cancelled).push(n);});
       }
+      const startH=pick([9,10.5,15.5,17,18]),len=pick([1,1.5,1.5,2]);   /* sensible session lengths */
+      const hm=t=>String(Math.floor(t)).padStart(2,"0")+":"+(t%1?"30":"00");
+      const startHM=hm(startH),endHM=hm(startH+len);
       activities.push({"Activity ID":"ACT-"+String(aid).padStart(3,"0"),"Name":g+" session",
         "Category":cat,"Group":g,"Date":iso(d),
-        "Start Time":pick(["09:00","10:30","15:30","17:00","18:00"]),
-        "End Time":pick(["10:30","12:00","17:00","18:30","19:30"]),
+        "Start Time":startHM,"End Time":endHM,
         "Location":pick(["Main Gym","Studio B","Community Pool","Kitchen","Art Room","Outdoor Track"]),
         "Participants":roster.join("; "),"Volunteers":vteam.join("; "),
         "Staff":rnd()<.9?pick(admins):"",
@@ -2470,8 +2519,5 @@ $("#btnDemo").onclick=()=>{demo();refreshAll();toast("Demo data loaded — repla
 if(!restore())demo();
 refreshAll();
 </script>
-<script src="../js/i18n.js"></script>
-<script src="../js/agent-config.js"></script>
-<script src="../js/agent.js"></script>
 </body>
 </html>
