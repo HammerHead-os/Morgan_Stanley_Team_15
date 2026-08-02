@@ -4,6 +4,7 @@
   const ROLE_KEY = "love21_role";
   const ROLE_PAGES = {
     family: "activity-finder.html",
+    contributor: "contributor.html",
     volunteer: "volunteer.html",
     donor: "impact.html",
     company: "explore.html#marketplace",
@@ -17,55 +18,12 @@
     if (!page) return null;
     return inPagesDir ? page : "pages/" + page;
   }
-  const STEP_COPY = {
-    contributor: {
-      eyebrow: "Contributor",
-      title: "How do you want to help?",
-      copy: "Donor, volunteer, or company are all real, live pages — pick the one that fits.",
-    },
-  };
-
   const overlay = document.querySelector("[data-iam-overlay]");
   const video = document.querySelector(".gate-video");
   const soundBtn = document.querySelector("[data-gate-sound]");
-  const mainRoles = document.querySelector("[data-iam-roles]");
-  const titleEl = document.getElementById("iam-title");
-  const eyebrowEl = document.querySelector("[data-iam-eyebrow]");
-  const copyEl = document.querySelector("[data-iam-copy]");
-  const defaultTitle = titleEl ? titleEl.textContent : "";
-  const defaultEyebrow = eyebrowEl ? eyebrowEl.textContent : "";
-  const defaultCopy = copyEl ? copyEl.textContent : "";
-
-  function showMainStep() {
-    if (mainRoles) mainRoles.hidden = false;
-    document.querySelectorAll("[data-iam-roles-sub]").forEach(function (el) {
-      el.hidden = true;
-    });
-    if (titleEl) titleEl.textContent = defaultTitle;
-    if (eyebrowEl) eyebrowEl.textContent = defaultEyebrow;
-    if (copyEl) copyEl.textContent = defaultCopy;
-  }
-
-  function showSubStep(step) {
-    const sub = document.querySelector('[data-iam-roles-sub="' + step + '"]');
-    if (!sub) return;
-    if (mainRoles) mainRoles.hidden = true;
-    document.querySelectorAll("[data-iam-roles-sub]").forEach(function (el) {
-      el.hidden = el !== sub;
-    });
-    const info = STEP_COPY[step];
-    if (info) {
-      if (titleEl) titleEl.textContent = info.title;
-      if (eyebrowEl) eyebrowEl.textContent = info.eyebrow;
-      if (copyEl) copyEl.textContent = info.copy;
-    }
-    const first = sub.querySelector(".iam-role");
-    if (first) first.focus();
-  }
 
   function openIam() {
     if (!overlay) return;
-    showMainStep();
     overlay.hidden = false;
     document.body.classList.add("iam-open");
     const first = overlay.querySelector(".iam-role");
@@ -91,16 +49,6 @@
   });
 
   document.addEventListener("click", function (e) {
-    const backBtn = e.target.closest("[data-iam-sub-back]");
-    if (backBtn) {
-      showMainStep();
-      return;
-    }
-    const stepBtn = e.target.closest("[data-role-step]");
-    if (stepBtn) {
-      showSubStep(stepBtn.getAttribute("data-role-step"));
-      return;
-    }
     const roleBtn = e.target.closest("[data-role]");
     if (!roleBtn) return;
     const role = roleBtn.getAttribute("data-role");
