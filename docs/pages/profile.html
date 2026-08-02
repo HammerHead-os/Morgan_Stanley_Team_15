@@ -29,7 +29,34 @@
           Menu
         </button>
         <ul class="nav-links" id="nav-menu">
-          <li><a class="nav-home" href="../index.html">Home</a></li>
+          <li class="nav-dropdown" data-home-dropdown>
+            <button
+              type="button"
+              class="nav-home nav-dropdown-toggle"
+              data-home-dropdown-toggle
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="home-dropdown-menu"
+            >
+              Home <span class="nav-dropdown-caret" aria-hidden="true">▾</span>
+            </button>
+            <ul class="nav-dropdown-menu" id="home-dropdown-menu" data-home-dropdown-menu hidden>
+              <li><button type="button" class="nav-dropdown-item" data-role="family">Family</button></li>
+              <li class="nav-dropdown-expand">
+                <button type="button" class="nav-dropdown-item nav-dropdown-item-expand" data-contributor-toggle aria-expanded="false" aria-controls="contributor-submenu">
+                  Contributor <span class="nav-dropdown-expand-caret" aria-hidden="true">▾</span>
+                </button>
+                <ul class="nav-dropdown-submenu" id="contributor-submenu" data-contributor-submenu hidden>
+                  <li><button type="button" class="nav-dropdown-item" data-role="donor">Donor</button></li>
+                  <li><button type="button" class="nav-dropdown-item" data-role="volunteer">Volunteer</button></li>
+                  <li><button type="button" class="nav-dropdown-item" data-role="company">Company</button></li>
+                </ul>
+              </li>
+              <li><button type="button" class="nav-dropdown-item" data-role="curious">Just curious</button></li>
+            </ul>
+          </li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="resources.html">Resources</a></li>
           <li><a href="contact.html">Contact</a></li>
           <li><a href="impact.html">Donations</a></li>
           <li><a class="nav-session" data-session href="profile.html" aria-current="page">…</a></li>
@@ -170,14 +197,14 @@
           <div class="passport-selector-section">
           <div class="passport-section-heading">
             <div>
-              <p class="eyebrow">My passports</p>
+              <p class="eyebrow">My journals</p>
               <h2 id="passport-selector-title">Choose your journey</h2>
             </div>
             <p class="muted">
-              Each passport keeps a separate record of your activities and achievements.
+              Each journal keeps a separate record of your activities and achievements.
             </p>
           </div>
-          <nav class="passport-selector" aria-label="Choose a passport" role="tablist">
+          <nav class="passport-selector" aria-label="Choose a journal" role="tablist">
             <button class="passport-selector-button active" type="button" role="tab" aria-selected="true" data-role-passport="family">
               <span class="passport-selector-mark" aria-hidden="true">F</span>
               <span><strong>Family</strong><small>Loading…</small></span>
@@ -209,10 +236,10 @@
           <div class="passport-book-stage" data-book-stage data-role="family">
             <div class="passport-book-cover" aria-hidden="true"></div>
             <div class="passport-book" data-book-spread></div>
-            <button class="passport-page-arrow passport-page-arrow-prev" type="button" data-page-prev aria-label="Previous passport pages">
+            <button class="passport-page-arrow passport-page-arrow-prev" type="button" data-page-prev aria-label="Previous journal pages">
               <span aria-hidden="true">←</span>
             </button>
-            <button class="passport-page-arrow passport-page-arrow-next" type="button" data-page-next aria-label="Next passport pages">
+            <button class="passport-page-arrow passport-page-arrow-next" type="button" data-page-next aria-label="Next journal pages">
               <span aria-hidden="true">→</span>
             </button>
           </div>
@@ -377,6 +404,7 @@
 
     <script src="../js/api.js?v=profile-nav2"></script>
     <script src="../js/app.js?v=profile-nav2"></script>
+    <script src="../js/gate.js"></script>
     <script src="../js/journal.js?v=profile-data1"></script>
     <script src="../js/profile.js?v=profile-calendar3"></script>
     <script src="../js/hub-demo.js"></script>

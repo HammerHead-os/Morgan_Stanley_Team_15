@@ -88,7 +88,7 @@
       details: [["Status", profileData ? "No data yet" : "Sign in to view"]],
       badges: [],
       activities: [],
-      emptyMessage: profileData ? "No records yet." : "Sign in to see this passport.",
+      emptyMessage: profileData ? "No records yet." : "Sign in to see this journal.",
     };
   }
 

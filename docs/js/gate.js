@@ -49,7 +49,13 @@
   });
 
   document.addEventListener("click", function (e) {
-    const roleBtn = e.target.closest("[data-role]");
+    // Scoped to the two real role-picker UIs (home dropdown, IAM overlay) —
+    // `data-role` is also reused elsewhere as a plain state marker (e.g. the
+    // profile journal's `data-book-stage[data-role]`), which is not a
+    // navigation control and must not match here.
+    const roleBtn = e.target.closest(
+      "[data-home-dropdown-menu] [data-role], [data-iam-roles] [data-role]"
+    );
     if (!roleBtn) return;
     const role = roleBtn.getAttribute("data-role");
     const dest = resolveRolePage(role);
