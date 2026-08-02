@@ -263,58 +263,21 @@
     toast("Claimed. Start the API to save it on your profile.");
   });
 
-  // Hire: click person → show date/time slots
-  document.addEventListener("click", function (e) {
-    const select = e.target.closest("[data-hire-select]");
-    if (select) {
-      e.preventDefault();
-      const person = select.closest("[data-hire-person]");
-      if (!person) return;
-      document.querySelectorAll("[data-hire-person]").forEach(function (card) {
-        const slots = card.querySelector("[data-hire-slots]");
-        if (!slots) return;
-        if (card === person) {
-          const open = slots.hidden;
-          slots.hidden = !open;
-          card.classList.toggle("open", open);
-        } else {
-          slots.hidden = true;
-          card.classList.remove("open");
-        }
-      });
-      return;
-    }
-  });
-
   document.addEventListener("click", async function (e) {
     const hire = e.target.closest("[data-hire]");
     if (hire) {
       e.preventDefault();
       const label = hire.getAttribute("data-hire");
-      const card =
-        hire.closest("[data-hire-person]") ||
-        hire.closest(".creator") ||
-        hire.closest("article") ||
-        hire.parentElement;
-      const dateSel = card ? card.querySelector("[data-hire-date]") : null;
-      const preferred = dateSel ? dateSel.value : "";
-      if (dateSel && !preferred) {
-        toast("Pick a date and time first");
-        return;
-      }
       if (!L || !window.Love21Hire) {
-        toast("Request noted for " + label + (preferred ? " · " + preferred : ""));
+        toast("Request noted for " + label);
         return;
       }
       try {
-        await L.requireLogin(async function () {
-          const result = await window.Love21Hire.open(label, preferred || "");
+        await L.requireLogin(async function (person) {
+          const result = await window.Love21Hire.open(label, person);
           if (!result) return; // cancelled
           if (typeof L.goToProfile === "function") {
-            L.goToProfile(
-              null,
-              "Request sent for " + label + (preferred ? " · " + preferred : "")
-            );
+            L.goToProfile(null, "Request sent for " + label);
           } else {
             toast("Request sent for " + label);
           }

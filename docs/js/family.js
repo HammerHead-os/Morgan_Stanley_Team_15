@@ -7,10 +7,14 @@
   const eyebrowEl = document.querySelector("[data-family-eyebrow]");
   const leadEl = document.querySelector("[data-family-lead]");
   const loginCta = document.querySelector("[data-family-login-cta]");
+  const bookedTag = document.querySelector("[data-family-booked-tag]");
+  const bookedList = document.querySelector("[data-family-booked-list]");
   const waitlistTag = document.querySelector("[data-family-waitlist-tag]");
   const waitlistList = document.querySelector("[data-family-waitlist-list]");
   const membersTag = document.querySelector("[data-family-members-tag]");
   const membersList = document.querySelector("[data-family-members-list]");
+  const fundsTag = document.querySelector("[data-family-funds-tag]");
+  const fundsList = document.querySelector("[data-family-funds-list]");
   const calTitle = document.querySelector("[data-family-calendar-title]");
   const calList = document.querySelector("[data-family-calendar-list]");
 
@@ -35,8 +39,10 @@
       leadEl.textContent =
         "Example: Alex is 9 and needs a beginners swim lane on Saturday at " +
         "the San Po Kong pool. Jamie and Chris both see the booking on the same profile.";
+    if (bookedTag) bookedTag.textContent = "Example bookings";
     if (waitlistTag) waitlistTag.textContent = "Example waitlist";
     if (membersTag) membersTag.textContent = "Example household";
+    if (fundsTag) fundsTag.textContent = "Example giving";
     if (calTitle) calTitle.textContent = "Coming up (example)";
     if (loginCta) loginCta.hidden = false;
   }
@@ -81,6 +87,38 @@
       }
     }
 
+    function partySuffix(r) {
+      return r.party_size > 1 ? " +" + (r.party_size - 1) + " more" : "";
+    }
+
+    function cancelBtn(r) {
+      return (
+        '<button type="button" class="btn btn-sm btn-ghost" data-l21-cancel-reg="' +
+        r.id +
+        '">Cancel</button>'
+      );
+    }
+
+    if (bookedTag) bookedTag.textContent = booked.length ? "Your bookings" : "No bookings yet";
+    if (bookedList) {
+      bookedList.innerHTML = booked.length
+        ? booked
+            .map(function (r) {
+              return (
+                "<li>" +
+                escapeHtml(r.activity_title || "Class") +
+                " · " +
+                escapeHtml(r.member_name || "") +
+                escapeHtml(partySuffix(r)) +
+                " " +
+                cancelBtn(r) +
+                "</li>"
+              );
+            })
+            .join("")
+        : "<li>No classes booked yet. Browse open classes to get started.</li>";
+    }
+
     if (waitlistTag) waitlistTag.textContent = waitlisted.length ? "Your waitlist" : "No waitlist";
     if (waitlistList) {
       waitlistList.innerHTML = waitlisted.length
@@ -93,6 +131,8 @@
                 escapeHtml(r.member_name || "") +
                 " · " +
                 escapeHtml(r.status_label || "Waitlist") +
+                " " +
+                cancelBtn(r) +
                 "</li>"
               );
             })
@@ -116,6 +156,34 @@
             })
             .join("")
         : "<li>Add family members from your Profile</li>";
+    }
+
+    const funds = (data.family && data.family.shared_funds) || null;
+    const byCategory = (funds && funds.by_fund_category) || [];
+    if (fundsTag) {
+      fundsTag.textContent = funds && funds.gift_count ? "Household giving" : "No gifts yet";
+    }
+    if (fundsList) {
+      fundsList.innerHTML =
+        funds && funds.gift_count
+          ? "<li>HKD " +
+            Math.round(funds.total_hkd).toLocaleString() +
+            " given across " +
+            funds.gift_count +
+            (funds.gift_count === 1 ? " gift" : " gifts") +
+            "</li>" +
+            byCategory
+              .map(function (f) {
+                return (
+                  "<li>" +
+                  escapeHtml(f.fund_category) +
+                  " · HKD " +
+                  Math.round(f.total_hkd).toLocaleString() +
+                  "</li>"
+                );
+              })
+              .join("")
+          : "<li>No gifts from this household yet</li>";
     }
 
     const calEvents = (data.calendar_events || []).filter(function (e) {
@@ -152,6 +220,21 @@
       });
     });
   }
+
+  document.addEventListener("click", async function (e) {
+    const btn = e.target.closest("[data-l21-cancel-reg]");
+    if (!btn) return;
+    e.preventDefault();
+    if (!window.confirm("Cancel this booking?")) return;
+    const id = Number(btn.getAttribute("data-l21-cancel-reg"));
+    try {
+      await L.api("/api/family/registrations/" + id + "/cancel", { method: "POST" });
+      L.showToast("Booking cancelled");
+      await showReal();
+    } catch (err) {
+      L.showToast(L.friendlyError(err));
+    }
+  });
 
   init();
 })();

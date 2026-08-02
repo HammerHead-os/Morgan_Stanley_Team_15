@@ -188,6 +188,8 @@
           a.id +
           '" data-activity-title="' +
           escapeHtml(a.title) +
+          '" data-activity-day="' +
+          escapeHtml(a.day) +
           '">' +
           action +
           "</button></article>"
@@ -202,26 +204,34 @@
       e.preventDefault();
       const activityId = Number(regBtn.getAttribute("data-register"));
       const activityTitle = regBtn.getAttribute("data-activity-title") || "this class";
+      const activityDay = regBtn.getAttribute("data-activity-day") || "weekday";
       const actionLabel = regBtn.textContent.trim();
       try {
         await L.requireLogin(async function (person) {
-          const profile = await L.api("/api/profile");
-          if (!profile.family) {
-            L.showToast(
-              "This account has no household — switch demo account in Profile."
-            );
-            return;
+          // No household required to register — the registrant may be the
+          // person the class is for, not necessarily a carer booking a
+          // separate dependent. If there IS a household, still offer its
+          // other members as options (today's carer-books-a-child flow).
+          let householdMembers = [];
+          try {
+            const profile = await L.api("/api/profile");
+            householdMembers = (profile.family && profile.family.members) || [];
+          } catch (e) {
+            householdMembers = [];
           }
-          const member =
-            profile.family.members.find(function (m) {
+          const defaultMember =
+            householdMembers.find(function (m) {
               return m.role_primary === "member";
             }) || person;
           if (!window.Love21Registration) return;
           const result = await window.Love21Registration.open(
             activityId,
             activityTitle,
-            member,
-            actionLabel
+            defaultMember,
+            actionLabel,
+            householdMembers,
+            person,
+            activityDay
           );
           if (!result) return; // cancelled
           const msg =
@@ -250,9 +260,15 @@
       const stayHere = claimBtn.hasAttribute("data-claim-stay");
       try {
         await L.requireLogin(async function () {
+          let attendees = [];
+          if (window.Love21Claim) {
+            const result = await window.Love21Claim.open();
+            if (!result) return; // cancelled
+            attendees = result.attendees || [];
+          }
           const claim = await L.api("/api/volunteers/claims", {
             method: "POST",
-            body: { shift_id: shiftId },
+            body: { shift_id: shiftId, attendees: attendees },
           });
           if (typeof window.reloadVolunteerShifts === "function") {
             window.reloadVolunteerShifts();
