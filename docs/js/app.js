@@ -461,9 +461,18 @@
       let link = qs("[" + attr + "]");
       if (isAdmin) {
         if (link) return;
+
+        // Prepend /pages if the current path doesn't already contain "pages"
+        const hasPages = window.location.pathname.includes("pages");
+
+        let targetHref = href;
+        if (!hasPages) {
+          targetHref = "/pages" + (href.startsWith("/") ? href : "/" + href);
+        }
+
         const li = document.createElement("li");
         const a = document.createElement("a");
-        a.href = href;
+        a.href = targetHref;
         a.textContent = text;
         a.setAttribute(attr, "");
         li.appendChild(a);
