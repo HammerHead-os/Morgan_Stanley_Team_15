@@ -1,0 +1,265 @@
+/* Accessibility controls — top toolbar + stronger prefs */
+
+.skip-link {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  z-index: 10000;
+  padding: 0.65rem 1rem;
+  background: #152029;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  transform: translateY(-160%);
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 3px solid #2a9bb5;
+  outline-offset: 3px;
+}
+
+/* —— Nav toolbar control —— */
+.nav-a11y {
+  position: relative;
+  list-style: none;
+}
+
+.nav-a11y-toggle {
+  border: 1px solid rgba(26, 51, 56, 0.22);
+  background: rgba(255, 255, 255, 0.75);
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  font-size: 0.88rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.nav-a11y-toggle[aria-expanded="true"] {
+  background: #2a6f6b;
+  border-color: #2a6f6b;
+  color: #fff;
+}
+
+.a11y-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.55rem);
+  z-index: 80;
+  width: min(340px, calc(100vw - 1.5rem));
+  padding: 1rem 1rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(21, 32, 41, 0.16);
+  background: #fff;
+  color: #152029;
+  box-shadow: 0 16px 40px rgba(21, 32, 41, 0.16);
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+
+.a11y-panel[hidden] {
+  display: none !important;
+}
+
+.a11y-panel h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.a11y-group {
+  margin: 0 0 0.95rem;
+}
+
+.a11y-group:last-of-type {
+  margin-bottom: 0.35rem;
+}
+
+.a11y-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.a11y-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.a11y-options button {
+  min-height: 40px;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  border: 2px solid rgba(21, 32, 41, 0.18);
+  background: #f4f8fb;
+  color: #152029;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.a11y-options button[aria-pressed="true"] {
+  background: #2a6f6b;
+  border-color: #2a6f6b;
+  color: #fff;
+}
+
+.a11y-options button:focus-visible,
+.nav-a11y-toggle:focus-visible {
+  outline: 3px solid #2a9bb5;
+  outline-offset: 2px;
+}
+
+.a11y-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #3d4f5c;
+}
+
+.a11y-reset {
+  margin-top: 0.65rem;
+  width: 100%;
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(21, 32, 41, 0.2);
+  background: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* —— Font size (actually noticeable) —— */
+html[data-font-scale="sm"] {
+  font-size: 87.5% !important;
+}
+
+html[data-font-scale="md"] {
+  font-size: 100% !important;
+}
+
+html[data-font-scale="lg"] {
+  font-size: 125% !important;
+}
+
+html[data-font-scale="xl"] {
+  font-size: 150% !important;
+}
+
+html[data-font-scale="lg"] body .about-top h1,
+html[data-font-scale="xl"] body .about-top h1,
+html[data-font-scale="lg"] body .story-copy h2,
+html[data-font-scale="xl"] body .story-copy h2 {
+  font-size: clamp(1.6rem, 4.2vw, 2.8rem) !important;
+}
+
+html[data-font-scale="lg"] body .about-lede,
+html[data-font-scale="xl"] body .about-lede,
+html[data-font-scale="lg"] body .story-line,
+html[data-font-scale="xl"] body .story-line {
+  font-size: 1.15em !important;
+  line-height: 1.65 !important;
+}
+
+/* —— Contrast —— */
+html[data-contrast="high"] body {
+  --ink: #000 !important;
+  --ink-soft: #111 !important;
+  --tq-ink: #000 !important;
+  --tq-muted: #111 !important;
+  --tq-deep: #000 !important;
+  --tq-teal: #000 !important;
+  --teal: #000 !important;
+  --teal-deep: #000 !important;
+  --line: #000 !important;
+  --tq-line: #000 !important;
+  color: #000 !important;
+}
+
+html[data-contrast="high"] body.theme-turquoise::before {
+  opacity: 0.12 !important;
+  filter: grayscale(1) !important;
+  animation: none !important;
+}
+
+html[data-contrast="high"] body.theme-turquoise::after {
+  background: rgba(255, 255, 255, 0.88) !important;
+}
+
+html[data-contrast="high"] body.theme-turquoise .about-top,
+html[data-contrast="high"] body.theme-turquoise .section-index,
+html[data-contrast="high"] body.theme-turquoise .about-scrolly,
+html[data-contrast="high"] body.theme-turquoise .about-scrolly .story-stage,
+html[data-contrast="high"] .a11y-panel {
+  background: #fff !important;
+}
+
+html[data-contrast="high"] body.theme-turquoise .about-top h1,
+html[data-contrast="high"] body.theme-turquoise .story-copy h2,
+html[data-contrast="high"] body.theme-turquoise .about-lede,
+html[data-contrast="high"] body.theme-turquoise .story-line,
+html[data-contrast="high"] body.theme-turquoise .eyebrow,
+html[data-contrast="high"] body.theme-turquoise .story-kicker {
+  color: #000 !important;
+}
+
+html[data-contrast="high"] a {
+  text-decoration: underline !important;
+  text-underline-offset: 0.15em;
+  color: #000 !important;
+}
+
+html[data-contrast="high"] .btn-primary,
+html[data-contrast="high"] .a11y-options button[aria-pressed="true"],
+html[data-contrast="high"] .nav-a11y-toggle[aria-expanded="true"] {
+  background: #000 !important;
+  border-color: #000 !important;
+  color: #fff !important;
+}
+
+html[data-underline-links="on"] a {
+  text-decoration: underline !important;
+  text-underline-offset: 0.16em;
+}
+
+/* —— Wave / image FX (no global “kill all motion”) —— */
+html[data-wave-motion="off"] body.theme-turquoise::before {
+  animation: none !important;
+}
+
+html[data-image-fx="off"] .story-stage canvas,
+html[data-image-fx="off"] .story-beat,
+html[data-image-fx="off"] .story-copy,
+html[data-image-fx="off"] .about-top-photo img,
+html[data-image-fx="off"] [data-scene] {
+  transition: none !important;
+  animation: none !important;
+}
+
+html[data-spacing="roomy"] body {
+  line-height: 1.75 !important;
+  letter-spacing: 0.015em;
+}
+
+html[data-spacing="roomy"] p,
+html[data-spacing="roomy"] .story-line,
+html[data-spacing="roomy"] .about-lede {
+  margin-bottom: 1.15em !important;
+}
+
+@media (max-width: 720px) {
+  .a11y-panel {
+    position: fixed;
+    left: 0.75rem;
+    right: 0.75rem;
+    top: 4.5rem;
+    width: auto;
+  }
+}

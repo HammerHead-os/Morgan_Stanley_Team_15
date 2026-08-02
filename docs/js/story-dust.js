@@ -277,6 +277,12 @@
     const next = targets[nextIndex];
     if (!next || !next.pts.length) return;
 
+    // Accessibility: skip particle morph / image transitions
+    if (document.documentElement.getAttribute("data-image-fx") === "off") {
+      snapToScene(nextIndex);
+      return;
+    }
+
     // Always start from a clean sample of the current image
     const fromPts = from && from.pts.length ? from.pts : next.pts;
     particles = makeParticles(fromPts);

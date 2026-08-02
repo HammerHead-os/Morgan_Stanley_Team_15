@@ -10,10 +10,32 @@
     <link rel="stylesheet" href="../css/about-repo.css?v=about32" />
     <link rel="stylesheet" href="../css/about-instagram.css?v=about32" />
     <link rel="stylesheet" href="../css/about-philip-lower.css?v=about32" />
+    <link rel="stylesheet" href="../css/theme-turquoise.css?v=tq7" />
+    <link rel="stylesheet" href="../css/a11y.css?v=a11y5" />
+    <script>
+      (function () {
+        try {
+          var p = JSON.parse(localStorage.getItem("love21_a11y") || "{}");
+          delete p.reduceMotion;
+          if (p.imageFx !== "off") p.imageFx = "on";
+          if (p.waveMotion !== "off") p.waveMotion = "on";
+          localStorage.setItem("love21_a11y", JSON.stringify(p));
+          var r = document.documentElement;
+          r.setAttribute("data-font-scale", p.fontScale || "md");
+          r.setAttribute("data-contrast", p.contrast || "default");
+          r.setAttribute("data-underline-links", p.underlineLinks || "off");
+          r.setAttribute("data-spacing", p.spacing || "default");
+          r.setAttribute("data-wave-motion", p.waveMotion || "on");
+          r.setAttribute("data-image-fx", p.imageFx || "on");
+          r.removeAttribute("data-reduce-motion");
+        } catch (e) {}
+      })();
+    </script>
     <!-- PostHog Analytics -->
     <script src="../js/posthog.js"></script>
   </head>
-  <body>
+  <body class="theme-turquoise">
+    <a class="skip-link" href="#main">Skip to content</a>
     <nav class="site-nav" aria-label="Primary">
       <div class="inner">
         <a class="brand" href="../index.html">
@@ -64,6 +86,81 @@
           <li><a href="resources.html">Resources</a></li>
           <li><a href="contact.html">Contact</a></li>
           <li><a href="impact.html">Donations</a></li>
+          <li class="nav-a11y">
+            <button
+              type="button"
+              class="nav-a11y-toggle"
+              data-a11y-toggle
+              aria-expanded="false"
+              aria-controls="a11y-panel"
+            >
+              Accessibility
+            </button>
+            <div
+              class="a11y-panel"
+              data-a11y-panel
+              id="a11y-panel"
+              role="dialog"
+              aria-label="Accessibility settings"
+              hidden
+            >
+              <h2>Accessibility</h2>
+
+              <div class="a11y-group">
+                <span class="a11y-label" id="a11y-font-label">Text size</span>
+                <div class="a11y-options" role="group" aria-labelledby="a11y-font-label">
+                  <button type="button" data-a11y-key="fontScale" data-a11y-value="sm">A−</button>
+                  <button type="button" data-a11y-key="fontScale" data-a11y-value="md">A</button>
+                  <button type="button" data-a11y-key="fontScale" data-a11y-value="lg">A+</button>
+                  <button type="button" data-a11y-key="fontScale" data-a11y-value="xl">A++</button>
+                </div>
+              </div>
+
+              <div class="a11y-group">
+                <span class="a11y-label" id="a11y-contrast-label">Contrast</span>
+                <div class="a11y-options" role="group" aria-labelledby="a11y-contrast-label">
+                  <button type="button" data-a11y-key="contrast" data-a11y-value="default">Standard</button>
+                  <button type="button" data-a11y-key="contrast" data-a11y-value="high">High</button>
+                </div>
+              </div>
+
+              <div class="a11y-group">
+                <span class="a11y-label" id="a11y-wave-label">Wave motion</span>
+                <div class="a11y-options" role="group" aria-labelledby="a11y-wave-label">
+                  <button type="button" data-a11y-key="waveMotion" data-a11y-value="on">On</button>
+                  <button type="button" data-a11y-key="waveMotion" data-a11y-value="off">Off</button>
+                </div>
+                <p class="a11y-hint">Gentle ripple on the ocean background.</p>
+              </div>
+
+              <div class="a11y-group">
+                <span class="a11y-label" id="a11y-fx-label">Image transitions</span>
+                <div class="a11y-options" role="group" aria-labelledby="a11y-fx-label">
+                  <button type="button" data-a11y-key="imageFx" data-a11y-value="on">On</button>
+                  <button type="button" data-a11y-key="imageFx" data-a11y-value="off">Off</button>
+                </div>
+                <p class="a11y-hint">Morphing between story images while you scroll.</p>
+              </div>
+
+              <div class="a11y-group">
+                <span class="a11y-label" id="a11y-links-label">Links</span>
+                <div class="a11y-options" role="group" aria-labelledby="a11y-links-label">
+                  <button type="button" data-a11y-key="underlineLinks" data-a11y-value="off">Default</button>
+                  <button type="button" data-a11y-key="underlineLinks" data-a11y-value="on">Underline</button>
+                </div>
+              </div>
+
+              <div class="a11y-group">
+                <span class="a11y-label" id="a11y-space-label">Spacing</span>
+                <div class="a11y-options" role="group" aria-labelledby="a11y-space-label">
+                  <button type="button" data-a11y-key="spacing" data-a11y-value="default">Default</button>
+                  <button type="button" data-a11y-key="spacing" data-a11y-value="roomy">Roomy</button>
+                </div>
+              </div>
+
+              <button type="button" class="a11y-reset" data-a11y-reset>Reset all</button>
+            </div>
+          </li>
           <li><a class="nav-session" data-session href="profile.html">…</a></li>
         </ul>
       </div>
@@ -84,6 +181,8 @@
           <img
             src="https://obnbgnmdrpxoutfuenoi.supabase.co/storage/v1/object/public/Love%2021%20Storage/1785653547329_our-story.jpg"
             alt="Love 21 members, families, volunteers, and staff together"
+            width="560"
+            height="360"
           />
         </figure>
       </div>
@@ -92,7 +191,7 @@
       </div>
     </header>
 
-    <main>
+    <main id="main">
       <!-- Jump links into repo About content -->
       <nav class="section-index" aria-label="About page sections">
         <div class="container">
@@ -688,9 +787,10 @@
 
     <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
+    <script src="../js/a11y.js?v=a11y3"></script>
     <script src="../js/gate.js"></script>
     <script src="../js/about.js?v=about32"></script>
-    <script src="../js/story-dust.js?v=about32"></script>
+    <script src="../js/story-dust.js?v=about33"></script>
     <script src="../js/about-sims.js?v=about32"></script>
     <script src="../js/i18n.js"></script>
     <script src="../js/agent-config.js"></script>
