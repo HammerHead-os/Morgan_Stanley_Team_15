@@ -1,0 +1,274 @@
+/* Love 21 — shared modal shell, used by the hire / register / onboarding /
+   payment pop-ups. Mirrors the existing .auth-modal-overlay look in
+   styles.css so new modals feel native to the site. */
+
+.l21-modal-backdrop[hidden] {
+  display: none;
+}
+
+.l21-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(12, 26, 22, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.l21-modal {
+  position: relative;
+  width: min(100%, 30rem);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.75rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--lift);
+  animation: rise 0.25s var(--ease) both;
+}
+
+.l21-modal h2 {
+  font-size: 1.4rem;
+  margin: 0 0 0.35rem;
+}
+
+.l21-modal .muted {
+  margin: 0 0 1.25rem;
+}
+
+.l21-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.l21-modal-error {
+  margin: 0 0 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: var(--coral-soft);
+  color: #b83d30;
+  font-size: 0.88rem;
+  font-weight: 600;
+  min-height: 0;
+}
+
+.l21-modal-error:empty {
+  display: none;
+}
+
+.l21-field {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.l21-field > span,
+.l21-field > strong {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 0.4rem;
+}
+
+.l21-field input,
+.l21-field select,
+.l21-field textarea {
+  width: 100%;
+  padding: 0.75rem 0.95rem;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+}
+
+.l21-field input:focus,
+.l21-field select:focus,
+.l21-field textarea:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(13, 124, 107, 0.15);
+}
+
+.l21-field textarea {
+  resize: vertical;
+  font-weight: 500;
+}
+
+.l21-checkbox-group label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+
+.l21-attendee-row {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.85rem 0.95rem 0.1rem;
+  margin-bottom: 0.85rem;
+}
+
+.l21-attendee-row strong {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.l21-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+/* Donor payment modal */
+.l21-pay-methods {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+
+.l21-pay-method {
+  flex: 1;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 0.7rem 0.5rem;
+  background: var(--white);
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.l21-pay-method.active {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(13, 124, 107, 0.15);
+}
+
+.l21-pay-method .icon {
+  display: block;
+  font-size: 1.3rem;
+  margin-bottom: 0.25rem;
+}
+
+.l21-pay-summary {
+  background: var(--paper-deep);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.l21-pay-summary .big {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.l21-pay-detail {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 0.15rem 0 0;
+}
+
+.l21-pay-btn-apple {
+  background: #000;
+  color: #fff;
+  width: 100%;
+  border-radius: 999px;
+  padding: 0.85rem;
+  font-weight: 700;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.l21-pay-btn-google {
+  background: #fff;
+  color: #3c4043;
+  width: 100%;
+  border-radius: 999px;
+  padding: 0.85rem;
+  font-weight: 700;
+  border: 1.5px solid #dadce0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.l21-pay-btn-payme {
+  background: linear-gradient(135deg, var(--coral), #d94a3a);
+  color: #fff;
+  width: 100%;
+  border-radius: 999px;
+  padding: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.l21-pay-processing {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.l21-pay-spinner {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  border: 3px solid var(--paper-deep);
+  border-top-color: var(--teal-deep);
+  animation: l21spin 0.8s linear infinite;
+}
+
+@keyframes l21spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.l21-pay-success {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.l21-pay-check {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: var(--teal-deep);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.l21-pay-ref {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-top: 0.4rem;
+}
+
+body.l21-modal-open {
+  overflow: hidden;
+}

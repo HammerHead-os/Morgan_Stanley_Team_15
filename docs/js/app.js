@@ -237,6 +237,10 @@
           btnClass +
           '" data-register="' +
           a.id +
+          '" data-activity-title="' +
+          escapeHtml(a.title) +
+          '" data-activity-day="' +
+          escapeHtml(a.day) +
           '">' +
           action +
           "</button></article>"
@@ -250,27 +254,37 @@
     if (regBtn && L) {
       e.preventDefault();
       const activityId = Number(regBtn.getAttribute("data-register"));
+      const activityTitle = regBtn.getAttribute("data-activity-title") || "this class";
+      const activityDay = regBtn.getAttribute("data-activity-day") || "weekday";
+      const actionLabel = regBtn.textContent.trim();
       try {
         await L.requireLogin(async function (person) {
-          const profile = await L.api("/api/profile");
-          if (!profile.family) {
-            L.showToast(
-              "This account has no household — switch demo account in Profile."
-            );
-            return;
+          // No household required to register — the registrant may be the
+          // person the class is for, not necessarily a carer booking a
+          // separate dependent. If there IS a household, still offer its
+          // other members as options (today's carer-books-a-child flow).
+          let householdMembers = [];
+          try {
+            const profile = await L.api("/api/profile");
+            householdMembers = (profile.family && profile.family.members) || [];
+          } catch (e) {
+            householdMembers = [];
           }
-          const member =
-            profile.family.members.find(function (m) {
+          const defaultMember =
+            householdMembers.find(function (m) {
               return m.role_primary === "member";
             }) || person;
-          const result = await L.api("/api/family/register", {
-            method: "POST",
-            body: {
-              activity_id: activityId,
-              member_person_id: member.id,
-              reminder_channel: "email",
-            },
-          });
+          if (!window.Love21Registration) return;
+          const result = await window.Love21Registration.open(
+            activityId,
+            activityTitle,
+            defaultMember,
+            actionLabel,
+            householdMembers,
+            person,
+            activityDay
+          );
+          if (!result) return; // cancelled
           const msg =
             result.status === "waitlist"
               ? "Waitlist #" + result.waitlist_position + " — saved to profile"
@@ -297,9 +311,15 @@
       const stayHere = claimBtn.hasAttribute("data-claim-stay");
       try {
         await L.requireLogin(async function () {
+          let attendees = [];
+          if (window.Love21Claim) {
+            const result = await window.Love21Claim.open();
+            if (!result) return; // cancelled
+            attendees = result.attendees || [];
+          }
           const claim = await L.api("/api/volunteers/claims", {
             method: "POST",
-            body: { shift_id: shiftId },
+            body: { shift_id: shiftId, attendees: attendees },
           });
           if (typeof window.reloadVolunteerShifts === "function") {
             window.reloadVolunteerShifts();
@@ -329,21 +349,20 @@
     }
 
     const commitBtn = e.target.closest("[data-start-commitment]");
-    if (commitBtn && L) {
+    if (commitBtn && L && window.Love21PaymentModal) {
       e.preventDefault();
       try {
         await L.requireLogin(async function () {
           const amountEl = document.getElementById("gift");
           const amount = amountEl ? Number(amountEl.value) || 300 : 300;
-          const c = await L.api("/api/impact/commitments", {
-            method: "POST",
-            body: {
-              amount_hkd: amount,
-              fund_category: "Sports programmes",
-              cadence: "monthly",
-            },
+          const result = await window.Love21PaymentModal.open({
+            amountHkd: amount,
+            cadence: "monthly",
+            fundCategory: "Sports programmes",
+            method: "payme",
           });
-          L.goToProfile("impact", "Monthly HKD " + c.amount_hkd + " started");
+          if (!result) return; // cancelled
+          L.goToProfile("impact", "Monthly HKD " + result.amount_hkd + " started");
         });
       } catch (err) {
         if (!err.cancelled) L.showToast(L.friendlyError(err));
@@ -404,24 +423,30 @@
 
   function paintAdminLink(person) {
     const isAdmin = !!person && Array.isArray(person.roles) && person.roles.indexOf("admin") !== -1;
-    let link = qs("[data-admin-link]");
-    if (isAdmin) {
-      if (link) return;
-      const slot = qs("[data-session]");
-      const li = document.createElement("li");
-      const a = document.createElement("a");
-      a.href = "admin-dashboard.html";
-      a.textContent = "Admin dashboard";
-      a.setAttribute("data-admin-link", "");
-      li.appendChild(a);
-      const sessionLi = slot && slot.closest("li");
-      if (sessionLi && sessionLi.parentNode) {
-        sessionLi.parentNode.insertBefore(li, sessionLi);
+    const slot = qs("[data-session]");
+    const sessionLi = slot && slot.closest("li");
+
+    function ensureLink(attr, href, text) {
+      let link = qs("[" + attr + "]");
+      if (isAdmin) {
+        if (link) return;
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = href;
+        a.textContent = text;
+        a.setAttribute(attr, "");
+        li.appendChild(a);
+        if (sessionLi && sessionLi.parentNode) {
+          sessionLi.parentNode.insertBefore(li, sessionLi);
+        }
+      } else if (link) {
+        const li = link.closest("li");
+        (li || link).remove();
       }
-    } else if (link) {
-      const li = link.closest("li");
-      (li || link).remove();
     }
+
+    ensureLink("data-admin-link", "admin-dashboard.html", "Admin dashboard");
+    ensureLink("data-admin-hire-link", "admin-hire.html", "Hire enquiries");
   }
 
   async function paintSession() {

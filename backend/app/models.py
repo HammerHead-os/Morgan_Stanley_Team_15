@@ -7,10 +7,12 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -70,7 +72,9 @@ class Household(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
-    carer_person_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    carer_person_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("people.id"), nullable=True
+    )
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     members: Mapped[list[Person]] = relationship(
@@ -78,6 +82,31 @@ class Household(Base):
     )
     registrations: Mapped[list["Registration"]] = relationship(
         back_populates="household"
+    )
+    invites: Mapped[list["HouseholdInvite"]] = relationship(
+        back_populates="household", foreign_keys="HouseholdInvite.household_id"
+    )
+
+
+class HouseholdInvite(Base):
+    __tablename__ = "household_invites"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    household_id: Mapped[int] = mapped_column(ForeignKey("households.id"))
+    invited_email: Mapped[str] = mapped_column(String(255))
+    invited_person_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("people.id"), nullable=True
+    )
+    code: Mapped[str] = mapped_column(String(64), unique=True)
+    created_by_person_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    # pending | accepted | expired | cancelled
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    household: Mapped[Household] = relationship(
+        back_populates="invites", foreign_keys=[household_id]
     )
 
 
@@ -117,13 +146,24 @@ class Activity(Base):
 class Registration(Base):
     __tablename__ = "registrations"
     __table_args__ = (
-        UniqueConstraint("activity_id", "member_person_id", name="uq_reg_activity_member"),
+        # Only one *active* (non-cancelled) registration per activity+member —
+        # a cancelled row must not block rebooking the same activity later.
+        Index(
+            "uq_reg_activity_member_active",
+            "activity_id",
+            "member_person_id",
+            unique=True,
+            sqlite_where=text("status != 'cancelled'"),
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     activity_id: Mapped[int] = mapped_column(ForeignKey("activities.id"))
-    household_id: Mapped[int] = mapped_column(ForeignKey("households.id"))
+    household_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("households.id"), nullable=True
+    )
     member_person_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
+    party_size: Mapped[int] = mapped_column(Integer, default=1)
     status: Mapped[str] = mapped_column(String(40), default="registered")
     # registered | waitlist | attended | cancelled
     waitlist_position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -132,10 +172,29 @@ class Registration(Base):
     session_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     feedback: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     feedback_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    reminder_sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     activity: Mapped[Activity] = relationship(back_populates="registrations")
-    household: Mapped[Household] = relationship(back_populates="registrations")
+    household: Mapped[Optional[Household]] = relationship(back_populates="registrations")
     member: Mapped[Person] = relationship(foreign_keys=[member_person_id])
+    attendees: Mapped[list["RegistrationAttendee"]] = relationship(
+        back_populates="registration", cascade="all, delete-orphan"
+    )
+
+
+class RegistrationAttendee(Base):
+    __tablename__ = "registration_attendees"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    registration_id: Mapped[int] = mapped_column(ForeignKey("registrations.id"))
+    full_name: Mapped[str] = mapped_column(String(120))
+    phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    age: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    role: Mapped[str] = mapped_column(String(20), default="participant")
+    # guardian | participant
+
+    registration: Mapped[Registration] = relationship(back_populates="attendees")
 
 
 class Achievement(Base):
@@ -174,6 +233,11 @@ class HireEnquiry(Base):
     )
     creator_label: Mapped[str] = mapped_column(String(200))
     preferred_date: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    requester_name: Mapped[str] = mapped_column(String(120), default="")
+    company_name: Mapped[str] = mapped_column(String(160), default="")
+    event_description: Mapped[str] = mapped_column(Text, default="")
+    contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    contact_phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
     status: Mapped[str] = mapped_column(String(40), default="received")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
@@ -201,6 +265,7 @@ class DonationCommitment(Base):
     status: Mapped[str] = mapped_column(String(40), default="active")
     # active | paused | cancelled
     cadence: Mapped[str] = mapped_column(String(20), default="monthly")
+    payment_method: Mapped[str] = mapped_column(String(40), default="PayMe")
     office_perk_unlocked: Mapped[bool] = mapped_column(Boolean, default=True)
     started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
@@ -274,14 +339,34 @@ class VolunteerShiftClaim(Base):
     )
     status: Mapped[str] = mapped_column(String(40), default="claimed")
     # claimed | completed | cancelled
+    party_size: Mapped[int] = mapped_column(Integer, default=1)
     hours: Mapped[float] = mapped_column(Float, default=0.0)
     reflection: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     claimed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     points_awarded: Mapped[int] = mapped_column(Integer, default=0)
+    reminder_sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     shift: Mapped[VolunteerShift] = relationship(back_populates="claims")
     volunteer: Mapped[VolunteerProfile] = relationship(back_populates="shifts")
+    attendees: Mapped[list["VolunteerClaimAttendee"]] = relationship(
+        back_populates="claim", cascade="all, delete-orphan"
+    )
+
+
+class VolunteerClaimAttendee(Base):
+    __tablename__ = "volunteer_claim_attendees"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    claim_id: Mapped[int] = mapped_column(ForeignKey("volunteer_shift_claims.id"))
+    full_name: Mapped[str] = mapped_column(String(120))
+    phone: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    age: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    role: Mapped[str] = mapped_column(String(20), default="participant")
+    # guardian | participant
+
+    claim: Mapped[VolunteerShiftClaim] = relationship(back_populates="attendees")
 
 
 class JourneyEvent(Base):

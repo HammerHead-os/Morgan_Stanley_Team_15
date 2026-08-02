@@ -1479,12 +1479,6 @@ p {
   line-height: 1.55;
 }
 
-.footer-belief {
-  max-width: 31rem;
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
 .footer-links {
   list-style: none;
   margin: 0;
@@ -1569,46 +1563,6 @@ body.page-gate .site-footer-home .footer-language-button[aria-pressed="true"] {
   color: var(--coral);
 }
 
-.footer-social-links {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin-top: 0.9rem;
-}
-
-.footer-social-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  color: var(--ink-soft);
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-radius: 50%;
-  transition: color var(--ease), border-color var(--ease), background var(--ease);
-}
-
-.footer-social-link:hover,
-.footer-social-link:focus-visible {
-  color: var(--teal-deep);
-  border-color: rgba(13, 124, 107, 0.38);
-  background: var(--teal-soft);
-}
-
-.footer-social-link svg {
-  width: 1.05rem;
-  height: 1.05rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-}
-
-.footer-social-link .social-icon-fill {
-  fill: currentColor;
-  stroke: none;
-}
-
 .prose-block {
   max-width: 42rem;
 }
@@ -1640,88 +1594,14 @@ body.page-gate .site-footer-home .footer-language-button[aria-pressed="true"] {
 .contact-layout {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
-  gap: 1.75rem;
+  gap: 1.5rem;
   align-items: start;
-}
-
-.contact-page .page-banner {
-  padding: 3.25rem 0 2rem;
-}
-
-.contact-page .page-banner .eyebrow {
-  margin-bottom: 0.45rem;
-}
-
-.contact-page .page-banner h1 {
-  margin-bottom: 0.65rem;
-}
-
-.contact-page .page-banner p:last-child {
-  max-width: 46rem;
-  margin-bottom: 0;
-}
-
-.contact-main-section {
-  padding-top: 2rem;
-  padding-bottom: 3.5rem;
-}
-
-.contact-layout .panel-soft h2,
-.contact-layout .panel-soft h3 {
-  margin-bottom: 0.75rem;
-}
-
-.contact-quick-panel {
-  padding-bottom: 1.5rem;
-}
-
-.contact-quick-links {
-  display: grid;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.contact-quick-links a {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.72rem 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--paper);
-  color: var(--teal-deep);
-  font-weight: 700;
-  transition: border-color var(--ease), background var(--ease), transform var(--ease);
-}
-
-.contact-quick-links a:hover,
-.contact-quick-links a:focus-visible {
-  border-color: rgba(13, 124, 107, 0.4);
-  background: var(--teal-soft);
-  transform: translateX(3px);
-}
-
-.contact-visit-section {
-  padding-top: 3.25rem;
-  border-top: 1px solid var(--line);
-}
-
-.contact-section-head {
-  max-width: 46rem;
-  margin-bottom: 1.75rem;
-}
-
-.contact-section-head p:last-child {
-  margin-bottom: 0;
 }
 
 .contact-visit {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr);
-  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+  gap: 1.25rem;
   align-items: stretch;
 }
 
@@ -1744,17 +1624,11 @@ body.page-gate .site-footer-home .footer-language-button[aria-pressed="true"] {
 .contact-visit-card {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 1.25rem;
   padding: 1.35rem 1.4rem;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-}
-
-.contact-location-title {
-  margin: 0 0 0.25rem;
-  font-size: 1.4rem;
 }
 
 .contact-visit-list {
@@ -1782,6 +1656,15 @@ body.page-gate .site-footer-home .footer-language-button[aria-pressed="true"] {
   color: var(--ink);
   font-size: 0.98rem;
   line-height: 1.45;
+}
+
+.contact-visit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: auto;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--line);
 }
 
 @media (max-width: 800px) {
@@ -2713,24 +2596,6 @@ body.iam-open {
   padding-top: 1rem;
 }
 
-.hire-date-label {
-  display: block;
-  margin: 0.65rem 0 0.75rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--ink-soft);
-}
-
-.hire-date {
-  display: block;
-  width: 100%;
-  margin-top: 0.35rem;
-  padding: 0.45rem 0.55rem;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: #fff;
-}
-
 .gate-about-link {
   margin: 1.25rem 0 0;
   color: rgba(245, 247, 246, 0.75);
@@ -3423,23 +3288,13 @@ body.iam-open {
   overflow: hidden;
 }
 
-.hire-person.open {
-  border-color: rgba(232, 93, 76, 0.45);
-  box-shadow: 0 10px 28px rgba(232, 93, 76, 0.08);
-}
-
 .hire-person-main {
-  appearance: none;
   width: 100%;
-  border: 0;
-  background: transparent;
   display: flex;
   align-items: center;
   gap: 0.85rem;
   padding: 0.95rem 1rem;
   text-align: left;
-  cursor: pointer;
-  font: inherit;
   color: inherit;
 }
 
@@ -3463,12 +3318,6 @@ body.iam-open {
   padding: 0 1rem 1rem;
   border-top: 1px solid rgba(20, 35, 31, 0.08);
   padding-top: 0.85rem;
-}
-
-.hire-slots p {
-  margin: 0 0 0.75rem;
-  color: var(--ink-soft);
-  font-size: 0.92rem;
 }
 
 .task-meta-line {
@@ -4272,4 +4121,28 @@ body.auth-modal-open {
   margin: 0.35rem 0;
   font-size: 0.95rem;
 
+}
+
+/* Staff admin tables (hire enquiries, etc.) */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.admin-table th {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
 }

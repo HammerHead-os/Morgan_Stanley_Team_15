@@ -8,6 +8,7 @@ from ..database import get_db
 from ..deps import get_current_person
 from ..labels import status_label
 from ..posthog_client import get_posthog_client
+from ..roles_util import ensure_role
 
 router = APIRouter(prefix="/api/impact", tags=["impact"])
 
@@ -21,6 +22,7 @@ def _commitment_out(c: models.DonationCommitment) -> schemas.CommitmentOut:
         status=c.status,
         status_label=status_label(c.status),
         cadence=c.cadence,
+        payment_method=c.payment_method,
         office_perk_unlocked=bool(c.office_perk_unlocked),
         started_at=c.started_at,
         updated_at=c.updated_at,
@@ -57,8 +59,10 @@ def start_commitment(
         amount_hkd=body.amount_hkd,
         fund_category=body.fund_category,
         cadence=body.cadence,
+        payment_method=body.payment_method,
         status="active",
     )
+    ensure_role(person, "donor")
     db.add(commitment)
     db.flush()
     amount = body.amount_hkd
@@ -111,6 +115,7 @@ def start_commitment(
                 "amount_hkd": commitment.amount_hkd,
                 "fund_category": commitment.fund_category,
                 "cadence": commitment.cadence,
+                "payment_method": commitment.payment_method,
             },
         )
     return _commitment_out(commitment)

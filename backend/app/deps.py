@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from . import models
 from .database import get_db
+from .roles_util import has_role
 
 
 def get_current_person(
@@ -33,3 +34,11 @@ def optional_person(
     except ValueError:
         return None
     return db.get(models.Person, person_id)
+
+
+def require_admin(
+    person: models.Person = Depends(get_current_person),
+) -> models.Person:
+    if not has_role(person, "admin"):
+        raise HTTPException(status_code=403, detail="Staff access only")
+    return person

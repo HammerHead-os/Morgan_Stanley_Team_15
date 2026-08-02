@@ -14,6 +14,36 @@
       .replace(/"/g, "&quot;");
   }
 
+  function renderPartyPicker(attendees) {
+    let html =
+      '<div class="party-picker" style="margin:0 0 0.5rem">' +
+      '<p class="muted" style="margin:0 0 0.35rem;font-size:0.85rem">Who does this apply to?</p>' +
+      '<label style="display:block"><input type="checkbox" data-party-self checked /> You</label>';
+    attendees.forEach(function (a) {
+      html +=
+        '<label style="display:block"><input type="checkbox" data-party-attendee="' +
+        a.id +
+        '" checked /> ' +
+        escapeHtml(a.full_name) +
+        "</label>";
+    });
+    html += "</div>";
+    return html;
+  }
+
+  function readPartySelection(box) {
+    const selfEl = box ? box.querySelector("[data-party-self]") : null;
+    const includeSelf = selfEl ? !!selfEl.checked : true;
+    const attendeeIds = box
+      ? Array.from(box.querySelectorAll("[data-party-attendee]:checked")).map(
+          function (el) {
+            return Number(el.getAttribute("data-party-attendee"));
+          }
+        )
+      : [];
+    return { includeSelf: includeSelf, attendeeIds: attendeeIds };
+  }
+
   function fmtDate(iso) {
     if (!iso) return "-";
     try {
@@ -143,6 +173,36 @@
     const form = document.querySelector("[data-add-member-form]");
     if (form) form.hidden = !canAdd;
 
+    const bookingsBox = document.querySelector("[data-family-bookings]");
+    if (bookingsBox) {
+      const regs = family.registrations || [];
+      const active = regs.filter(function (r) {
+        return r.status === "registered" || r.status === "waitlist";
+      });
+      bookingsBox.innerHTML = active.length
+        ? '<ul class="family-member-list">' +
+          active
+            .map(function (r) {
+              const who = r.member_name || "";
+              const extra = r.party_size > 1 ? " +" + (r.party_size - 1) + " more" : "";
+              return (
+                "<li><strong>" +
+                escapeHtml(r.activity_title || "Class") +
+                "</strong> · " +
+                escapeHtml(who) +
+                escapeHtml(extra) +
+                " · " +
+                escapeHtml(r.status_label || r.status) +
+                ' <button type="button" class="btn btn-sm btn-ghost" data-cancel-registration="' +
+                r.id +
+                '">Cancel</button></li>'
+              );
+            })
+            .join("") +
+          "</ul>"
+        : '<p class="muted">No classes booked yet.</p>';
+    }
+
     const members = family.members || [];
     if (!members.length) {
       list.innerHTML = '<p class="muted">No members yet.</p>';
@@ -152,6 +212,7 @@
       '<ul class="family-member-list">' +
       members
         .map(function (m) {
+          const canRemove = canAdd && m.id !== data.person.id;
           return (
             "<li><strong>" +
             escapeHtml(m.name) +
@@ -159,7 +220,13 @@
             escapeHtml(roleLabel(m.role_primary, m.household_role)) +
             ' <span class="muted">(' +
             escapeHtml(m.profile_code || "") +
-            ")</span></li>"
+            ")</span>" +
+            (canRemove
+              ? ' <button type="button" class="btn btn-sm btn-ghost" data-remove-member="' +
+                m.id +
+                '">Remove</button>'
+              : "") +
+            "</li>"
           );
         })
         .join("") +
@@ -671,12 +738,28 @@
               escapeHtml(c.status_label || "Claimed") +
               (pts ? " · +" + pts + " pts when done" : "") +
               "</p>" +
+              '<label class="complete-note-label">Hours spent' +
+              '<input type="number" class="complete-hours" min="0.25" max="24" step="0.25" value="' +
+              (c.duration_min ? (c.duration_min / 60).toFixed(2) : "") +
+              '" required />' +
+              "</label>" +
               '<label class="complete-note-label">Short note when finished' +
               '<textarea class="complete-note" rows="2" maxlength="2000" placeholder="What did you do?"></textarea>' +
               "</label></div>" +
+              '<div class="l21-modal-actions" style="justify-content:flex-start;margin-top:0.5rem">' +
               '<button type="button" class="btn btn-sm btn-primary" data-complete-claim="' +
               c.id +
               '">Mark complete</button>' +
+              '<button type="button" class="btn btn-sm btn-ghost" data-change-time="' +
+              c.id +
+              '" data-shift-title="' +
+              escapeHtml(c.shift_title || "") +
+              '">Change time</button>' +
+              '<button type="button" class="btn btn-sm btn-ghost" data-cancel-claim="' +
+              c.id +
+              '">Cancel</button>' +
+              "</div>" +
+              '<div class="claim-action-box" data-action-box hidden></div>' +
               "</article>"
             );
           })
@@ -782,23 +865,77 @@
         (addForm.household_role && addForm.household_role.value) || "helper";
       const email = (addForm.email && addForm.email.value) || "";
       try {
-        await L.api("/api/family/members", {
+        const result = await L.api("/api/family/members", {
           method: "POST",
           body: {
             name: name.trim(),
             household_role: household_role,
-            email: email.trim() || null,
+            email: email.trim(),
             is_child: household_role === "child",
           },
         });
         addForm.reset();
-        L.showToast("Family member added. They share the child records.");
+        if (result && result.status === "invited") {
+          L.showToast("Invite sent to " + result.invited_email);
+        } else {
+          L.showToast("Family member added. They share the child records.");
+        }
         await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
       }
     });
   }
+
+  const joinForm = document.querySelector("[data-join-household-form]");
+  if (joinForm) {
+    joinForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const code = (joinForm.code && joinForm.code.value.trim()) || "";
+      if (!code) return;
+      try {
+        await L.api("/api/family/join", { method: "POST", body: { code: code } });
+        joinForm.reset();
+        L.showToast("You've joined the new household.");
+        await reloadProfile();
+      } catch (err) {
+        L.showToast(L.friendlyError(err));
+      }
+    });
+  }
+
+  document.addEventListener("click", async function (e) {
+    const removeBtn = e.target.closest("[data-remove-member]");
+    if (removeBtn) {
+      e.preventDefault();
+      if (!window.confirm("Remove this person from your household?")) return;
+      const memberId = Number(removeBtn.getAttribute("data-remove-member"));
+      try {
+        await L.api("/api/family/members/" + memberId, { method: "DELETE" });
+        L.showToast("Removed from your household.");
+        await reloadProfile();
+      } catch (err) {
+        L.showToast(L.friendlyError(err));
+      }
+      return;
+    }
+
+    const cancelRegBtn = e.target.closest("[data-cancel-registration]");
+    if (cancelRegBtn) {
+      e.preventDefault();
+      if (!window.confirm("Cancel this booking?")) return;
+      const regId = Number(cancelRegBtn.getAttribute("data-cancel-registration"));
+      try {
+        await L.api("/api/family/registrations/" + regId + "/cancel", {
+          method: "POST",
+        });
+        L.showToast("Booking cancelled");
+        await reloadProfile();
+      } catch (err) {
+        L.showToast(L.friendlyError(err));
+      }
+    }
+  });
 
   const saveRoles = document.querySelector("[data-save-roles]");
   if (saveRoles) {
@@ -848,10 +985,17 @@
       const claimId = Number(completeBtn.getAttribute("data-complete-claim"));
       const card = completeBtn.closest(".my-task-card");
       const noteEl = card ? card.querySelector(".complete-note") : null;
+      const hoursEl = card ? card.querySelector(".complete-hours") : null;
       const reflection = noteEl ? noteEl.value.trim() : "";
       if (!reflection) {
         L.showToast("Add a short note before marking complete");
         if (noteEl) noteEl.focus();
+        return;
+      }
+      const hoursVal = hoursEl && hoursEl.value ? Number(hoursEl.value) : undefined;
+      if (hoursEl && !hoursVal) {
+        L.showToast("Enter the hours you actually spent");
+        hoursEl.focus();
         return;
       }
       try {
@@ -859,7 +1003,7 @@
           "/api/volunteers/claims/" + claimId + "/complete",
           {
             method: "POST",
-            body: { reflection: reflection },
+            body: { reflection: reflection, hours: hoursVal },
           }
         );
         L.showToast(
@@ -867,6 +1011,175 @@
             (claim.points_awarded || 0) +
             " points"
         );
+        await reloadProfile();
+      } catch (err) {
+        L.showToast(L.friendlyError(err));
+      }
+      return;
+    }
+
+    const cancelClaimBtn = e.target.closest("[data-cancel-claim]");
+    if (cancelClaimBtn) {
+      e.preventDefault();
+      const claimId = Number(cancelClaimBtn.getAttribute("data-cancel-claim"));
+      const card = cancelClaimBtn.closest(".my-task-card");
+      const box = card ? card.querySelector("[data-action-box]") : null;
+      const claims =
+        profileData && profileData.volunteer
+          ? profileData.volunteer.claims || []
+          : [];
+      const claim = claims.find(function (c) {
+        return c.id === claimId;
+      });
+      const attendees = (claim && claim.attendees) || [];
+
+      if (!attendees.length) {
+        if (!window.confirm("Cancel this volunteer shift?")) return;
+        try {
+          await L.api("/api/volunteers/claims/" + claimId + "/cancel", {
+            method: "POST",
+          });
+          L.showToast("Shift cancelled");
+          await reloadProfile();
+        } catch (err) {
+          L.showToast(L.friendlyError(err));
+        }
+        return;
+      }
+
+      if (!box) return;
+      if (box.getAttribute("data-action") === "cancel" && !box.hidden) {
+        box.hidden = true;
+        box.innerHTML = "";
+        box.removeAttribute("data-action");
+        return;
+      }
+      box.setAttribute("data-action", "cancel");
+      box.hidden = false;
+      box.innerHTML =
+        renderPartyPicker(attendees) +
+        '<button type="button" class="btn btn-sm btn-primary" data-confirm-cancel="' +
+        claimId +
+        '" style="margin-top:0.25rem">Cancel selected</button>';
+      return;
+    }
+
+    const confirmCancelBtn = e.target.closest("[data-confirm-cancel]");
+    if (confirmCancelBtn) {
+      e.preventDefault();
+      const claimId = Number(
+        confirmCancelBtn.getAttribute("data-confirm-cancel")
+      );
+      const box = confirmCancelBtn.closest("[data-action-box]");
+      const sel = readPartySelection(box);
+      if (!sel.includeSelf && !sel.attendeeIds.length) {
+        L.showToast("Select at least one person");
+        return;
+      }
+      if (!window.confirm("Cancel the selected shift booking?")) return;
+      try {
+        await L.api("/api/volunteers/claims/" + claimId + "/cancel", {
+          method: "POST",
+          body: { include_self: sel.includeSelf, attendee_ids: sel.attendeeIds },
+        });
+        L.showToast("Cancelled");
+        await reloadProfile();
+      } catch (err) {
+        L.showToast(L.friendlyError(err));
+      }
+      return;
+    }
+
+    const changeTimeBtn = e.target.closest("[data-change-time]");
+    if (changeTimeBtn) {
+      e.preventDefault();
+      const claimId = Number(changeTimeBtn.getAttribute("data-change-time"));
+      const card = changeTimeBtn.closest(".my-task-card");
+      const box = card ? card.querySelector("[data-action-box]") : null;
+      if (!box) return;
+      if (box.getAttribute("data-action") === "reschedule" && !box.hidden) {
+        box.hidden = true;
+        box.innerHTML = "";
+        box.removeAttribute("data-action");
+        return;
+      }
+      box.setAttribute("data-action", "reschedule");
+      box.hidden = false;
+      box.innerHTML = '<p class="muted">Checking other open times…</p>';
+      try {
+        const claims = profileData && profileData.volunteer
+          ? profileData.volunteer.claims || []
+          : [];
+        const claim = claims.find(function (c) {
+          return c.id === claimId;
+        });
+        const attendees = (claim && claim.attendees) || [];
+        const shifts = await L.api("/api/volunteers/shifts");
+        const alts = shifts.filter(function (s) {
+          return (
+            s.title === changeTimeBtn.getAttribute("data-shift-title") &&
+            (!claim || s.id !== claim.shift_id) &&
+            s.spots_left > 0
+          );
+        });
+        if (!alts.length) {
+          box.innerHTML =
+            '<p class="muted">No other open times for this task right now.</p>';
+          return;
+        }
+        box.innerHTML =
+          (attendees.length ? renderPartyPicker(attendees) : "") +
+          '<label class="field">' +
+          "<span>Pick a new time</span>" +
+          '<select data-reschedule-select>' +
+          alts
+            .map(function (s) {
+              return (
+                '<option value="' +
+                s.id +
+                '">' +
+                escapeHtml(fmtTaskWhen(s)) +
+                "</option>"
+              );
+            })
+            .join("") +
+          "</select>" +
+          "</label>" +
+          '<button type="button" class="btn btn-sm btn-primary" data-confirm-reschedule="' +
+          claimId +
+          '" style="margin-top:0.25rem">Confirm new time</button>';
+      } catch (err) {
+        box.innerHTML =
+          '<p class="muted">' + escapeHtml(L.friendlyError(err)) + "</p>";
+      }
+      return;
+    }
+
+    const confirmRescheduleBtn = e.target.closest("[data-confirm-reschedule]");
+    if (confirmRescheduleBtn) {
+      e.preventDefault();
+      const claimId = Number(
+        confirmRescheduleBtn.getAttribute("data-confirm-reschedule")
+      );
+      const box = confirmRescheduleBtn.closest("[data-action-box]");
+      const select = box ? box.querySelector("[data-reschedule-select]") : null;
+      const newShiftId = select ? Number(select.value) : null;
+      if (!newShiftId) return;
+      const sel = readPartySelection(box);
+      if (!sel.includeSelf && !sel.attendeeIds.length) {
+        L.showToast("Select at least one person");
+        return;
+      }
+      try {
+        await L.api("/api/volunteers/claims/" + claimId + "/reschedule", {
+          method: "POST",
+          body: {
+            new_shift_id: newShiftId,
+            include_self: sel.includeSelf,
+            attendee_ids: sel.attendeeIds,
+          },
+        });
+        L.showToast("Time changed");
         await reloadProfile();
       } catch (err) {
         L.showToast(L.friendlyError(err));
@@ -979,6 +1292,13 @@
         flashEl.hidden = false;
         flashEl.textContent = flash;
         sessionStorage.removeItem("love21_flash");
+      }
+      // Arriving from a "join our household" invite email link.
+      const joinCode = new URLSearchParams(location.search).get("join_code");
+      const joinFormEl = document.querySelector("[data-join-household-form]");
+      if (joinCode && joinFormEl && joinFormEl.code) {
+        joinFormEl.code.value = joinCode;
+        joinFormEl.scrollIntoView({ block: "center" });
       }
     } catch (err) {
       if (err && err.status === 401) {

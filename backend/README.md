@@ -74,3 +74,18 @@ single value in `docs/js/agent-config.js` from `"deepseek"` to `"n8n"` to restor
 ## Instagram feed
 
 See `INSTAGRAM_API_SETUP.md`. Endpoint: `GET /api/instagram/posts`.
+
+## PostHog analytics (optional)
+
+The backend uses PostHog to capture server-side events (logins, signups,
+volunteer claims, impact commitments, etc.). It is **optional** — if
+`POSTHOG_PROJECT_TOKEN` / `POSTHOG_HOST` are not set in `backend/.env`, the API
+starts normally and simply logs a warning, skipping event capture.
+
+To enable it, copy `.env.example` to `.env` and fill in the PostHog values:
+
+```
+POSTHOG_PROJECT_TOKEN=<server-side project API key>
+POSTHOG_HOST=https://us.i.posthog.com
+```
+

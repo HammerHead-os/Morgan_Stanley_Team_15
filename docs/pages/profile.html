@@ -224,6 +224,32 @@
         </div>
         </section>
 
+        <section class="panel-soft mt-2" id="my-tasks">
+          <div class="section-head" style="margin-bottom: 0.75rem">
+            <h2>My tasks</h2>
+          </div>
+          <div class="points-bar" data-points-bar hidden>
+            <div>
+              <strong data-points-balance>0</strong>
+              <span class="muted"> points</span>
+            </div>
+            <p class="muted" style="margin: 0; font-size: 0.88rem">
+              Finish tasks to earn points. Redeem below.
+            </p>
+          </div>
+          <div class="async-tasks" data-async-tasks hidden>
+            <h3 class="task-group-title" style="margin-top: 0">Async tasks</h3>
+            <ul data-async-list></ul>
+          </div>
+          <div data-my-tasks>
+            <p class="muted">Loading…</p>
+          </div>
+          <div class="redeem-block mt-1" data-redeem-block hidden>
+            <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem">Redeem</h3>
+            <div class="redeem-grid" data-redeem-grid></div>
+          </div>
+        </section>
+
         <section
           class="panel-soft mt-2"
           data-tour
@@ -258,7 +284,12 @@
         </section>
 
         <section id="member-management" class="panel-soft mt-2" data-family-section hidden>
-          <h2>Family members</h2>
+          <h2>Bookings</h2>
+          <p class="muted">
+            Anyone in the household can cancel a booking, not just who it's for.
+          </p>
+          <div data-family-bookings></div>
+          <h2 class="mt-2">Family members</h2>
           <p class="muted">
             Mom, dad, caregivers, and helpers share the same child records.
           </p>
@@ -280,10 +311,21 @@
               </select>
             </label>
             <label>
-              Email (optional)
-              <input type="email" name="email" maxlength="200" />
+              Email
+              <input type="email" name="email" required maxlength="200" />
             </label>
             <button type="submit" class="btn btn-primary btn-sm">Add member</button>
+          </form>
+          <form class="profile-member-form mt-2" data-join-household-form>
+            <h3>Have an invite code?</h3>
+            <p class="muted" style="margin: 0 0 0.5rem">
+              Join a different household instead of your own.
+            </p>
+            <label>
+              Invite code
+              <input type="text" name="code" required maxlength="64" />
+            </label>
+            <button type="submit" class="btn btn-sm">Join household</button>
           </form>
         </section>
 
@@ -334,7 +376,7 @@
     </footer>
 
     <script src="../js/api.js?v=profile-nav2"></script>
-    <script src="../js/app.js?v=footer2"></script>
+    <script src="../js/app.js?v=profile-nav2"></script>
     <script src="../js/journal.js?v=profile-data1"></script>
     <script src="../js/profile.js?v=profile-calendar3"></script>
     <script src="../js/hub-demo.js"></script>

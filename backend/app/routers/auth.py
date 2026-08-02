@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+import secrets
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import or_
@@ -152,6 +153,29 @@ def signup(body: schemas.SignupIn, request: Request, db: Session = Depends(get_d
     db.add(person)
     db.flush()
     person.profile_code = f"L21-{person.id:05d}"
+
+    # Every account gets its own household immediately — joining a
+    # different one later happens via an invite code, not by starting
+    # without one (see /api/family/join).
+    household = models.Household(
+        name=f"{person.name}'s household", carer_person_id=person.id
+    )
+    db.add(household)
+    db.flush()
+    person.household_id = household.id
+
+    # Without this, PATCH /api/prefs 404s forever for this account — there's
+    # no row to update — and email opt-outs/reminders can't be honored.
+    db.add(
+        models.CommPreferences(
+            person_id=person.id,
+            email_on=True,
+            sms_on=False,
+            whatsapp_on=False,
+            opt_out_token=secrets.token_urlsafe(16),
+        )
+    )
+
     db.commit()
     db.refresh(person)
 
@@ -201,6 +225,62 @@ def login(body: schemas.LoginIn, request: Request, db: Session = Depends(get_db)
     client = get_posthog_client()
     if client:
         client.capture("login_completed", properties={"login_method": "password"})
+
+    return schemas.DemoLoginOut(
+        person=schemas.PersonOut.model_validate(person),
+        token=str(person.id),
+    )
+
+
+@router.post("/claim", response_model=schemas.DemoLoginOut)
+def claim_account(
+    body: schemas.ClaimAccountIn, request: Request, db: Session = Depends(get_db)
+):
+    """Activate login on a person record created via 'Add someone' — for
+    someone who didn't have their own account yet when a household member
+    added them. Sets a password on the existing Person row; never creates a
+    new one."""
+    invite = (
+        db.query(models.HouseholdInvite)
+        .filter(models.HouseholdInvite.code == body.code)
+        .first()
+    )
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invite not found")
+    if invite.status != "pending":
+        raise HTTPException(status_code=409, detail="This invite has already been used")
+    if invite.expires_at < datetime.utcnow():
+        invite.status = "expired"
+        db.commit()
+        raise HTTPException(status_code=409, detail="This invite has expired")
+    if not invite.invited_person_id:
+        raise HTTPException(
+            status_code=400, detail="This invite isn't for creating a new account"
+        )
+
+    person = db.get(models.Person, invite.invited_person_id)
+    if not person:
+        raise HTTPException(status_code=404, detail="Account not found")
+    if person.password_hash:
+        raise HTTPException(
+            status_code=409, detail="This account is already active — log in instead"
+        )
+
+    now = datetime.now(timezone.utc)
+    person.password_hash = hash_password(body.password)
+    person.login_count = (person.login_count or 0) + 1
+    person.current_login_at = now
+    person.last_login_at = now
+    person.last_login_ip = get_client_ip(request)
+    invite.status = "accepted"
+    invite.accepted_at = datetime.utcnow()
+    db.commit()
+    db.refresh(person)
+
+    identify_person(person)
+    client = get_posthog_client()
+    if client:
+        client.capture("account_claimed")
 
     return schemas.DemoLoginOut(
         person=schemas.PersonOut.model_validate(person),

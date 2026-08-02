@@ -48,3 +48,13 @@ def pick_primary(roles: list[str]) -> str:
         if preferred in roles:
             return preferred
     return roles[0] if roles else "family"
+
+
+def ensure_role(person, role: str) -> None:
+    """Tag a person with a role the moment they actually do that thing
+    (claim a shift, start a gift, ...), even if they signed up under a
+    different default role. Without this, `roles` silently drifts out of
+    sync with what someone actually does, which is exactly what causes
+    role-gated checks elsewhere to hide a person's own real activity."""
+    if not has_role(person, role):
+        person.roles = serialize_roles(parse_roles(person) + [role])

@@ -87,17 +87,39 @@ class ActivityOut(OrmModel):
     location: str
 
 
+class AttendeeIn(BaseModel):
+    full_name: str = Field(min_length=1, max_length=120)
+    phone: Optional[str] = Field(default=None, max_length=40)
+    email: Optional[str] = Field(default=None, max_length=255)
+    age: Optional[int] = Field(default=None, ge=0, le=120)
+    role: Literal["guardian", "participant"] = "participant"
+
+
 class RegisterIn(BaseModel):
     activity_id: int
-    member_person_id: int
+    member_person_id: Optional[int] = None  # None => registering myself
     reminder_channel: str = "email"
+    # No session_date here on purpose — classes run on a fixed recurring
+    # schedule (Activity.day), so the actual date is computed server-side
+    # (see _next_occurrence in family.py), never chosen by the client.
+    attendees: list[AttendeeIn] = Field(default_factory=list)
+
+
+class AttendeeOut(OrmModel):
+    id: int
+    full_name: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    age: Optional[int] = None
+    role: str = "participant"
 
 
 class RegistrationOut(OrmModel):
     id: int
     activity_id: int
-    household_id: int
+    household_id: Optional[int] = None
     member_person_id: int
+    party_size: int = 1
     status: str
     status_label: str = ""
     waitlist_position: Optional[int] = None
@@ -109,6 +131,7 @@ class RegistrationOut(OrmModel):
     activity_location: Optional[str] = None
     activity_goal: Optional[str] = None
     member_name: Optional[str] = None
+    attendees: list[AttendeeOut] = []
 
 
 class FeedbackIn(BaseModel):
@@ -149,9 +172,10 @@ class ConsentIn(BaseModel):
 
 
 class CommitmentIn(BaseModel):
-    amount_hkd: float = 300
+    amount_hkd: float = Field(default=300, ge=50, le=1_000_000)
     fund_category: str = "Sports programmes"
     cadence: str = "monthly"
+    payment_method: str = Field(default="PayMe", max_length=40)
 
 
 class CommitmentOut(OrmModel):
@@ -162,6 +186,7 @@ class CommitmentOut(OrmModel):
     status: str
     status_label: str = ""
     cadence: str
+    payment_method: str = "PayMe"
     office_perk_unlocked: bool = True
     started_at: datetime
     updated_at: datetime
@@ -214,6 +239,22 @@ class VolunteerShiftOut(OrmModel):
 
 class ClaimShiftIn(BaseModel):
     shift_id: int
+    attendees: list[AttendeeIn] = Field(default_factory=list)
+
+
+class RescheduleClaimIn(BaseModel):
+    new_shift_id: int
+    # Which of the party moves to the new shift. None = everyone (default,
+    # matches the old whole-claim-moves behaviour); an explicit list picks
+    # specific attendees by their VolunteerClaimAttendee id, letting the
+    # rest of the party stay put on the original shift.
+    attendee_ids: Optional[list[int]] = None
+    include_self: bool = True
+
+
+class CancelClaimIn(BaseModel):
+    attendee_ids: Optional[list[int]] = None
+    include_self: bool = True
 
 
 class ClaimOut(OrmModel):
@@ -222,6 +263,7 @@ class ClaimOut(OrmModel):
     volunteer_profile_id: int
     status: str
     status_label: str = ""
+    party_size: int = 1
     hours: float
     reflection: Optional[str] = None
     claimed_at: datetime
@@ -232,6 +274,7 @@ class ClaimOut(OrmModel):
     duration_min: Optional[int] = None
     remote: bool = True
     scheduled_date: Optional[date] = None
+    attendees: list[AttendeeOut] = []
 
 
 class ReflectionIn(BaseModel):
@@ -286,12 +329,22 @@ class OnboardIn(BaseModel):
 class HireIn(BaseModel):
     creator_label: str = Field(min_length=2, max_length=200)
     preferred_date: Optional[str] = Field(default=None, max_length=40)
+    requester_name: str = Field(min_length=1, max_length=120)
+    company_name: str = Field(default="", max_length=160)
+    event_description: str = Field(default="", max_length=2000)
+    contact_email: str = Field(min_length=3, max_length=255)
+    contact_phone: Optional[str] = Field(default=None, max_length=40)
 
 
 class HireOut(OrmModel):
     id: int
     creator_label: str
     preferred_date: Optional[str] = None
+    requester_name: str = ""
+    company_name: str = ""
+    event_description: str = ""
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
     status: str
     created_at: datetime
 
@@ -299,9 +352,23 @@ class HireOut(OrmModel):
 class FamilyMemberIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     household_role: str = Field(min_length=2, max_length=40)
-    email: Optional[str] = Field(default=None, max_length=255)
+    email: str = Field(min_length=3, max_length=255)
     # mom | dad | caregiver | helper | child
     is_child: bool = False
+
+
+class InviteOut(BaseModel):
+    status: str
+    invited_email: str
+
+
+class JoinHouseholdIn(BaseModel):
+    code: str = Field(min_length=1, max_length=64)
+
+
+class ClaimAccountIn(BaseModel):
+    code: str = Field(min_length=1, max_length=64)
+    password: str = Field(min_length=6, max_length=200)
 
 
 class PrefsOut(OrmModel):
@@ -346,11 +413,23 @@ class FamilyMetricsOut(BaseModel):
     badges: list[RuleBadgeOut] = Field(default_factory=list)
 
 
+class FundByCategoryOut(BaseModel):
+    fund_category: str
+    total_hkd: float
+
+
+class SharedFundsOut(BaseModel):
+    total_hkd: float = 0
+    gift_count: int = 0
+    by_fund_category: list[FundByCategoryOut] = Field(default_factory=list)
+
+
 class FamilyProfileOut(BaseModel):
     household_name: str
     members: list[PersonOut]
     registrations: list[RegistrationOut]
     metrics: FamilyMetricsOut = Field(default_factory=FamilyMetricsOut)
+    shared_funds: SharedFundsOut = Field(default_factory=SharedFundsOut)
 
 
 class AchievementProfileOut(BaseModel):

@@ -34,21 +34,23 @@
 
   document.addEventListener("click", async function (e) {
     const pay = e.target.closest("[data-pay]");
-    if (!pay || !L) return;
+    if (!pay || !L || !window.Love21PaymentModal) return;
     e.preventDefault();
     const amount = gift ? Number(gift.value) || 300 : 300;
-    const method = pay.getAttribute("data-pay");
+    const methodLabel = pay.getAttribute("data-pay"); // "PayMe" | "Apple Pay" | "Google Pay"
+    const methodKey =
+      methodLabel === "Apple Pay" ? "apple_pay" :
+      methodLabel === "Google Pay" ? "google_pay" : "payme";
     try {
       await L.requireLogin(async function () {
-        await L.api("/api/impact/commitments", {
-          method: "POST",
-          body: {
-            amount_hkd: amount,
-            fund_category: "Sports programmes",
-            cadence: "monthly",
-          },
+        const result = await window.Love21PaymentModal.open({
+          amountHkd: amount,
+          cadence: "monthly",
+          fundCategory: "Sports programmes",
+          method: methodKey,
         });
-        L.goToProfile("impact", method + " · HKD " + amount + "/mo started");
+        if (!result) return; // cancelled
+        L.goToProfile("impact", methodLabel + " · HKD " + amount + "/mo started");
       });
     } catch (err) {
       if (!err.cancelled) L.showToast(L.friendlyError(err));

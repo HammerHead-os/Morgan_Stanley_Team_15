@@ -1,10 +1,13 @@
 """Application-wide PostHog client initialization for the FastAPI process."""
 
 import atexit
+import logging
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from posthog import Posthog
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -37,14 +40,18 @@ def init_posthog() -> Posthog | None:
         "POSTHOG_PROJECT_TOKEN" if not settings.posthog_project_token else None
     ) or ("POSTHOG_HOST" if not settings.posthog_host else None)
     if missing:
-        if settings.debug:
-            raise RuntimeError(
-                f"{missing} variable required by PostHog is missing or un-configured, "
-                f"this causes events to be silently missed. This error stops appearing "
-                f"once {missing} is configured"
-            )
+        # PostHog is optional: log a warning and run without analytics rather
+        # than crashing the whole API at startup when no token is configured.
+        logger.warning(
+            "%s variable required by PostHog is missing or un-configured; "
+            "running without PostHog analytics. Configure POSTHOG_PROJECT_TOKEN "
+            "and POSTHOG_HOST (e.g. in backend/.env) to enable event capture.",
+            missing,
+        )
         return None
 
+    assert settings.posthog_project_token is not None
+    assert settings.posthog_host is not None
     posthog_client = Posthog(
         project_api_key=settings.posthog_project_token,
         host=settings.posthog_host,

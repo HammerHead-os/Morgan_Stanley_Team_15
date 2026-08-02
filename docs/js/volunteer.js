@@ -246,17 +246,11 @@
 
     if (!e.target.closest("[data-onboard]")) return;
     e.preventDefault();
-    if (!L) return;
+    if (!L || !window.Love21Onboard) return;
     try {
       await L.requireLogin(async function () {
-        await L.api("/api/volunteers/onboard", {
-          method: "POST",
-          body: {
-            skills: "cantonese,photos,sports",
-            languages: "yue,en",
-            availability: "weekends",
-          },
-        });
+        const result = await window.Love21Onboard.open();
+        if (!result) return; // cancelled
         L.goToProfile(null, "Onboarding done");
       });
     } catch (err) {
