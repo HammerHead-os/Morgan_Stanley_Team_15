@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,8 +26,7 @@
             line-height: 1.5;
         }
 
-        h2,
-        h3 {
+        h2, h3 {
             color: var(--text);
             margin-bottom: 12px;
         }
@@ -120,6 +118,20 @@
             border: 1px solid var(--border);
         }
 
+        .pdf-preview {
+            width: 100%;
+            height: 80px;
+            background-color: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-muted);
+            gap: 10px;
+        }
+
         .file-footer {
             width: 100%;
             display: flex;
@@ -143,16 +155,16 @@
         }
     </style>
 </head>
-
 <body>
 
     <h2>Cloud Storage & Gallery</h2>
 
     <!-- Upload Card -->
     <div class="card">
-        <h3>Upload File</h3>
-        <input type="file" id="fileInput">
-        <button id="uploadBtn">Upload File</button>
+        <h3>Upload Multiple Files</h3>
+        <!-- Added 'multiple' attribute here -->
+        <input type="file" id="fileInput" accept="image/*,.pdf" multiple>
+        <button id="uploadBtn">Upload Files</button>
         <p id="status"></p>
     </div>
 
@@ -179,37 +191,49 @@
         const refreshBtn = document.getElementById("refreshBtn");
         const fileList = document.getElementById("fileList");
 
-        // Upload Event
+        // Multi-file Upload Event
         uploadBtn.addEventListener("click", async () => {
-            const file = fileInput.files[0];
-            if (!file) {
+            const files = fileInput.files;
+            if (files.length === 0) {
                 status.style.color = "var(--danger)";
-                status.textContent = "Please select a file first!";
+                status.textContent = "Please select at least one file first!";
                 return;
             }
 
             status.style.color = "var(--primary)";
-            status.textContent = "Uploading...";
+            status.textContent = `Uploading ${files.length} file(s)...`;
 
-            const fileName = `${Date.now()}_${file.name}`;
-            const { error } = await supabase.storage.from(BUCKET_NAME).upload(fileName, file);
+            // Loop through all selected files and upload them concurrently
+            const uploadPromises = Array.from(files).map(async (file) => {
+                const fileName = `${Date.now()}_${file.name}`;
+                return await supabase.storage.from(BUCKET_NAME).upload(fileName, file);
+            });
 
-            if (error) {
+            // Wait for all uploads to finish
+            const results = await Promise.all(uploadPromises);
+            
+            // Check if any uploads failed
+            const errors = results.filter(res => res.error);
+
+            if (errors.length > 0) {
                 status.style.color = "var(--danger)";
-                status.textContent = `Error: ${error.message}`;
+                status.textContent = `Completed with ${errors.length} error(s). Check console.`;
+                console.error(errors);
             } else {
                 status.style.color = "#16a34a";
-                status.textContent = "Upload successful!";
+                status.textContent = "All files uploaded successfully!";
                 fileInput.value = "";
                 loadFiles();
             }
         });
 
-        // Load Files and Display Images / Links
+        // Load Files and Display Images, PDFs, or Links
         async function loadFiles() {
             fileList.innerHTML = "<li style='border:none; background:transparent;'>Loading files...</li>";
 
-            const { data: files, error } = await supabase.storage.from(BUCKET_NAME).list();
+            const { data: files, error } = await supabase.storage.from(BUCKET_NAME).list("", {
+                sortBy: { column: "created_at", order: "desc" }
+            });
 
             if (error) {
                 fileList.innerHTML = `<li style="color:var(--danger);">Error loading files: ${error.message}</li>`;
@@ -227,11 +251,12 @@
 
                 const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(file.name);
                 const fileUrl = data.publicUrl;
-
+                
                 const li = document.createElement("li");
 
-                // Check if file is an image format
+                // Check file types
                 const isImage = /\.(jpeg|jpg|png|webp|gif)$/i.test(file.name);
+                const isPdf = /\.pdf$/i.test(file.name);
 
                 if (isImage) {
                     const img = document.createElement("img");
@@ -239,6 +264,11 @@
                     img.alt = file.name;
                     img.className = "file-preview";
                     li.appendChild(img);
+                } else if (isPdf) {
+                    const pdfBox = document.createElement("div");
+                    pdfBox.className = "pdf-preview";
+                    pdfBox.innerHTML = `<span>📄</span> <span>PDF Document</span>`;
+                    li.appendChild(pdfBox);
                 }
 
                 // Footer containing filename link and delete button
@@ -264,7 +294,7 @@
         }
 
         // Delete Function
-        window.deleteFile = async function (fileName) {
+        window.deleteFile = async function(fileName) {
             if (!confirm(`Are you sure you want to delete ${fileName}?`)) return;
 
             const { error } = await supabase.storage.from(BUCKET_NAME).remove([fileName]);
@@ -281,5 +311,4 @@
         loadFiles();
     </script>
 </body>
-
 </html>
