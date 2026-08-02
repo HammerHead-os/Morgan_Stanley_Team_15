@@ -40,8 +40,6 @@ def update_prefs(
         prefs.sms_on = body.sms_on
     if body.whatsapp_on is not None:
         prefs.whatsapp_on = body.whatsapp_on
-    if not prefs.email_on and not prefs.sms_on and not prefs.whatsapp_on:
-        prefs.email_on = True
     db.commit()
     db.refresh(prefs)
     client = get_posthog_client()

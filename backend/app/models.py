@@ -72,7 +72,9 @@ class Household(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
-    carer_person_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    carer_person_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("people.id"), nullable=True
+    )
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     members: Mapped[list[Person]] = relationship(
@@ -80,6 +82,31 @@ class Household(Base):
     )
     registrations: Mapped[list["Registration"]] = relationship(
         back_populates="household"
+    )
+    invites: Mapped[list["HouseholdInvite"]] = relationship(
+        back_populates="household", foreign_keys="HouseholdInvite.household_id"
+    )
+
+
+class HouseholdInvite(Base):
+    __tablename__ = "household_invites"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    household_id: Mapped[int] = mapped_column(ForeignKey("households.id"))
+    invited_email: Mapped[str] = mapped_column(String(255))
+    invited_person_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("people.id"), nullable=True
+    )
+    code: Mapped[str] = mapped_column(String(64), unique=True)
+    created_by_person_id: Mapped[int] = mapped_column(ForeignKey("people.id"))
+    status: Mapped[str] = mapped_column(String(20), default="pending")
+    # pending | accepted | expired | cancelled
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    household: Mapped[Household] = relationship(
+        back_populates="invites", foreign_keys=[household_id]
     )
 
 
@@ -145,6 +172,7 @@ class Registration(Base):
     session_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     feedback: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     feedback_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    reminder_sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     activity: Mapped[Activity] = relationship(back_populates="registrations")
     household: Mapped[Optional[Household]] = relationship(back_populates="registrations")
@@ -317,6 +345,7 @@ class VolunteerShiftClaim(Base):
     claimed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     points_awarded: Mapped[int] = mapped_column(Integer, default=0)
+    reminder_sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     shift: Mapped[VolunteerShift] = relationship(back_populates="claims")
     volunteer: Mapped[VolunteerProfile] = relationship(back_populates="shifts")

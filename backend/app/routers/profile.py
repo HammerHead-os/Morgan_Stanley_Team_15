@@ -201,6 +201,35 @@ def _volunteer_metrics(
     )
 
 
+def _shared_funds(db: Session, members: list[models.Person]) -> schemas.SharedFundsOut:
+    member_ids = [m.id for m in members]
+    if not member_ids:
+        return schemas.SharedFundsOut()
+    rows = (
+        db.query(models.DonationCommitment.fund_category, models.DonationReceipt.amount_hkd)
+        .join(
+            models.DonationReceipt,
+            models.DonationReceipt.commitment_id == models.DonationCommitment.id,
+        )
+        .filter(models.DonationCommitment.supporter_person_id.in_(member_ids))
+        .all()
+    )
+    total = 0.0
+    by_category: dict[str, float] = defaultdict(float)
+    for fund_category, amount in rows:
+        amount = float(amount or 0)
+        total += amount
+        by_category[fund_category] += amount
+    return schemas.SharedFundsOut(
+        total_hkd=total,
+        gift_count=len(rows),
+        by_fund_category=[
+            schemas.FundByCategoryOut(fund_category=cat, total_hkd=amt)
+            for cat, amt in sorted(by_category.items(), key=lambda kv: -kv[1])
+        ],
+    )
+
+
 def _visible_tabs(role: str) -> list[str]:
     """Always the three profile chapters — settings live outside the tab strip."""
     return ["ability", "contribution", "impact"]
@@ -331,6 +360,7 @@ def get_profile(
             members=[_person_out(m) for m in members],
             registrations=[_registration_out(r) for r in regs],
             metrics=_family_metrics(regs, child_members),
+            shared_funds=_shared_funds(db, members),
         )
     else:
         # No household — still surface this person's own direct
@@ -350,6 +380,7 @@ def get_profile(
                 members=[_person_out(m) for m in members],
                 registrations=[_registration_out(r) for r in regs],
                 metrics=_family_metrics(regs, child_members),
+                shared_funds=_shared_funds(db, members),
             )
 
     achievement_members = child_members or ([person] if is_familyish else [])
@@ -413,7 +444,12 @@ def get_profile(
     )
     claims = []
     suggested = None
-    if has_role(person, "volunteer") or has_role(person, "corporate"):
+    # Show claims regardless of role tag — someone who's actually claimed a
+    # shift has a VolunteerProfile row (created on first claim/onboard) even
+    # if their account was never explicitly tagged with the "volunteer"
+    # role. Gating on the role alone hid real claims for any account that
+    # started as e.g. "family" and later claimed a shift.
+    if has_role(person, "volunteer") or has_role(person, "corporate") or profile:
         if not profile:
             profile = _ensure_profile(db, person)
         claims = (

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, timedelta
 import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,10 +9,32 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
+from ..email_client import frontend_url, qr_data_uri, send_email
 from ..labels import status_label
 from ..posthog_client import get_posthog_client
+from ..roles_util import ensure_role
+
+INVITE_TTL_DAYS = 7
 
 router = APIRouter(prefix="/api/family", tags=["family"])
+
+_WEEKDAY_TARGETS = {"saturday": 5, "sunday": 6}  # Monday=0 ... Sunday=6
+
+
+def _next_occurrence(day: str) -> date:
+    """The actual calendar date of this activity's next session. Classes run
+    on a fixed recurring schedule (Activity.day), so this is always computed
+    server-side — never something a registrant picks."""
+    today = date.today()
+    target = _WEEKDAY_TARGETS.get(day)
+    if target is not None:
+        return today + timedelta(days=(target - today.weekday()) % 7)
+    # "weekday" (or anything unrecognized): today if it's already Mon–Fri,
+    # otherwise the next Monday.
+    candidate = today
+    while candidate.weekday() >= 5:
+        candidate += timedelta(days=1)
+    return candidate
 
 
 def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
@@ -133,8 +155,10 @@ def register_for_activity(
         status=reg_status,
         waitlist_position=waitlist_position,
         reminder_channel=channel,
+        session_date=_next_occurrence(activity.day),
         created_at=datetime.utcnow(),
     )
+    ensure_role(person, "family")
     db.add(reg)
     db.flush()
     for a in body.attendees:
@@ -324,7 +348,68 @@ def cancel_registration(
     return _registration_out(reg)
 
 
-@router.post("/members", response_model=schemas.PersonOut)
+def _create_invite(
+    db: Session,
+    household: models.Household,
+    created_by: models.Person,
+    invited_email: str,
+    invited_person_id: int,
+) -> models.HouseholdInvite:
+    invite = models.HouseholdInvite(
+        household_id=household.id,
+        invited_email=invited_email,
+        invited_person_id=invited_person_id,
+        code=secrets.token_urlsafe(24),
+        created_by_person_id=created_by.id,
+        expires_at=datetime.utcnow() + timedelta(days=INVITE_TTL_DAYS),
+    )
+    db.add(invite)
+    return invite
+
+
+def _send_join_invite_email(household: models.Household, invite: models.HouseholdInvite) -> None:
+    link = frontend_url(f"/pages/profile.html?join_code={invite.code}")
+    qr = qr_data_uri(link)
+    text = (
+        f"You've been invited to join {household.name} on Love 21.\n\n"
+        f"Log in to your account, then open Profile and enter this code: {invite.code}\n"
+        f"Or click: {link}\n\n"
+        f"This invite expires in {INVITE_TTL_DAYS} days."
+    )
+    html = (
+        f"<p>You've been invited to join <strong>{household.name}</strong> on Love 21.</p>"
+        f"<p>Log in to your account, then open Profile and enter this code: <strong>{invite.code}</strong></p>"
+        f'<p><a href="{link}">{link}</a></p>'
+        f'<p><img src="{qr}" alt="QR code" width="180" height="180" /></p>'
+        f"<p>This invite expires in {INVITE_TTL_DAYS} days.</p>"
+    )
+    send_email(invite.invited_email, f"Join {household.name} on Love 21", text, html)
+
+
+def _send_create_account_invite_email(
+    household: models.Household, invite: models.HouseholdInvite, name: str
+) -> None:
+    link = frontend_url(f"/pages/claim-account.html?code={invite.code}")
+    qr = qr_data_uri(link)
+    text = (
+        f"{name} was added to {household.name} on Love 21.\n\n"
+        f"Create your own login so you can see and manage your bookings: {link}\n"
+        f"Your invite code: {invite.code}\n\n"
+        f"This invite expires in {INVITE_TTL_DAYS} days."
+    )
+    html = (
+        f"<p><strong>{name}</strong> was added to <strong>{household.name}</strong> on Love 21.</p>"
+        f'<p><a href="{link}">Create your account</a> so you can see and manage your bookings.</p>'
+        f"<p>Your invite code: <strong>{invite.code}</strong></p>"
+        f'<p><img src="{qr}" alt="QR code" width="180" height="180" /></p>'
+        f"<p>This invite expires in {INVITE_TTL_DAYS} days.</p>"
+    )
+    send_email(
+        invite.invited_email, f"Create your Love 21 account — {household.name}", text, html
+    )
+
+
+@router.post("/members", response_model=schemas.PersonOut | schemas.InviteOut)
 def add_family_member(
     body: schemas.FamilyMemberIn,
     person: models.Person = Depends(get_current_person),
@@ -349,14 +434,34 @@ def add_family_member(
             detail="Role must be mom, dad, caregiver, helper, or child",
         )
 
-    email = (body.email or "").strip().lower()
-    if not email:
-        slug = body.name.lower().replace(" ", ".")[:40]
-        email = f"{slug}.{person.household_id}.{secrets.token_hex(3)}@family.love21"
+    email = body.email.strip().lower()
+    household = db.get(models.Household, person.household_id)
 
     existing = db.query(models.Person).filter(models.Person.email == email).first()
+
     if existing:
-        raise HTTPException(status_code=409, detail="That email is already in use")
+        # They already have their own account — don't touch it. Invite them
+        # to join this household instead of creating a duplicate record.
+        if existing.household_id == person.household_id:
+            raise HTTPException(
+                status_code=409, detail="They're already in your household"
+            )
+        invite = _create_invite(db, household, person, email, existing.id)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(
+                status_code=409, detail="An invite is already pending for that email"
+            )
+        db.refresh(invite)
+        _send_join_invite_email(household, invite)
+        client = get_posthog_client()
+        if client:
+            client.capture(
+                "household_invite_sent", properties={"kind": "existing_account"}
+            )
+        return schemas.InviteOut(status="invited", invited_email=email)
 
     is_child = body.is_child or role == "child"
     new_roles = "member" if is_child else "family"
@@ -381,6 +486,7 @@ def add_family_member(
             opt_out_token=secrets.token_urlsafe(16),
         )
     )
+    invite = _create_invite(db, household, person, email, new_person.id)
     _log_journey(
         db,
         person.id,
@@ -388,8 +494,15 @@ def add_family_member(
         "email",
         f"member={new_person.id};role={role}",
     )
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="That email is already in use")
     db.refresh(new_person)
+    db.refresh(invite)
+
+    _send_create_account_invite_email(household, invite, new_person.name)
 
     client = get_posthog_client()
     if client:
@@ -409,4 +522,130 @@ def add_family_member(
         household_role=new_person.household_role,
         profile_code=new_person.profile_code,
         issued_at=new_person.issued_at or new_person.created_at,
+    )
+
+
+@router.delete("/members/{person_id}", response_model=schemas.PersonOut)
+def remove_family_member(
+    person_id: int,
+    person: models.Person = Depends(get_current_person),
+    db: Session = Depends(get_db),
+):
+    from ..roles_util import parse_roles
+
+    if not person.household_id:
+        raise HTTPException(status_code=400, detail="You need a household first")
+    if person.household_role == "child":
+        raise HTTPException(
+            status_code=403, detail="Ask a parent or caregiver to remove members"
+        )
+    if person_id == person.id:
+        raise HTTPException(
+            status_code=400,
+            detail="You can't remove yourself — join a different household instead",
+        )
+
+    target = db.get(models.Person, person_id)
+    if not target or target.household_id != person.household_id:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    # Removing someone shouldn't leave them stranded — spin them off into
+    # their own solo household (same shape signup() creates) and carry
+    # their own bookings with them, mirroring /join's re-parenting.
+    new_household = models.Household(
+        name=f"{target.name}'s household", carer_person_id=target.id
+    )
+    db.add(new_household)
+    db.flush()
+    target.household_id = new_household.id
+    db.query(models.Registration).filter(
+        models.Registration.member_person_id == target.id
+    ).update({models.Registration.household_id: new_household.id})
+
+    _log_journey(
+        db, person.id, "family_member_removed", "email", f"member={target.id}"
+    )
+    db.commit()
+    db.refresh(target)
+
+    client = get_posthog_client()
+    if client:
+        client.capture("family_member_removed")
+
+    return schemas.PersonOut(
+        id=target.id,
+        email=target.email,
+        name=target.name,
+        role_primary=target.role_primary,
+        roles=parse_roles(target),
+        language=target.language,
+        household_id=target.household_id,
+        household_role=target.household_role,
+        profile_code=target.profile_code,
+        issued_at=target.issued_at or target.created_at,
+    )
+
+
+@router.post("/join", response_model=schemas.PersonOut)
+def join_household(
+    body: schemas.JoinHouseholdIn,
+    person: models.Person = Depends(get_current_person),
+    db: Session = Depends(get_db),
+):
+    from ..roles_util import parse_roles
+
+    invite = (
+        db.query(models.HouseholdInvite)
+        .filter(models.HouseholdInvite.code == body.code)
+        .first()
+    )
+    if not invite:
+        raise HTTPException(status_code=404, detail="Invite not found")
+    # Only the account this invite was actually addressed to may redeem it —
+    # otherwise any logged-in account that obtains a code meant for someone
+    # else could hijack its way into an arbitrary household.
+    if invite.invited_person_id != person.id:
+        raise HTTPException(
+            status_code=403, detail="This invite isn't addressed to your account"
+        )
+    if invite.status != "pending":
+        raise HTTPException(status_code=409, detail="This invite has already been used")
+    if invite.expires_at < datetime.utcnow():
+        invite.status = "expired"
+        db.commit()
+        raise HTTPException(status_code=409, detail="This invite has expired")
+
+    old_household_id = person.household_id
+    person.household_id = invite.household_id
+    db.query(models.Registration).filter(
+        models.Registration.member_person_id == person.id
+    ).update({models.Registration.household_id: invite.household_id})
+    invite.status = "accepted"
+    invite.accepted_at = datetime.utcnow()
+
+    _log_journey(
+        db,
+        person.id,
+        "household_joined",
+        "email",
+        f"from_household={old_household_id};to_household={invite.household_id}",
+    )
+    db.commit()
+    db.refresh(person)
+
+    client = get_posthog_client()
+    if client:
+        client.capture("household_joined")
+
+    return schemas.PersonOut(
+        id=person.id,
+        email=person.email,
+        name=person.name,
+        role_primary=person.role_primary,
+        roles=parse_roles(person),
+        language=person.language,
+        household_id=person.household_id,
+        household_role=person.household_role,
+        profile_code=person.profile_code,
+        issued_at=person.issued_at or person.created_at,
     )

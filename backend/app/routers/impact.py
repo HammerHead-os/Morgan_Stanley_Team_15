@@ -8,6 +8,7 @@ from ..database import get_db
 from ..deps import get_current_person
 from ..labels import status_label
 from ..posthog_client import get_posthog_client
+from ..roles_util import ensure_role
 
 router = APIRouter(prefix="/api/impact", tags=["impact"])
 
@@ -61,6 +62,7 @@ def start_commitment(
         payment_method=body.payment_method,
         status="active",
     )
+    ensure_role(person, "donor")
     db.add(commitment)
     db.flush()
     amount = body.amount_hkd

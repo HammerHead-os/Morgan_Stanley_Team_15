@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager, nullcontext
 from pathlib import Path
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -34,7 +35,10 @@ from .routers import (
 )
 from .database import SessionLocal
 from .posthog_client import get_posthog_client, init_posthog, shutdown_posthog
+from .reminders import check_and_send_reminders
 from .seed import init_db
+
+scheduler = BackgroundScheduler()
 
 
 @asynccontextmanager
@@ -42,7 +46,12 @@ async def lifespan(app: FastAPI):
     """Initialize shared services before serving requests and flush on shutdown."""
     init_posthog()
     init_db()
+    # IntervalTrigger defaults to first-run-after-one-interval (not
+    # immediately on boot), which is what we want here.
+    scheduler.add_job(check_and_send_reminders, "interval", minutes=15, id="reminders")
+    scheduler.start()
     yield
+    scheduler.shutdown(wait=False)
     shutdown_posthog()
 
 

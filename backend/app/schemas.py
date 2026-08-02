@@ -99,6 +99,9 @@ class RegisterIn(BaseModel):
     activity_id: int
     member_person_id: Optional[int] = None  # None => registering myself
     reminder_channel: str = "email"
+    # No session_date here on purpose — classes run on a fixed recurring
+    # schedule (Activity.day), so the actual date is computed server-side
+    # (see _next_occurrence in family.py), never chosen by the client.
     attendees: list[AttendeeIn] = Field(default_factory=list)
 
 
@@ -239,6 +242,21 @@ class ClaimShiftIn(BaseModel):
     attendees: list[AttendeeIn] = Field(default_factory=list)
 
 
+class RescheduleClaimIn(BaseModel):
+    new_shift_id: int
+    # Which of the party moves to the new shift. None = everyone (default,
+    # matches the old whole-claim-moves behaviour); an explicit list picks
+    # specific attendees by their VolunteerClaimAttendee id, letting the
+    # rest of the party stay put on the original shift.
+    attendee_ids: Optional[list[int]] = None
+    include_self: bool = True
+
+
+class CancelClaimIn(BaseModel):
+    attendee_ids: Optional[list[int]] = None
+    include_self: bool = True
+
+
 class ClaimOut(OrmModel):
     id: int
     shift_id: int
@@ -334,9 +352,23 @@ class HireOut(OrmModel):
 class FamilyMemberIn(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     household_role: str = Field(min_length=2, max_length=40)
-    email: Optional[str] = Field(default=None, max_length=255)
+    email: str = Field(min_length=3, max_length=255)
     # mom | dad | caregiver | helper | child
     is_child: bool = False
+
+
+class InviteOut(BaseModel):
+    status: str
+    invited_email: str
+
+
+class JoinHouseholdIn(BaseModel):
+    code: str = Field(min_length=1, max_length=64)
+
+
+class ClaimAccountIn(BaseModel):
+    code: str = Field(min_length=1, max_length=64)
+    password: str = Field(min_length=6, max_length=200)
 
 
 class PrefsOut(OrmModel):
@@ -381,11 +413,23 @@ class FamilyMetricsOut(BaseModel):
     badges: list[RuleBadgeOut] = Field(default_factory=list)
 
 
+class FundByCategoryOut(BaseModel):
+    fund_category: str
+    total_hkd: float
+
+
+class SharedFundsOut(BaseModel):
+    total_hkd: float = 0
+    gift_count: int = 0
+    by_fund_category: list[FundByCategoryOut] = Field(default_factory=list)
+
+
 class FamilyProfileOut(BaseModel):
     household_name: str
     members: list[PersonOut]
     registrations: list[RegistrationOut]
     metrics: FamilyMetricsOut = Field(default_factory=FamilyMetricsOut)
+    shared_funds: SharedFundsOut = Field(default_factory=SharedFundsOut)
 
 
 class AchievementProfileOut(BaseModel):

@@ -937,6 +937,9 @@ def _migrate_sqlite_columns() -> None:
         ("people", "current_login_at", "DATETIME"),
         ("people", "last_login_ip", "VARCHAR(45)"),
         ("people", "locked_until", "DATETIME"),
+
+        ("registrations", "reminder_sent_at", "DATETIME"),
+        ("volunteer_shift_claims", "reminder_sent_at", "DATETIME"),
     ]
     with engine.begin() as conn:
         for table, col, decl in alters:

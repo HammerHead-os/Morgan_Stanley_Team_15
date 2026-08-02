@@ -4,3 +4,5 @@ sqlalchemy>=2.0.25
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
 posthog==7.35.4
+apscheduler>=3.10.4
+qrcode[pil]>=7.4.2
