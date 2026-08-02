@@ -506,7 +506,7 @@ def get_profile(
     calendar_events: list[schemas.CalendarEventOut] = []
     if family:
         for r in family.registrations:
-            if not r.session_date:
+            if not r.session_date or r.status == "cancelled":
                 continue
             calendar_events.append(
                 schemas.CalendarEventOut(
@@ -541,7 +541,7 @@ def get_profile(
     )
     for claim in calendar_claims:
         shift = claim.shift
-        if not shift:
+        if not shift or claim.status == "cancelled":
             continue
         if shift.remote:
             if claim.status != "completed" or not claim.completed_at:

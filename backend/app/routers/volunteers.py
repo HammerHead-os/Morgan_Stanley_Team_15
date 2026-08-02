@@ -96,6 +96,7 @@ def _claim_out(claim: models.VolunteerShiftClaim) -> schemas.ClaimOut:
     available = points_for_minutes(duration) if claim.status == "claimed" else 0
     remote = bool(shift.remote) if shift else True
     scheduled = None if remote else (shift.scheduled_date if shift else None)
+    scheduled_time = None if remote else (shift.scheduled_time if shift else None)
     return schemas.ClaimOut(
         id=claim.id,
         shift_id=claim.shift_id,
@@ -113,6 +114,7 @@ def _claim_out(claim: models.VolunteerShiftClaim) -> schemas.ClaimOut:
         duration_min=duration,
         remote=remote,
         scheduled_date=scheduled,
+        scheduled_time=scheduled_time,
         attendees=[schemas.AttendeeOut.model_validate(a) for a in claim.attendees],
     )
 

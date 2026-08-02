@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Optional
 
 from sqlalchemy import (
@@ -11,6 +11,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    Time,
     UniqueConstraint,
     text,
 )
@@ -137,6 +138,11 @@ class Activity(Base):
     capacity: Mapped[int] = mapped_column(Integer, default=10)
     spots_left: Mapped[int] = mapped_column(Integer, default=10)
     location: Mapped[str] = mapped_column(String(200), default="San Po Kong")
+    scheduled_time: Mapped[Optional[time]] = mapped_column(Time, nullable=True)
+    # One-off session on this exact date instead of the recurring `day`
+    # pattern (e.g. a special one-time class) — when set, registration uses
+    # this date directly instead of computing the next recurring occurrence.
+    fixed_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
 
     registrations: Mapped[list["Registration"]] = relationship(
         back_populates="activity"
@@ -322,6 +328,7 @@ class VolunteerShift(Base):
     spots_left: Mapped[int] = mapped_column(Integer, default=5)
     requires_onboarding: Mapped[bool] = mapped_column(Boolean, default=False)
     scheduled_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    scheduled_time: Mapped[Optional[time]] = mapped_column(Time, nullable=True)
 
     claims: Mapped[list["VolunteerShiftClaim"]] = relationship(back_populates="shift")
 

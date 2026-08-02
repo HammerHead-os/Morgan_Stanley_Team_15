@@ -1,5 +1,5 @@
 import secrets
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -123,6 +123,7 @@ def seed(db: Session) -> None:
             language="both",
             capacity=12,
             spots_left=2,
+            scheduled_time=time(10, 0),
         ),
         models.Activity(
             title="One-on-one nutrition",
@@ -134,6 +135,7 @@ def seed(db: Session) -> None:
             language="yue",
             capacity=4,
             spots_left=0,
+            scheduled_time=time(15, 30),
         ),
         models.Activity(
             title="Yoga & stretch",
@@ -145,6 +147,7 @@ def seed(db: Session) -> None:
             language="en",
             capacity=15,
             spots_left=8,
+            scheduled_time=time(9, 0),
         ),
         models.Activity(
             title="Parent counselling circle",
@@ -156,6 +159,7 @@ def seed(db: Session) -> None:
             language="yue",
             capacity=20,
             spots_left=11,
+            scheduled_time=time(11, 0),
         ),
         models.Activity(
             title="Ball sports clinic",
@@ -167,6 +171,7 @@ def seed(db: Session) -> None:
             language="both",
             capacity=10,
             spots_left=0,
+            scheduled_time=time(16, 0),
         ),
         models.Activity(
             title="Cooking together",
@@ -178,6 +183,46 @@ def seed(db: Session) -> None:
             language="en",
             capacity=8,
             spots_left=3,
+            scheduled_time=time(13, 0),
+        ),
+        models.Activity(
+            title="Pottery workshop",
+            description="Hand-building basics · all levels welcome · San Po Kong studio.",
+            goal="arts",
+            age_band="adult",
+            day="weekday",
+            support_need="group",
+            language="both",
+            capacity=10,
+            spots_left=10,
+            fixed_date=date.today() + timedelta(days=2),
+            scheduled_time=time(16, 45),
+        ),
+        models.Activity(
+            title="Dance session",
+            description="Beginner-friendly movement class · bilingual instructor.",
+            goal="sport",
+            age_band="teen",
+            day="weekday",
+            support_need="group",
+            language="both",
+            capacity=12,
+            spots_left=12,
+            fixed_date=date.today() + timedelta(days=2),
+            scheduled_time=time(17, 15),
+        ),
+        models.Activity(
+            title="Painting class",
+            description="Guided watercolour session · materials provided.",
+            goal="arts",
+            age_band="child",
+            day="weekday",
+            support_need="low",
+            language="both",
+            capacity=10,
+            spots_left=10,
+            fixed_date=date.today() + timedelta(days=2),
+            scheduled_time=time(17, 45),
         ),
     ]
     db.add_all(activities)
@@ -319,6 +364,7 @@ def seed(db: Session) -> None:
             remote=True,
             spots_left=3,
             scheduled_date=None,
+            scheduled_time=time(10, 0),
         ),
         models.VolunteerShift(
             title="Photo sort",
@@ -329,6 +375,7 @@ def seed(db: Session) -> None:
             remote=True,
             spots_left=2,
             scheduled_date=None,
+            scheduled_time=time(14, 0),
         ),
         models.VolunteerShift(
             title="Voice cheers",
@@ -339,28 +386,91 @@ def seed(db: Session) -> None:
             remote=True,
             spots_left=5,
             scheduled_date=None,
+            scheduled_time=time(18, 0),
         ),
         models.VolunteerShift(
-            title="Kitchen prep · Saturday",
-            description="Help set tables and label snack boxes before the banquet.",
-            duration_min=90,
-            skills_needed="sports",
+            title="Banquet evening setup",
+            description="Arrive by 7:15pm to help set up chairs and decorations for the evening banquet.",
+            duration_min=60,
+            skills_needed="events",
             language="both",
             remote=False,
             spots_left=4,
             requires_onboarding=False,
-            scheduled_date=date.today() + timedelta(days=5),
+            scheduled_date=date.today() + timedelta(days=1),
+            scheduled_time=time(19, 15),
         ),
         models.VolunteerShift(
-            title="Track day helper",
-            description="Hand out water and cheer on the straight at San Po Kong.",
-            duration_min=120,
-            skills_needed="sports",
+            title="Banquet evening setup",
+            description="7:20pm slot: help set up chairs and decorations for the evening banquet.",
+            duration_min=60,
+            skills_needed="events",
             language="both",
             remote=False,
-            spots_left=6,
+            spots_left=4,
             requires_onboarding=False,
-            scheduled_date=date.today() + timedelta(days=12),
+            scheduled_date=date.today() + timedelta(days=1),
+            scheduled_time=time(19, 20),
+        ),
+        models.VolunteerShift(
+            title="Banquet evening setup",
+            description="7:25pm slot: help set up chairs and decorations for the evening banquet.",
+            duration_min=60,
+            skills_needed="events",
+            language="both",
+            remote=False,
+            spots_left=4,
+            requires_onboarding=False,
+            scheduled_date=date.today() + timedelta(days=1),
+            scheduled_time=time(19, 25),
+        ),
+        models.VolunteerShift(
+            title="Banquet evening setup",
+            description="7:30pm slot: help set up chairs and decorations for the evening banquet.",
+            duration_min=60,
+            skills_needed="events",
+            language="both",
+            remote=False,
+            spots_left=4,
+            requires_onboarding=False,
+            scheduled_date=date.today() + timedelta(days=1),
+            scheduled_time=time(19, 30),
+        ),
+        models.VolunteerShift(
+            title="Registration desk help",
+            description="4:30pm–5:00pm slot: greet guests and hand out name badges at check-in.",
+            duration_min=30,
+            skills_needed="events",
+            language="both",
+            remote=False,
+            spots_left=2,
+            requires_onboarding=False,
+            scheduled_date=date.today() + timedelta(days=2),
+            scheduled_time=time(16, 30),
+        ),
+        models.VolunteerShift(
+            title="Registration desk help",
+            description="5:00pm–5:30pm slot: greet guests and hand out name badges at check-in.",
+            duration_min=30,
+            skills_needed="events",
+            language="both",
+            remote=False,
+            spots_left=2,
+            requires_onboarding=False,
+            scheduled_date=date.today() + timedelta(days=2),
+            scheduled_time=time(17, 0),
+        ),
+        models.VolunteerShift(
+            title="Registration desk help",
+            description="5:30pm–6:00pm slot: greet guests and hand out name badges at check-in.",
+            duration_min=30,
+            skills_needed="events",
+            language="both",
+            remote=False,
+            spots_left=2,
+            requires_onboarding=False,
+            scheduled_date=date.today() + timedelta(days=2),
+            scheduled_time=time(17, 30),
         ),
         models.VolunteerShift(
             title="Session buddy · swimming",
@@ -372,6 +482,7 @@ def seed(db: Session) -> None:
             spots_left=2,
             requires_onboarding=True,
             scheduled_date=date.today() + timedelta(days=19),
+            scheduled_time=time(10, 0),
         ),
     ]
     db.add_all(shifts)
@@ -730,11 +841,11 @@ def _ensure_profile_demo_data(db: Session) -> None:
         )
 
     historical_shifts = [
-        ("Family sports day welcome", 120, today - timedelta(days=100), 2.0, 50),
-        ("Nutrition workshop support", 180, today - timedelta(days=72), 3.0, 60),
-        ("Open day photography", 240, today - timedelta(days=38), 4.0, 80),
+        ("Family sports day welcome", 120, today - timedelta(days=100), 2.0, 50, time(9, 0)),
+        ("Nutrition workshop support", 180, today - timedelta(days=72), 3.0, 60, time(13, 30)),
+        ("Open day photography", 240, today - timedelta(days=38), 4.0, 80, time(11, 0)),
     ]
-    for title, duration, scheduled, hours, points in historical_shifts:
+    for title, duration, scheduled, hours, points, shift_time in historical_shifts:
         shift = db.query(models.VolunteerShift).filter_by(title=title).first()
         if not shift:
             shift = models.VolunteerShift(
@@ -747,6 +858,7 @@ def _ensure_profile_demo_data(db: Session) -> None:
                 spots_left=0,
                 requires_onboarding=False,
                 scheduled_date=scheduled,
+                scheduled_time=shift_time,
             )
             db.add(shift)
             db.flush()
@@ -844,7 +956,7 @@ def _ensure_profile_demo_data(db: Session) -> None:
     jamie_claims = [
         ("Family sports day welcome", "completed", 2.0, 50),
         ("Open day photography", "completed", 4.0, 80),
-        ("Kitchen prep · Saturday", "claimed", 1.5, 0),
+        ("Banquet evening setup", "claimed", 1.0, 0),
     ]
     for title, claim_status, hours, points in jamie_claims:
         shift = db.query(models.VolunteerShift).filter_by(title=title).first()
@@ -939,7 +1051,14 @@ def _migrate_sqlite_columns() -> None:
         ("people", "locked_until", "DATETIME"),
 
         ("registrations", "reminder_sent_at", "DATETIME"),
+        ("registrations", "party_size", "INTEGER DEFAULT 1"),
+        ("registrations", "household_id", "INTEGER"),
+        ("registrations", "session_date", "DATE"),
+        ("registrations", "feedback_at", "DATETIME"),
         ("volunteer_shift_claims", "reminder_sent_at", "DATETIME"),
+        ("volunteer_shifts", "scheduled_time", "TIME"),
+        ("activities", "scheduled_time", "TIME"),
+        ("activities", "fixed_date", "DATE"),
     ]
     with engine.begin() as conn:
         for table, col, decl in alters:
@@ -973,57 +1092,3 @@ def _migrate_sqlite_columns() -> None:
                 """
             )
         )
-        # Add dated in-person tasks if missing (existing DBs)
-        existing = {
-            r[0]
-            for r in conn.execute(text("SELECT title FROM volunteer_shifts")).fetchall()
-        }
-        extras = [
-            (
-                "Kitchen prep · Saturday",
-                "Help set tables and label snack boxes before the banquet.",
-                90,
-                "sports",
-                "both",
-                0,
-                4,
-                0,
-                "date('now', '+5 days')",
-            ),
-            (
-                "Track day helper",
-                "Hand out water and cheer on the straight at San Po Kong.",
-                120,
-                "sports",
-                "both",
-                0,
-                6,
-                0,
-                "date('now', '+12 days')",
-            ),
-        ]
-        for title, desc, mins, skills, lang, remote, spots, onboard, when_sql in extras:
-            if title in existing:
-                continue
-            conn.execute(
-                text(
-                    f"""
-                    INSERT INTO volunteer_shifts
-                    (title, description, duration_min, skills_needed, language,
-                     remote, spots_left, requires_onboarding, scheduled_date)
-                    VALUES
-                    (:title, :desc, :mins, :skills, :lang,
-                     :remote, :spots, :onboard, {when_sql})
-                    """
-                ),
-                {
-                    "title": title,
-                    "desc": desc,
-                    "mins": mins,
-                    "skills": skills,
-                    "lang": lang,
-                    "remote": remote,
-                    "spots": spots,
-                    "onboard": onboard,
-                },
-            )

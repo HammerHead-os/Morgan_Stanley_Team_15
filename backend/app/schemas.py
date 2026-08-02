@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -85,6 +85,8 @@ class ActivityOut(OrmModel):
     capacity: int
     spots_left: int
     location: str
+    scheduled_time: Optional[time] = None
+    fixed_date: Optional[date] = None
 
 
 class AttendeeIn(BaseModel):
@@ -126,6 +128,7 @@ class RegistrationOut(OrmModel):
     reminder_channel: str
     created_at: datetime
     session_date: Optional[date] = None
+    scheduled_time: Optional[time] = None
     feedback: Optional[str] = None
     activity_title: Optional[str] = None
     activity_location: Optional[str] = None
@@ -235,6 +238,7 @@ class VolunteerShiftOut(OrmModel):
     spots_left: int
     requires_onboarding: bool
     scheduled_date: Optional[date] = None
+    scheduled_time: Optional[time] = None
 
 
 class ClaimShiftIn(BaseModel):
@@ -274,6 +278,7 @@ class ClaimOut(OrmModel):
     duration_min: Optional[int] = None
     remote: bool = True
     scheduled_date: Optional[date] = None
+    scheduled_time: Optional[time] = None
     attendees: list[AttendeeOut] = []
 
 

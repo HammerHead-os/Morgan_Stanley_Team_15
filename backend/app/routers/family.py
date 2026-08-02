@@ -12,6 +12,7 @@ from ..deps import get_current_person
 from ..email_client import frontend_url, qr_data_uri, send_email
 from ..labels import status_label
 from ..posthog_client import get_posthog_client
+from ..reminders import _all_recipients
 from ..roles_util import ensure_role
 
 INVITE_TTL_DAYS = 7
@@ -37,6 +38,12 @@ def _next_occurrence(day: str) -> date:
     return candidate
 
 
+def _session_date_for(activity: models.Activity) -> date:
+    """A one-off activity (fixed_date set) always happens on that exact
+    date; a recurring one falls back to the next matching weekday."""
+    return activity.fixed_date or _next_occurrence(activity.day)
+
+
 def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
     label = status_label(reg.status)
     if reg.status == "waitlist" and reg.waitlist_position:
@@ -53,6 +60,7 @@ def _registration_out(reg: models.Registration) -> schemas.RegistrationOut:
         reminder_channel=reg.reminder_channel,
         created_at=reg.created_at,
         session_date=reg.session_date,
+        scheduled_time=reg.activity.scheduled_time if reg.activity else None,
         feedback=reg.feedback,
         activity_title=reg.activity.title if reg.activity else None,
         activity_location=reg.activity.location if reg.activity else None,
@@ -155,7 +163,7 @@ def register_for_activity(
         status=reg_status,
         waitlist_position=waitlist_position,
         reminder_channel=channel,
-        session_date=_next_occurrence(activity.day),
+        session_date=_session_date_for(activity),
         created_at=datetime.utcnow(),
     )
     ensure_role(person, "family")
@@ -328,6 +336,19 @@ def cancel_registration(
                 }
             )
         )
+
+    if activity:
+        when_text = (
+            f"{reg.session_date} at {activity.scheduled_time.strftime('%-I:%M %p')}"
+            if reg.session_date and activity.scheduled_time
+            else str(reg.session_date or "")
+        )
+        for name, email in _all_recipients(
+            db, reg.household_id, reg.member_person_id, reg.attendees
+        ):
+            text = f'Hi {name}, your booking for "{activity.title}"{" on " + when_text if when_text else ""} has been cancelled.'
+            html = f'<p>Hi {name}, your booking for <strong>{activity.title}</strong>{" on " + when_text if when_text else ""} has been cancelled.</p>'
+            send_email(email, f"Cancelled: {activity.title}", text, html)
 
     _log_journey(
         db,
