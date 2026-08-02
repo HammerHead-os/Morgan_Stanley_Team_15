@@ -1285,8 +1285,8 @@ p {
 /* ——— Floating Donate button (persistent, every page) ——— */
 .floating-donate {
   position: fixed;
-  left: 1.25rem;
-  top: calc(var(--nav-h) + 1rem);
+  right: 1.25rem;
+  bottom: calc(1.25rem + 62px + 1rem);
   z-index: 40;
   display: inline-flex;
   align-items: center;
@@ -1320,8 +1320,8 @@ p {
 
 @media (max-width: 640px) {
   .floating-donate {
-    left: 0.85rem;
-    top: calc(var(--nav-h) + 0.75rem);
+    right: 0.75rem;
+    bottom: calc(0.75rem + 56px + 0.75rem);
     padding: 0.65rem 1.05rem;
     font-size: 0.88rem;
   }
