@@ -94,11 +94,11 @@ def _send_registration_reminders(db, window_start, window_end):
         if not (window_start <= target <= window_end):
             continue
         title = activity.title if activity else "your class"
-        when_text = (
-            f"{reg.session_date} at {scheduled_time.strftime('%-I:%M %p')}"
-            if scheduled_time
-            else str(reg.session_date)
-        )
+        if scheduled_time:
+            time_str = scheduled_time.strftime("%I:%M %p").lstrip("0")
+            when_text = f"{reg.session_date} at {time_str}"
+        else:
+            when_text = str(reg.session_date)
         for name, email in _all_recipients(
             db, reg.household_id, reg.member_person_id, reg.attendees
         ):
