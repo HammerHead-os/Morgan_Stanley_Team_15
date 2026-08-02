@@ -1,4 +1,4 @@
-backend/love21.db
+
 backend/**/__pycache__/
 *.pyc
 .venv/
