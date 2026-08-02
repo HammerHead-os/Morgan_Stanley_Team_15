@@ -138,11 +138,11 @@ def _send_volunteer_reminders(db, window_start, window_end):
         if not (window_start <= target <= window_end):
             continue
         title = shift.title
-        when_text = (
-            f"{shift.scheduled_date} at {shift.scheduled_time.strftime('%-I:%M %p')}"
-            if shift.scheduled_time
-            else str(shift.scheduled_date)
-        )
+        if shift.scheduled_time:
+            time_str = shift.scheduled_time.strftime("%I:%M %p").lstrip("0")
+            when_text = f"{shift.scheduled_date} at {time_str}"
+        else:
+            when_text = str(shift.scheduled_date)
         profile = db.get(models.VolunteerProfile, claim.volunteer_profile_id)
         person = db.get(models.Person, profile.person_id) if profile else None
         if person:
