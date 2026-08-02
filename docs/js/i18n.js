@@ -725,28 +725,17 @@
   }
 
   function injectLanguageSwitchers() {
-    document.querySelectorAll(".site-nav [data-language-switcher]").forEach(function (switcher) {
-      const item = switcher.closest(".nav-language-item");
-      (item || switcher).remove();
-    });
-    document.querySelectorAll(".site-footer").forEach(function (footer) {
-      const target = footer.querySelector(".footer-bottom") || footer;
-      if (target.querySelector("[data-language-switcher]")) return;
-      const wrap = document.createElement("div");
-      wrap.className = "footer-language";
-      wrap.setAttribute("data-language-switcher", "");
-      wrap.setAttribute("aria-label", "Language");
-      wrap.innerHTML =
-        '<span class="footer-language-label">Language</span>' +
-        '<button type="button" class="footer-language-button" data-language-choice="en" aria-pressed="false">EN</button>' +
-        '<span aria-hidden="true">/</span>' +
-        '<button type="button" class="footer-language-button" data-language-choice="zh-Hant" aria-pressed="false">繁</button>';
-      const copyright = target.firstElementChild;
-      if (copyright && copyright.nextSibling) {
-        target.insertBefore(wrap, copyright.nextSibling);
-      } else {
-        target.appendChild(wrap);
-      }
+    document.querySelectorAll(".site-nav .nav-links").forEach(function (navLinks) {
+      if (navLinks.querySelector("[data-language-switcher]")) return;
+      const item = document.createElement("li");
+      item.className = "nav-language-item";
+      item.setAttribute("data-language-switcher", "");
+      item.setAttribute("aria-label", "Language");
+      item.innerHTML =
+        '<button type="button" class="nav-language-button" data-language-choice="en" aria-pressed="false">EN</button>' +
+        '<span aria-hidden="true">|</span>' +
+        '<button type="button" class="nav-language-button" data-language-choice="zh-Hant" aria-pressed="false">繁</button>';
+      navLinks.appendChild(item);
     });
   }
 

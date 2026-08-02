@@ -176,6 +176,35 @@ p {
   color: var(--ink);
 }
 
+.nav-language-item {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.25rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.nav-language-button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.nav-language-button:hover,
+.nav-language-button:focus-visible,
+.nav-language-button[aria-pressed="true"] {
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .nav-cta {
   background: var(--ink) !important;
   color: var(--paper) !important;
@@ -1253,6 +1282,51 @@ p {
   box-shadow: 0 8px 24px rgba(20, 35, 31, 0.06);
 }
 
+/* ——— Floating Donate button (persistent, every page) ——— */
+.floating-donate {
+  position: fixed;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--coral);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.3rem;
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(232, 93, 76, 0.4);
+  text-decoration: none;
+  transition: transform var(--ease), box-shadow var(--ease);
+}
+
+.floating-donate:hover,
+.floating-donate:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(232, 93, 76, 0.48);
+  color: #fff;
+}
+
+.floating-donate span {
+  display: inline-block;
+  transition: transform var(--ease);
+}
+
+.floating-donate:hover span {
+  transform: translateX(3px);
+}
+
+@media (max-width: 640px) {
+  .floating-donate {
+    left: 0.85rem;
+    bottom: 0.85rem;
+    padding: 0.65rem 1.05rem;
+    font-size: 0.88rem;
+  }
+}
+
 /* ——— Profile section accordions (bookings / family members) ——— */
 .profile-accordion summary {
   display: flex;
@@ -1708,43 +1782,6 @@ p {
   font-size: 0.82rem;
 }
 
-.footer-language {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  margin-right: auto;
-  padding: 0.12rem 0.45rem;
-  color: var(--ink-soft);
-  white-space: nowrap;
-}
-
-.footer-language-label {
-  margin-right: 0.1rem;
-  font-size: 0.78rem;
-}
-
-.footer-language-button {
-  appearance: none;
-  border: 0;
-  padding: 0.05rem 0.18rem;
-  background: transparent;
-  color: var(--ink-soft);
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.footer-language-button:hover,
-.footer-language-button:focus-visible,
-.footer-language-button[aria-pressed="true"] {
-  color: var(--teal-deep);
-}
-
-.footer-language-button[aria-pressed="true"] {
-  font-weight: 700;
-}
-
 body.page-gate .site-footer-home {
   position: relative;
   z-index: 1;
@@ -1755,17 +1792,6 @@ body.page-gate .site-footer-home {
 
 body.page-gate .site-footer-home .footer-bottom {
   border-top: 0;
-}
-
-body.page-gate .site-footer-home .footer-language,
-body.page-gate .site-footer-home .footer-language-button {
-  color: rgba(245, 247, 246, 0.82);
-}
-
-body.page-gate .site-footer-home .footer-language-button:hover,
-body.page-gate .site-footer-home .footer-language-button:focus-visible,
-body.page-gate .site-footer-home .footer-language-button[aria-pressed="true"] {
-  color: #fff;
 }
 
 .site-footer a:hover {
@@ -2251,6 +2277,20 @@ body.page-gate .site-nav-gate .nav-links a.nav-session {
 
 body.page-gate .site-nav-gate .nav-links a:hover,
 body.page-gate .site-nav-gate .nav-links a[aria-current="page"] {
+  color: #fff;
+}
+
+body.page-gate .site-nav-gate .nav-language-item {
+  border-left-color: rgba(245, 247, 246, 0.3);
+}
+
+body.page-gate .site-nav-gate .nav-language-button {
+  color: rgba(245, 247, 246, 0.82);
+}
+
+body.page-gate .site-nav-gate .nav-language-button:hover,
+body.page-gate .site-nav-gate .nav-language-button:focus-visible,
+body.page-gate .site-nav-gate .nav-language-button[aria-pressed="true"] {
   color: #fff;
 }
 

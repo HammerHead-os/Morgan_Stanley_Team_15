@@ -59,7 +59,6 @@
           <li><a href="about.html">About</a></li>
           <li><a href="resources.html">Resources</a></li>
           <li><a href="contact.html">Contact</a></li>
-          <li><a href="impact.html">Donations</a></li>
           <li><a class="nav-session" data-session href="profile.html" aria-current="page">…</a></li>
         </ul>
       </div>
@@ -253,29 +252,34 @@
         </section>
 
         <section class="panel-soft mt-2" id="my-tasks">
-          <div class="section-head" style="margin-bottom: 0.75rem">
-            <h2>My tasks</h2>
-          </div>
-          <div class="points-bar" data-points-bar hidden>
-            <div>
-              <strong data-points-balance>0</strong>
-              <span class="muted"> points</span>
+          <details class="profile-accordion">
+            <summary>
+              <h2>My tasks</h2>
+              <span class="profile-accordion-caret" aria-hidden="true">+</span>
+            </summary>
+            <div class="profile-accordion-body">
+              <div class="points-bar" data-points-bar hidden>
+                <div>
+                  <strong data-points-balance>0</strong>
+                  <span class="muted"> points</span>
+                </div>
+                <p class="muted" style="margin: 0; font-size: 0.88rem">
+                  Finish tasks to earn points. Redeem below.
+                </p>
+              </div>
+              <div class="async-tasks" data-async-tasks hidden>
+                <h3 class="task-group-title" style="margin-top: 0">Async tasks</h3>
+                <ul data-async-list></ul>
+              </div>
+              <div data-my-tasks>
+                <p class="muted">Loading…</p>
+              </div>
+              <div class="redeem-block mt-1" data-redeem-block hidden>
+                <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem">Redeem</h3>
+                <div class="redeem-grid" data-redeem-grid></div>
+              </div>
             </div>
-            <p class="muted" style="margin: 0; font-size: 0.88rem">
-              Finish tasks to earn points. Redeem below.
-            </p>
-          </div>
-          <div class="async-tasks" data-async-tasks hidden>
-            <h3 class="task-group-title" style="margin-top: 0">Async tasks</h3>
-            <ul data-async-list></ul>
-          </div>
-          <div data-my-tasks>
-            <p class="muted">Loading…</p>
-          </div>
-          <div class="redeem-block mt-1" data-redeem-block hidden>
-            <h3 style="font-size: 1.05rem; margin-bottom: 0.5rem">Redeem</h3>
-            <div class="redeem-grid" data-redeem-grid></div>
-          </div>
+          </details>
         </section>
 
         <section
@@ -312,7 +316,7 @@
         </section>
 
         <section id="member-management" class="panel-soft mt-2" data-family-section hidden>
-          <details class="profile-accordion" open>
+          <details class="profile-accordion">
             <summary>
               <h2>Bookings</h2>
               <span class="profile-accordion-caret" aria-hidden="true">+</span>

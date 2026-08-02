@@ -123,6 +123,17 @@
       : "assets/media/love21-logo.png";
   }
 
+  // Persistent floating Donate button, present on every page (replaces the
+  // old "Donations" nav tab with a more visible, always-reachable call to give).
+  if (!qs(".floating-donate")) {
+    const inPagesDirectory = window.location.pathname.includes("/pages/");
+    const donateLink = document.createElement("a");
+    donateLink.className = "floating-donate";
+    donateLink.href = inPagesDirectory ? "impact.html" : "pages/impact.html";
+    donateLink.innerHTML = "Donate <span aria-hidden=\"true\">→</span>";
+    document.body.appendChild(donateLink);
+  }
+
   const toggle = qs(".nav-toggle");
   const links = qs(".nav-links");
   if (toggle && links) {
