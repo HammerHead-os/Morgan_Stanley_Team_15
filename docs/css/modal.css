@@ -102,10 +102,29 @@
   font-weight: 500;
 }
 
-.l21-checkbox-group label {
-  display: block;
+.l21-checkbox-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.l21-checkbox-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 500;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0;
+  width: auto;
+}
+
+.l21-checkbox-options input[type="checkbox"],
+.l21-checkbox-options input[type="radio"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  padding: 0;
+  border-radius: 4px;
+  flex: none;
+  accent-color: var(--teal);
 }
 
 .l21-attendee-row {

@@ -199,6 +199,16 @@
     }
   }
 
+  function fmtActivityTime(hms) {
+    if (!hms) return "";
+    const parts = String(hms).split(":");
+    let h = parseInt(parts[0], 10);
+    const m = parts[1] || "00";
+    const suffix = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return h + ":" + m + " " + suffix;
+  }
+
   function renderActivities(list) {
     const empty = qs("[data-empty]");
     if (!list.length) {
@@ -212,6 +222,7 @@
         const full = a.spots_left <= 0;
         const action = full ? "Join waitlist" : "Register";
         const btnClass = full ? "btn-ink" : "btn-primary";
+        const timeText = fmtActivityTime(a.scheduled_time);
         return (
           '<article class="activity" data-activity-id="' +
           a.id +
@@ -222,6 +233,7 @@
           "</span>" +
           '<span class="tag">' +
           a.day +
+          (timeText ? " · " + timeText : "") +
           "</span>" +
           (full
             ? '<span class="tag tag-coral">Full</span>'
@@ -241,6 +253,10 @@
           escapeHtml(a.title) +
           '" data-activity-day="' +
           escapeHtml(a.day) +
+          '" data-activity-fixed-date="' +
+          escapeHtml(a.fixed_date || "") +
+          '" data-activity-time="' +
+          escapeHtml(a.scheduled_time || "") +
           '">' +
           action +
           "</button></article>"
@@ -256,6 +272,8 @@
       const activityId = Number(regBtn.getAttribute("data-register"));
       const activityTitle = regBtn.getAttribute("data-activity-title") || "this class";
       const activityDay = regBtn.getAttribute("data-activity-day") || "weekday";
+      const activityFixedDate = regBtn.getAttribute("data-activity-fixed-date") || "";
+      const activityScheduledTime = regBtn.getAttribute("data-activity-time") || "";
       const actionLabel = regBtn.textContent.trim();
       try {
         await L.requireLogin(async function (person) {
@@ -282,7 +300,9 @@
             actionLabel,
             householdMembers,
             person,
-            activityDay
+            activityDay,
+            activityFixedDate,
+            activityScheduledTime
           );
           if (!result) return; // cancelled
           const msg =

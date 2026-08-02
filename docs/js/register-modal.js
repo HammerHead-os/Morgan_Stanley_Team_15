@@ -46,6 +46,16 @@
     });
   }
 
+  function fmtTime(hms) {
+    if (!hms) return "";
+    const parts = String(hms).split(":");
+    let h = parseInt(parts[0], 10);
+    const m = parts[1] || "00";
+    const suffix = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return h + ":" + m + " " + suffix;
+  }
+
   // Attendee name/phone values typed by the user are re-inserted into
   // value="..." attributes whenever the party-size input changes (so people
   // don't lose what they typed). Escape them, or a stray `"` in someone's
@@ -63,7 +73,7 @@
     return escapeAttr(s).replace(/'/g, "&#39;");
   }
 
-  function attendeeRow(i, name, phone, role) {
+  function attendeeRow(i, name, phone, role, email) {
     const isGuardian = role === "guardian";
     return (
       '<div class="l21-attendee-row" data-row="' +
@@ -76,13 +86,15 @@
       '" value="' +
       escapeAttr(name) +
       '" required /></label>' +
-      '<label class="l21-field"><span>Phone</span><input type="tel" name="phone_' +
+      '<label class="l21-field"><span>Email</span><input type="email" name="email_' +
+      i +
+      '" value="' +
+      escapeAttr(email) +
+      '" required /></label>' +
+      '<label class="l21-field"><span>Phone (optional)</span><input type="tel" name="phone_' +
       i +
       '" value="' +
       escapeAttr(phone) +
-      '" required /></label>' +
-      '<label class="l21-field"><span>Email (optional)</span><input type="email" name="email_' +
-      i +
       '" /></label>' +
       '<label class="l21-field"><span>Age (optional)</span><input type="number" min="0" max="120" name="age_' +
       i +
@@ -149,14 +161,15 @@
       const select = row.querySelector("select");
       existing.push({
         name: inputs[0].value,
-        phone: inputs[1].value,
+        email: inputs[1].value,
+        phone: inputs[2].value,
         role: select ? select.value : "participant",
       });
     });
     let out = "";
     for (let i = 0; i < extraCount; i++) {
       const prev = existing[i] || {};
-      out += attendeeRow(i, prev.name, prev.phone, prev.role);
+      out += attendeeRow(i, prev.name, prev.phone, prev.role, prev.email);
     }
     box.innerHTML = out;
   }
@@ -188,7 +201,7 @@
       const roleSel = form["role_" + i];
       attendees.push({
         full_name: form["name_" + i].value.trim(),
-        phone: form["phone_" + i].value.trim(),
+        phone: (form["phone_" + i] && form["phone_" + i].value.trim()) || null,
         email: (form["email_" + i] && form["email_" + i].value.trim()) || null,
         age: form["age_" + i] && form["age_" + i].value ? Number(form["age_" + i].value) : null,
         role: roleSel ? roleSel.value : "participant",
@@ -229,7 +242,17 @@
     return opts;
   }
 
-  function open(id, activityTitle, defaultMember, actionLabel, householdMembers, selfPerson, activityDay) {
+  function open(
+    id,
+    activityTitle,
+    defaultMember,
+    actionLabel,
+    householdMembers,
+    selfPerson,
+    activityDay,
+    activityFixedDate,
+    activityScheduledTime
+  ) {
     activityId = id;
     memberOptions = buildMemberOptions(
       defaultMember,
@@ -237,7 +260,11 @@
       selfPerson || defaultMember
     );
     selectedMemberId = defaultMember ? defaultMember.id : (selfPerson || {}).id;
-    sessionDateText = fmtSessionDate(nextOccurrence(activityDay || "weekday"));
+    const sessionDate = activityFixedDate
+      ? new Date(activityFixedDate + "T12:00:00")
+      : nextOccurrence(activityDay || "weekday");
+    const timeText = fmtTime(activityScheduledTime);
+    sessionDateText = fmtSessionDate(sessionDate) + (timeText ? " · " + timeText : "");
     ensureBuilt();
     const form = backdrop.querySelector("[data-l21-register-form]");
     form.reset();

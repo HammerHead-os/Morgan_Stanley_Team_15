@@ -248,8 +248,19 @@
   calCursor.setDate(1);
   let calAligned = false;
 
+  function fmtTime(hms) {
+    if (!hms) return "";
+    const parts = String(hms).split(":");
+    let h = parseInt(parts[0], 10);
+    const m = parts[1] || "00";
+    const suffix = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return h + ":" + m + " " + suffix;
+  }
+
   function fmtTaskWhen(c) {
     if (c.remote || !c.scheduled_date) return "Async · do anytime";
+    const timeText = fmtTime(c.scheduled_time);
     try {
       return (
         "In person · " +
@@ -257,10 +268,11 @@
           weekday: "short",
           day: "numeric",
           month: "short",
-        })
+        }) +
+        (timeText ? " · " + timeText : "")
       );
     } catch (e) {
-      return "In person · " + String(c.scheduled_date);
+      return "In person · " + String(c.scheduled_date) + (timeText ? " · " + timeText : "");
     }
   }
 

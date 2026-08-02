@@ -125,10 +125,34 @@
     }
   }
 
+  function fmtTime(hms) {
+    if (!hms) return "";
+    const parts = String(hms).split(":");
+    let h = parseInt(parts[0], 10);
+    const m = parts[1] || "00";
+    const suffix = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return h + ":" + m + " " + suffix;
+  }
+
   function cardHtml(s) {
+    const timeText = fmtTime(s.scheduled_time);
     const when = s.remote
       ? tr("Remote · async")
-      : tr("In person · dated") + " · " + fmtDate(s.scheduled_date);
+      : tr("In person · dated") +
+        " · " +
+        fmtDate(s.scheduled_date) +
+        (timeText ? " · " + timeText : "");
+    const hasSpots = typeof s.spots_left === "number";
+    const spotsTag = hasSpots
+      ? s.spots_left <= 0
+        ? '<span class="tag tag-coral">' + tr("Full") + "</span>"
+        : '<span class="tag tag-coral">' +
+          s.spots_left +
+          " " +
+          tr(s.spots_left === 1 ? "spot" : "spots") +
+          "</span>"
+      : "";
     const tags =
       '<div class="activity-meta">' +
       '<span class="tag">' +
@@ -136,7 +160,9 @@
       "</span>" +
       '<span class="tag">' +
       when +
-      "</span></div>";
+      "</span>" +
+      spotsTag +
+      "</div>";
     let btn;
     if (s.requires_onboarding) {
       btn =

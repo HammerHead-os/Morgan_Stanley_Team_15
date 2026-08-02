@@ -8,27 +8,39 @@
 
   const SKILLS = [
     { value: "cantonese", label: "Cantonese reading" },
-    { value: "photos", label: "Basic photo sorting" },
+    { value: "photos", label: "Photo/video editing" },
     { value: "voice", label: "Phone mic (English or Cantonese)" },
     { value: "sports", label: "On-site sports help" },
+    { value: "events", label: "Event setup & logistics" },
+    { value: "kitchen", label: "Kitchen / cooking help" },
+    { value: "childcare", label: "Childcare experience" },
+    { value: "first-aid", label: "First aid trained" },
+    { value: "social-media", label: "Social media / marketing" },
+    { value: "admin", label: "Admin / data entry" },
+    { value: "driving", label: "Driving (own transport)" },
   ];
   const LANGS = [
     { value: "yue", label: "Cantonese" },
     { value: "en", label: "English" },
+    { value: "cmn", label: "Mandarin" },
+    { value: "hi-ur", label: "Hindi / Urdu" },
+    { value: "tl", label: "Filipino / Tagalog" },
   ];
   const AVAIL = [
     "weekday mornings",
+    "weekday afternoons",
     "weekday evenings",
     "saturday",
     "sunday",
     "remote-only",
+    "on-call / last-minute",
   ];
 
   let backdrop = null;
   let pendingResolve = null;
 
   function checkboxGroup(name, options) {
-    return options
+    const items = options
       .map(function (o) {
         const value = typeof o === "string" ? o : o.value;
         const label = typeof o === "string" ? o : o.label;
@@ -43,6 +55,7 @@
         );
       })
       .join("");
+    return '<div class="l21-checkbox-options">' + items + "</div>";
   }
 
   function html() {

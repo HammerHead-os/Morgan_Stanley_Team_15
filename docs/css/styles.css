@@ -2245,6 +2245,10 @@ body.page-gate .site-nav-gate .nav-links a {
   color: rgba(245, 247, 246, 0.82);
 }
 
+body.page-gate .site-nav-gate .nav-links a.nav-session {
+  color: #000;
+}
+
 body.page-gate .site-nav-gate .nav-links a:hover,
 body.page-gate .site-nav-gate .nav-links a[aria-current="page"] {
   color: #fff;
