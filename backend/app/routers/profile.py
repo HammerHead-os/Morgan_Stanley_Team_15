@@ -7,6 +7,7 @@ from .. import models, schemas
 from ..database import get_db
 from ..deps import get_current_person
 from ..labels import event_label, status_label
+from ..posthog_client import get_posthog_client
 from ..roles_util import has_role, parse_roles, pick_primary, serialize_roles
 from .family import _registration_out
 from .volunteers import _claim_out, _ensure_profile
@@ -664,4 +665,7 @@ def update_roles(
     )
     db.commit()
     db.refresh(person)
+    client = get_posthog_client()
+    if client:
+        client.capture("roles_updated", properties={"role_count": len(parse_roles(person))})
     return _person_out(person)

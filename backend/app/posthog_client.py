@@ -7,13 +7,19 @@ from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from posthog import Posthog
 
+from .settings import ENV_FILE
+
 logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
     """Optional PostHog settings loaded from the environment."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=ENV_FILE,
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     posthog_project_token: str | None = None
     posthog_host: str | None = None
