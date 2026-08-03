@@ -337,12 +337,17 @@ def cancel_registration(
             )
         )
 
-    if activity:
-        when_text = (
-            f"{reg.session_date} at {activity.scheduled_time.strftime('%-I:%M %p')}"
-            if reg.session_date and activity.scheduled_time
-            else str(reg.session_date or "")
-        )
+        if activity:
+            time_str = (
+                activity.scheduled_time.strftime("%I:%M %p").lstrip("0")
+                if activity.scheduled_time
+                else ""
+            )
+            when_text = (
+                f"{reg.session_date} at {time_str}"
+                if reg.session_date and time_str
+                else str(reg.session_date or "")
+            )
         for name, email in _all_recipients(
             db, reg.household_id, reg.member_person_id, reg.attendees
         ):
